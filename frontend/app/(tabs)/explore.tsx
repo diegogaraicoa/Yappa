@@ -49,9 +49,6 @@ export default function ExploreScreen() {
           ))}
         </View>
 
-        <View style={styles.infoCard}>
-          <Text style={styles.infoText}>Pr\u00f3ximamente disponible</Text>
-        </View>
       </View>
     </ScrollView>
   );
