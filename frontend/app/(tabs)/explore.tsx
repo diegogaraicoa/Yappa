@@ -48,7 +48,6 @@ export default function ExploreScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
       </View>
     </ScrollView>
   );
