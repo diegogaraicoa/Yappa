@@ -350,6 +350,71 @@ async def login(credentials: UserLogin):
         }
     }
 
+class ForgotPassword(BaseModel):
+    email: EmailStr
+
+class ResetPassword(BaseModel):
+    email: EmailStr
+    reset_code: str
+    new_password: str
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(data: ForgotPassword):
+    user = await db.users.find_one({"email": data.email})
+    if not user:
+        # Don't reveal if user exists
+        return {"message": "Si el email existe, recibirás instrucciones de recuperación"}
+    
+    # Generate 6-digit code
+    import random
+    reset_code = str(random.randint(100000, 999999))
+    
+    # Store reset code with expiration (15 minutes)
+    await db.password_resets.insert_one({
+        "email": data.email,
+        "code": reset_code,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(minutes=15),
+        "used": False
+    })
+    
+    # TODO: Send email/SMS/WhatsApp with reset code
+    # For now, just return the code (ONLY FOR DEVELOPMENT)
+    print(f"Reset code for {data.email}: {reset_code}")
+    
+    return {
+        "message": "Si el email existe, recibirás instrucciones de recuperación",
+        "reset_code": reset_code  # Remove in production
+    }
+
+@api_router.post("/auth/reset-password")
+async def reset_password(data: ResetPassword):
+    # Find valid reset code
+    reset_request = await db.password_resets.find_one({
+        "email": data.email,
+        "code": data.reset_code,
+        "used": False,
+        "expires_at": {"$gt": datetime.utcnow()}
+    })
+    
+    if not reset_request:
+        raise HTTPException(status_code=400, detail="Código inválido o expirado")
+    
+    # Update password
+    hashed_password = get_password_hash(data.new_password)
+    await db.users.update_one(
+        {"email": data.email},
+        {"$set": {"password": hashed_password}}
+    )
+    
+    # Mark code as used
+    await db.password_resets.update_one(
+        {"_id": reset_request["_id"]},
+        {"$set": {"used": True}}
+    )
+    
+    return {"message": "Contraseña actualizada correctamente"}
+
 # ==================== STORE ENDPOINTS ====================
 
 @api_router.get("/stores/me")
