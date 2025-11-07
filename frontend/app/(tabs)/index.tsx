@@ -85,7 +85,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={item.id}
               style={[styles.menuCard, { borderColor: item.color }]}
-              onPress={item.action || (() => Alert.alert('Pr\u00f3ximamente', `${item.title} estar\u00e1 disponible pronto`))}
+              onPress={item.action}
             >
               <Ionicons name={item.icon as any} size={48} color={item.color} />
               <Text style={[styles.menuTitle, { color: item.color }]}>{item.title}</Text>
