@@ -145,6 +145,47 @@ export default function BalanceScreen() {
         </Text>
       </View>
 
+      {/* Date Filters */}
+      <View style={styles.dateFilters}>
+        <Text style={styles.dateFiltersTitle}>Filtrar por Fecha</Text>
+        <View style={styles.dateButtons}>
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => {
+              setSelectingDate('start');
+              setShowDateModal(true);
+            }}
+          >
+            <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
+            <Text style={styles.dateButtonText}>
+              {startDate ? format(new Date(startDate), 'dd/MM/yyyy') : 'Fecha Inicio'}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => {
+              setSelectingDate('end');
+              setShowDateModal(true);
+            }}
+          >
+            <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
+            <Text style={styles.dateButtonText}>
+              {endDate ? format(new Date(endDate), 'dd/MM/yyyy') : 'Fecha Fin'}
+            </Text>
+          </TouchableOpacity>
+
+          {(startDate || endDate) && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={clearDates}
+            >
+              <Ionicons name="close-circle" size={24} color="#f44336" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
       {/* Quick Actions */}
       <View style={styles.actionsContainer}>
         <TouchableOpacity
