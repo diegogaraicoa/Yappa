@@ -123,6 +123,15 @@ export default function AuthScreen() {
               {isLogin ? '\u00bfNo tienes cuenta? Reg\u00edstrate' : '\u00bfYa tienes cuenta? Inicia sesi\u00f3n'}
             </Text>
           </TouchableOpacity>
+
+          {isLogin && (
+            <TouchableOpacity
+              style={styles.forgotButton}
+              onPress={() => router.push('/forgot-password')}
+            >
+              <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
