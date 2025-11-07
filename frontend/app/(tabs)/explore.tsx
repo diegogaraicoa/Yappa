@@ -28,6 +28,14 @@ export default function ExploreScreen() {
       color: '#2196F3',
       route: '/employees',
     },
+    {
+      id: 4,
+      title: 'Reportes IA',
+      icon: 'bulb',
+      color: '#9C27B0',
+      route: '/insights',
+      badge: 'Próximamente',
+    },
   ];
 
   return (
