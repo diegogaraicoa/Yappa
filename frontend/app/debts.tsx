@@ -151,7 +151,7 @@ export default function DebtsScreen() {
                 <Text style={styles.debtAmount}>${debt.amount.toFixed(2)}</Text>
               </View>
               <Text style={styles.debtDate}>
-                {format(new Date(debt.date), "d 'de' MMMM, yyyy", { locale: es })}
+                {format(new Date(debt.date), "d 'de' MMMM, yyyy")}
               </Text>
               {debt.notes && <Text style={styles.debtNotes}>{debt.notes}</Text>}
               <TouchableOpacity
