@@ -39,7 +39,11 @@ export default function ExploreScreen() {
 
         <View style={styles.grid}>
           {exploreItems.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.card}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.card}
+              onPress={() => router.push(item.route as any)}
+            >
               <Ionicons name={item.icon as any} size={40} color={item.color} />
               <Text style={styles.cardTitle}>{item.title}</Text>
             </TouchableOpacity>
