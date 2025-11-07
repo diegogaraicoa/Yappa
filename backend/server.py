@@ -770,6 +770,46 @@ async def delete_debt(debt_id: str, current_user: dict = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Deuda no encontrada")
     return {"message": "Deuda eliminada"}
 
+# ==================== STOCK ALERTS ENDPOINTS ====================
+
+@api_router.get("/alerts/low-stock")
+async def get_low_stock_alerts(current_user: dict = Depends(get_current_user)):
+    """Get all products with stock below their alert threshold"""
+    products = await db.products.find({
+        "store_id": current_user["store_id"],
+        "alert_enabled": True
+    }).to_list(1000)
+    
+    low_stock_products = []
+    for product in products:
+        if product["quantity"] <= product.get("min_stock_alert", 10):
+            product["_id"] = str(product["_id"])
+            product["alert_level"] = "critical" if product["quantity"] == 0 else "warning"
+            low_stock_products.append(product)
+    
+    return low_stock_products
+
+@api_router.put("/products/{product_id}/alert-settings")
+async def update_alert_settings(
+    product_id: str,
+    min_stock_alert: float,
+    alert_enabled: bool,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update alert settings for a product"""
+    result = await db.products.update_one(
+        {"_id": ObjectId(product_id), "store_id": current_user["store_id"]},
+        {"$set": {
+            "min_stock_alert": min_stock_alert,
+            "alert_enabled": alert_enabled
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    
+    return {"message": "Configuración de alertas actualizada"}
+
 # ==================== BALANCE/REPORTS ENDPOINTS ====================
 
 @api_router.get("/balance")
