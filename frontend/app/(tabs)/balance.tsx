@@ -21,14 +21,20 @@ export default function BalanceScreen() {
   const [loading, setLoading] = useState(false);
   const [sales, setSales] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [selectingDate, setSelectingDate] = useState<'start' | 'end'>('start');
 
   useEffect(() => {
+    loadData();
+  }, [startDate, endDate]);
+
+  const loadData = () => {
     loadBalance();
     loadSales();
     loadExpenses();
-  }, []);
+  };
 
   const loadBalance = async () => {
     setLoading(true);
