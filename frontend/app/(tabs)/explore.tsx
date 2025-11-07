@@ -21,7 +21,13 @@ export default function ExploreScreen() {
       color: '#FF9800',
       route: '/suppliers',
     },
-    { id: 3, title: 'Empleados', icon: 'person', color: '#2196F3' },
+    {
+      id: 3,
+      title: 'Empleados',
+      icon: 'person',
+      color: '#2196F3',
+      route: '/employees',
+    },
     { id: 4, title: 'Categor\u00edas', icon: 'list', color: '#9C27B0' },
   ];
 
