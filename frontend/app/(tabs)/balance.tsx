@@ -39,7 +39,11 @@ export default function BalanceScreen() {
   const loadBalance = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/api/balance');
+      const params: any = {};
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      
+      const response = await api.get('/api/balance', { params });
       setBalance(response.data);
     } catch (error) {
       console.log('Error loading balance:', error);
@@ -51,8 +55,12 @@ export default function BalanceScreen() {
 
   const loadSales = async () => {
     try {
-      const response = await api.get('/api/sales');
-      setSales(response.data.slice(0, 5)); // Last 5 sales
+      const params: any = {};
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      
+      const response = await api.get('/api/sales', { params });
+      setSales(response.data.slice(0, 5));
     } catch (error) {
       console.log('Error loading sales:', error);
     }
@@ -60,17 +68,33 @@ export default function BalanceScreen() {
 
   const loadExpenses = async () => {
     try {
-      const response = await api.get('/api/expenses');
-      setExpenses(response.data.slice(0, 5)); // Last 5 expenses
+      const params: any = {};
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      
+      const response = await api.get('/api/expenses', { params });
+      setExpenses(response.data.slice(0, 5));
     } catch (error) {
       console.log('Error loading expenses:', error);
     }
   };
 
   const onRefresh = () => {
-    loadBalance();
-    loadSales();
-    loadExpenses();
+    loadData();
+  };
+
+  const handleDateSelect = (date: string) => {
+    if (selectingDate === 'start') {
+      setStartDate(date);
+    } else {
+      setEndDate(date);
+    }
+    setShowDateModal(false);
+  };
+
+  const clearDates = () => {
+    setStartDate('');
+    setEndDate('');
   };
 
   if (!balance) {
