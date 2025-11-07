@@ -1,39 +1,125 @@
-diff --git a/frontend/app/debts.tsx b/frontend/app/debts.tsx
-index 9ca0219..5179bee 100644
---- a/frontend/app/debts.tsx
-+++ b/frontend/app/debts.tsx
-@@ -12,7 +12,6 @@ import { useRouter } from 'expo-router';
+diff --git a/frontend/app/(tabs)/explore.tsx b/frontend/app/(tabs)/explore.tsx
+index 460834b..d00fce9 100644
+--- a/frontend/app/(tabs)/explore.tsx
++++ b/frontend/app/(tabs)/explore.tsx
+@@ -1,13 +1,33 @@
+ import React from 'react';
+ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
  import { Ionicons } from '@expo/vector-icons';
- import api from '../utils/api';
- import { format } from 'date-fns';
--import { es } from 'date-fns/locale';
++import { useRouter } from 'expo-router';
  
- export default function DebtsScreen() {
-   const router = useRouter();
-@@ -152,7 +151,7 @@ export default function DebtsScreen() {
-                 <Text style={styles.debtAmount}>${debt.amount.toFixed(2)}</Text>
-               </View>
-               <Text style={styles.debtDate}>
--                {format(new Date(debt.date), "d 'de' MMMM, yyyy", { locale: es })}
-+                {format(new Date(debt.date), "d 'de' MMMM, yyyy")}
-               </Text>
-               {debt.notes && <Text style={styles.debtNotes}>{debt.notes}</Text>}
-               <TouchableOpacity
+ export default function ExploreScreen() {
++  const router = useRouter();
++
+   const exploreItems = [
+-    { id: 1, title: 'Clientes', icon: 'people', color: '#4CAF50' },
+-    { id: 2, title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
+-    { id: 3, title: 'Empleados', icon: 'person', color: '#2196F3' },
+-    { id: 4, title: 'Categor\u00edas', icon: 'list', color: '#9C27B0' },
++    {
++      id: 1,
++      title: 'Clientes',
++      icon: 'people',
++      color: '#4CAF50',
++      route: '/customers',
++    },
++    {
++      id: 2,
++      title: 'Proveedores',
++      icon: 'briefcase',
++      color: '#FF9800',
++      route: '/suppliers',
++    },
++    {
++      id: 3,
++      title: 'Empleados',
++      icon: 'person',
++      color: '#2196F3',
++      route: '/employees',
++    },
+   ];
+ 
+   return (
+@@ -18,16 +38,16 @@ export default function ExploreScreen() {
+ 
+         <View style={styles.grid}>
+           {exploreItems.map((item) => (
+-            <TouchableOpacity key={item.id} style={styles.card}>
++            <TouchableOpacity
++              key={item.id}
++              style={styles.card}
++              onPress={() => router.push(item.route as any)}
++            >
+               <Ionicons name={item.icon as any} size={40} color={item.color} />
+               <Text style={styles.cardTitle}>{item.title}</Text>
+             </TouchableOpacity>
+           ))}
+         </View>
+-
+-        <View style={styles.infoCard}>
+-          <Text style={styles.infoText}>Pr\u00f3ximamente disponible</Text>
+-        </View>
+       </View>
+     </ScrollView>
+   );
+@@ -77,16 +97,4 @@ const styles = StyleSheet.create({
+     marginTop: 12,
+     textAlign: 'center',
+   },
+-  infoCard: {
+-    backgroundColor: '#E8F5E9',
+-    borderRadius: 12,
+-    padding: 16,
+-    marginTop: 24,
+-    alignItems: 'center',
+-  },
+-  infoText: {
+-    fontSize: 16,
+-    color: '#4CAF50',
+-    fontWeight: '600',
+-  },
+ });
 diff --git a/model.patch b/model.patch
-index 0ea3ed7..e69de29 100644
+index f61acc1..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,13 +0,0 @@
--diff --git a/frontend/app/(tabs)/index.tsx b/frontend/app/(tabs)/index.tsx
--index c371dc6..66df22f 100644
----- a/frontend/app/(tabs)/index.tsx
--+++ b/frontend/app/(tabs)/index.tsx
--@@ -85,7 +85,7 @@ export default function HomeScreen() {
--             <TouchableOpacity
--               key={item.id}
--               style={[styles.menuCard, { borderColor: item.color }]}
---              onPress={item.action || (() => Alert.alert('Pr\u00f3ximamente', `${item.title} estar\u00e1 disponible pronto`))}
--+              onPress={item.action}
--             >
--               <Ionicons name={item.icon as any} size={48} color={item.color} />
--               <Text style={[styles.menuTitle, { color: item.color }]}>{item.title}</Text>
+@@ -1,39 +0,0 @@
+-diff --git a/frontend/app/debts.tsx b/frontend/app/debts.tsx
+-index 9ca0219..5179bee 100644
+---- a/frontend/app/debts.tsx
+-+++ b/frontend/app/debts.tsx
+-@@ -12,7 +12,6 @@ import { useRouter } from 'expo-router';
+- import { Ionicons } from '@expo/vector-icons';
+- import api from '../utils/api';
+- import { format } from 'date-fns';
+--import { es } from 'date-fns/locale';
+- 
+- export default function DebtsScreen() {
+-   const router = useRouter();
+-@@ -152,7 +151,7 @@ export default function DebtsScreen() {
+-                 <Text style={styles.debtAmount}>${debt.amount.toFixed(2)}</Text>
+-               </View>
+-               <Text style={styles.debtDate}>
+--                {format(new Date(debt.date), "d 'de' MMMM, yyyy", { locale: es })}
+-+                {format(new Date(debt.date), "d 'de' MMMM, yyyy")}
+-               </Text>
+-               {debt.notes && <Text style={styles.debtNotes}>{debt.notes}</Text>}
+-               <TouchableOpacity
+-diff --git a/model.patch b/model.patch
+-index 0ea3ed7..e69de29 100644
+---- a/model.patch
+-+++ b/model.patch
+-@@ -1,13 +0,0 @@
+--diff --git a/frontend/app/(tabs)/index.tsx b/frontend/app/(tabs)/index.tsx
+--index c371dc6..66df22f 100644
+----- a/frontend/app/(tabs)/index.tsx
+--+++ b/frontend/app/(tabs)/index.tsx
+--@@ -85,7 +85,7 @@ export default function HomeScreen() {
+--             <TouchableOpacity
+--               key={item.id}
+--               style={[styles.menuCard, { borderColor: item.color }]}
+---              onPress={item.action || (() => Alert.alert('Pr\u00f3ximamente', `${item.title} estar\u00e1 disponible pronto`))}
+--+              onPress={item.action}
+--             >
+--               <Ionicons name={item.icon as any} size={48} color={item.color} />
+--               <Text style={[styles.menuTitle, { color: item.color }]}>{item.title}</Text>
