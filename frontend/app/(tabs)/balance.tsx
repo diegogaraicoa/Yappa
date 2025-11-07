@@ -292,6 +292,34 @@ export default function BalanceScreen() {
           ))}
         </View>
       )}
+
+      {/* Date Picker Modal */}
+      <Modal visible={showDateModal} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Seleccionar {selectingDate === 'start' ? 'Fecha Inicio' : 'Fecha Fin'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowDateModal(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            <Calendar
+              onDayPress={(day) => handleDateSelect(day.dateString)}
+              markedDates={{
+                [startDate]: { selected: true, selectedColor: '#4CAF50' },
+                [endDate]: { selected: true, selectedColor: '#2196F3' },
+              }}
+              theme={{
+                selectedDayBackgroundColor: '#4CAF50',
+                todayTextColor: '#4CAF50',
+                arrowColor: '#4CAF50',
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
