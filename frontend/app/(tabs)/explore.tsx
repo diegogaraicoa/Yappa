@@ -7,7 +7,13 @@ export default function ExploreScreen() {
   const router = useRouter();
 
   const exploreItems = [
-    { id: 1, title: 'Clientes', icon: 'people', color: '#4CAF50' },
+    {
+      id: 1,
+      title: 'Clientes',
+      icon: 'people',
+      color: '#4CAF50',
+      route: '/customers',
+    },
     { id: 2, title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
     { id: 3, title: 'Empleados', icon: 'person', color: '#2196F3' },
     { id: 4, title: 'Categor\u00edas', icon: 'list', color: '#9C27B0' },
