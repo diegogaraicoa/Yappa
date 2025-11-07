@@ -97,16 +97,4 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'center',
   },
-  infoCard: {
-    backgroundColor: '#E8F5E9',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 24,
-    alignItems: 'center',
-  },
-  infoText: {
-    fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: '600',
-  },
 });
