@@ -28,7 +28,6 @@ export default function ExploreScreen() {
       color: '#2196F3',
       route: '/employees',
     },
-    { id: 4, title: 'Categor\u00edas', icon: 'list', color: '#9C27B0' },
   ];
 
   return (
