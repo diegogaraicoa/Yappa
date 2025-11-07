@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 export default function ExploreScreen() {
+  const router = useRouter();
+
   const exploreItems = [
     { id: 1, title: 'Clientes', icon: 'people', color: '#4CAF50' },
     { id: 2, title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
