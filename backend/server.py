@@ -173,6 +173,9 @@ class Product(BaseModel):
     cost: float = 0.0
     category_id: Optional[str] = None
     description: Optional[str] = None
+    min_stock_alert: float = 10.0  # Umbral de alerta
+    alert_enabled: bool = True  # Activar/desactivar alertas
+    preferred_supplier_id: Optional[str] = None  # Proveedor preferido
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class ProductCreate(BaseModel):
