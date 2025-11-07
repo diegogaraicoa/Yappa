@@ -36,7 +36,74 @@ export default function InventoryScreen() {
 
   useEffect(() => {
     loadData();
+    requestPermissions();
   }, []);
+
+  const requestPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería para agregar fotos');
+    }
+  };
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0].base64) {
+        setNewProduct({
+          ...newProduct,
+          image: `data:image/jpeg;base64,${result.assets[0].base64}`,
+        });
+      }
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo cargar la imagen');
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso necesario', 'Necesitamos acceso a tu cámara');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0].base64) {
+        setNewProduct({
+          ...newProduct,
+          image: `data:image/jpeg;base64,${result.assets[0].base64}`,
+        });
+      }
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo tomar la foto');
+    }
+  };
+
+  const showImagePicker = () => {
+    Alert.alert(
+      'Agregar Foto',
+      'Selecciona una opción',
+      [
+        { text: 'Tomar Foto', onPress: takePhoto },
+        { text: 'Seleccionar de Galería', onPress: pickImage },
+        { text: 'Cancelar', style: 'cancel' },
+      ]
+    );
+  };
 
   const loadData = () => {
     loadProducts();
