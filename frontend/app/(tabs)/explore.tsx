@@ -1,0 +1,92 @@
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+export default function ExploreScreen() {
+  const exploreItems = [
+    { id: 1, title: 'Clientes', icon: 'people', color: '#4CAF50' },
+    { id: 2, title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
+    { id: 3, title: 'Empleados', icon: 'person', color: '#2196F3' },
+    { id: 4, title: 'Categor\u00edas', icon: 'list', color: '#9C27B0' },
+  ];
+
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Explorar</Text>
+        <Text style={styles.subtitle}>Gestiona todos los aspectos de tu tienda</Text>
+
+        <View style={styles.grid}>
+          {exploreItems.map((item) => (
+            <TouchableOpacity key={item.id} style={styles.card}>
+              <Ionicons name={item.icon as any} size={40} color={item.color} />
+              <Text style={styles.cardTitle}>{item.title}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.infoCard}>
+          <Text style={styles.infoText}>Pr\u00f3ximamente disponible</Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  content: {
+    padding: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 24,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  card: {
+    width: '48%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  infoCard: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+});
