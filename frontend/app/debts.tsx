@@ -12,7 +12,6 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../utils/api';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 export default function DebtsScreen() {
   const router = useRouter();
