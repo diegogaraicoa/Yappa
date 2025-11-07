@@ -325,6 +325,20 @@ export default function InventoryScreen() {
               </TouchableOpacity>
             </View>
             <ScrollView>
+              <Text style={styles.inputLabel}>Foto del Producto</Text>
+              <TouchableOpacity style={styles.imagePickerButton} onPress={showImagePicker}>
+                {newProduct.image ? (
+                  <Image source={{ uri: newProduct.image }} style={styles.productImage} />
+                ) : (
+                  <View style={styles.imagePlaceholder}>
+                    <Ionicons name="camera" size={40} color="#999" />
+                    <Text style={styles.imagePlaceholderText}>
+                      Tomar foto o seleccionar
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
               <Text style={styles.inputLabel}>Nombre *</Text>
               <TextInput
                 style={styles.input}
