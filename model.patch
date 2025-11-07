@@ -1,13 +1,39 @@
-diff --git a/frontend/app/(tabs)/index.tsx b/frontend/app/(tabs)/index.tsx
-index c371dc6..66df22f 100644
---- a/frontend/app/(tabs)/index.tsx
-+++ b/frontend/app/(tabs)/index.tsx
-@@ -85,7 +85,7 @@ export default function HomeScreen() {
-             <TouchableOpacity
-               key={item.id}
-               style={[styles.menuCard, { borderColor: item.color }]}
--              onPress={item.action || (() => Alert.alert('Pr\u00f3ximamente', `${item.title} estar\u00e1 disponible pronto`))}
-+              onPress={item.action}
-             >
-               <Ionicons name={item.icon as any} size={48} color={item.color} />
-               <Text style={[styles.menuTitle, { color: item.color }]}>{item.title}</Text>
+diff --git a/frontend/app/debts.tsx b/frontend/app/debts.tsx
+index 9ca0219..5179bee 100644
+--- a/frontend/app/debts.tsx
++++ b/frontend/app/debts.tsx
+@@ -12,7 +12,6 @@ import { useRouter } from 'expo-router';
+ import { Ionicons } from '@expo/vector-icons';
+ import api from '../utils/api';
+ import { format } from 'date-fns';
+-import { es } from 'date-fns/locale';
+ 
+ export default function DebtsScreen() {
+   const router = useRouter();
+@@ -152,7 +151,7 @@ export default function DebtsScreen() {
+                 <Text style={styles.debtAmount}>${debt.amount.toFixed(2)}</Text>
+               </View>
+               <Text style={styles.debtDate}>
+-                {format(new Date(debt.date), "d 'de' MMMM, yyyy", { locale: es })}
++                {format(new Date(debt.date), "d 'de' MMMM, yyyy")}
+               </Text>
+               {debt.notes && <Text style={styles.debtNotes}>{debt.notes}</Text>}
+               <TouchableOpacity
+diff --git a/model.patch b/model.patch
+index 0ea3ed7..e69de29 100644
+--- a/model.patch
++++ b/model.patch
+@@ -1,13 +0,0 @@
+-diff --git a/frontend/app/(tabs)/index.tsx b/frontend/app/(tabs)/index.tsx
+-index c371dc6..66df22f 100644
+---- a/frontend/app/(tabs)/index.tsx
+-+++ b/frontend/app/(tabs)/index.tsx
+-@@ -85,7 +85,7 @@ export default function HomeScreen() {
+-             <TouchableOpacity
+-               key={item.id}
+-               style={[styles.menuCard, { borderColor: item.color }]}
+--              onPress={item.action || (() => Alert.alert('Pr\u00f3ximamente', `${item.title} estar\u00e1 disponible pronto`))}
+-+              onPress={item.action}
+-             >
+-               <Ionicons name={item.icon as any} size={48} color={item.color} />
+-               <Text style={[styles.menuTitle, { color: item.color }]}>{item.title}</Text>
