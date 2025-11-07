@@ -283,22 +283,20 @@ export default function SaleScreen() {
           </View>
         </View>
 
-        {!paid && (
-          <View style={styles.section}>
-            <Text style={styles.label}>Cliente</Text>
-            <TouchableOpacity
-              style={styles.customerButton}
-              onPress={() => setShowCustomerModal(true)}
-            >
-              <Text style={styles.customerButtonText}>
-                {selectedCustomer
-                  ? `${selectedCustomer.name} ${selectedCustomer.lastname}`
-                  : 'Seleccionar Cliente'}
-              </Text>
-              <Ionicons name="chevron-forward" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
-        )}
+        <View style={styles.section}>
+          <Text style={styles.label}>Cliente (Opcional)</Text>
+          <TouchableOpacity
+            style={styles.customerButton}
+            onPress={() => setShowCustomerModal(true)}
+          >
+            <Text style={styles.customerButtonText}>
+              {selectedCustomer
+                ? `${selectedCustomer.name} ${selectedCustomer.lastname}`
+                : 'Seleccionar Cliente'}
+            </Text>
+            <Ionicons name="chevron-forward" size={24} color="#666" />
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>Notas (Opcional)</Text>
