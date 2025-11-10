@@ -30,6 +30,8 @@ export default function InventoryScreen() {
     cost: '',
     description: '',
     category_id: '',
+    min_stock_alert: '10',
+    alert_enabled: true,
   });
   const [newCategoryName, setNewCategoryName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
