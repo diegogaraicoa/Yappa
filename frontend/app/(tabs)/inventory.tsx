@@ -491,7 +491,9 @@ export default function InventoryScreen() {
                 style={styles.submitButton}
                 onPress={handleCreateProduct}
               >
-                <Text style={styles.submitButtonText}>Crear Producto</Text>
+                <Text style={styles.submitButtonText}>
+                  {editingProduct ? 'Actualizar Producto' : 'Crear Producto'}
+                </Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
