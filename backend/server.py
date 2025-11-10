@@ -867,6 +867,116 @@ async def get_balance(
     }
 
 # Include the router in the main app
+# ==================== NOTIFICATION SETTINGS ====================
+
+class NotificationSettings(BaseModel):
+    whatsapp_number: Optional[str] = None
+    alert_email: Optional[str] = None
+    expo_push_token: Optional[str] = None
+    alerts_enabled: bool = True
+    stock_alerts_enabled: bool = True
+    daily_summary_enabled: bool = True
+    weekly_summary_enabled: bool = True
+
+@api_router.get("/user/notification-settings")
+async def get_notification_settings(current_user: dict = Depends(get_current_user)):
+    """Get user's notification settings"""
+    user = await db.users.find_one({"_id": ObjectId(current_user["user_id"])})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "whatsapp_number": user.get("whatsapp_number"),
+        "alert_email": user.get("alert_email"),
+        "expo_push_token": user.get("expo_push_token"),
+        "alerts_enabled": user.get("alerts_enabled", True),
+        "stock_alerts_enabled": user.get("stock_alerts_enabled", True),
+        "daily_summary_enabled": user.get("daily_summary_enabled", True),
+        "weekly_summary_enabled": user.get("weekly_summary_enabled", True),
+    }
+
+@api_router.post("/user/notification-settings")
+async def update_notification_settings(
+    settings: NotificationSettings,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's notification settings"""
+    update_data = settings.dict(exclude_unset=True)
+    
+    result = await db.users.update_one(
+        {"_id": ObjectId(current_user["user_id"])},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Failed to update settings")
+    
+    return {"message": "Settings updated successfully"}
+
+@api_router.post("/alerts/test")
+async def test_alerts(current_user: dict = Depends(get_current_user)):
+    """Send test notifications to user"""
+    from services.twilio_service import twilio_service
+    from services.sendgrid_service import sendgrid_service
+    from services.expo_push_service import expo_push_service
+    
+    user = await db.users.find_one({"_id": ObjectId(current_user["user_id"])})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    results = {
+        "whatsapp": None,
+        "email": None,
+        "push": None
+    }
+    
+    # Test WhatsApp
+    if user.get("whatsapp_number"):
+        whatsapp_result = twilio_service.send_whatsapp(
+            user["whatsapp_number"],
+            "🎉 ¡Prueba exitosa! Tu número de WhatsApp está configurado correctamente en BarrioShop."
+        )
+        results["whatsapp"] = whatsapp_result
+    
+    # Test Email
+    if user.get("alert_email"):
+        email_result = sendgrid_service.send_email(
+            user["alert_email"],
+            "✅ Prueba de Alertas - BarrioShop",
+            """
+            <html>
+                <body style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="color: #4CAF50;">¡Prueba Exitosa! ✅</h2>
+                    <p>Tu email está configurado correctamente para recibir alertas de BarrioShop.</p>
+                    <p>Recibirás notificaciones sobre:</p>
+                    <ul>
+                        <li>📦 Stock bajo</li>
+                        <li>📊 Resumen diario de ventas</li>
+                        <li>📈 Resumen semanal</li>
+                        <li>💰 Recordatorios de deudas</li>
+                    </ul>
+                </body>
+            </html>
+            """
+        )
+        results["email"] = email_result
+    
+    # Test Push Notification
+    if user.get("expo_push_token"):
+        push_result = expo_push_service.send_push_notification(
+            user["expo_push_token"],
+            "✅ Prueba Exitosa",
+            "Las notificaciones push están configuradas correctamente.",
+            {"type": "test"}
+        )
+        results["push"] = push_result
+    
+    return {
+        "message": "Test notifications sent",
+        "results": results
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(
