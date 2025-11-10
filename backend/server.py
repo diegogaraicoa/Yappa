@@ -1022,7 +1022,7 @@ async def generate_insights(current_user: dict = Depends(get_current_user)):
         # Save to database
         insight_doc = {
             "store_id": store_id,
-            "user_id": current_user["_id"],
+            "user_id": str(current_user["_id"]),
             "insights": insights.get('insights'),
             "metrics": insights.get('metrics'),
             "generated_at": datetime.now(),
@@ -1030,9 +1030,17 @@ async def generate_insights(current_user: dict = Depends(get_current_user)):
         }
         
         result = await db.insights.insert_one(insight_doc)
-        insight_doc["_id"] = str(result.inserted_id)
         
-        return insight_doc
+        # Return with proper string IDs
+        return {
+            "_id": str(result.inserted_id),
+            "store_id": store_id,
+            "user_id": str(current_user["_id"]),
+            "insights": insights.get('insights'),
+            "metrics": insights.get('metrics'),
+            "generated_at": datetime.now().isoformat(),
+            "period_days": 30
+        }
     
     except Exception as e:
         logger.error(f"Error generating insights: {str(e)}")
