@@ -177,3 +177,7 @@ agent_communication:
     message: "✅ BACKEND TESTING COMPLETADO: El endpoint /api/alerts/low-stock está funcionando perfectamente. Realicé testing exhaustivo con 9 escenarios diferentes incluyendo casos edge. Todos los tests pasaron: autenticación requerida, lógica de alertas correcta (critical/warning), filtrado por alert_enabled, formato de respuesta válido, manejo de cantidades decimales, umbrales altos/bajos. El backend está listo para producción. Recomiendo proceder con testing frontend si el usuario lo solicita."
   - agent: "testing"
     message: "✅ FRONTEND TESTING COMPLETADO: Ambas tareas de frontend funcionando correctamente. ISSUES CRÍTICOS RESUELTOS: 1) Imports incorrectos en alerts.tsx y index.tsx (cambiado de named import a default import), 2) URLs de API incorrectas (agregado prefijo /api). FUNCIONALIDAD VERIFICADA: Pantalla de alertas muestra estado vacío correctamente, banner en home no aparece cuando no hay alertas (comportamiento esperado), navegación y UI funcionando. Las funciones están listas para mostrar alertas cuando existan productos con stock bajo. Recomiendo que el main agent haga un resumen y termine la tarea."
+  - agent: "user"
+    message: "PROBLEMAS REPORTADOS: 1) No se pueden eliminar productos - click en botón de eliminar no hace nada. 2) Alertas no aparecen en Home a pesar de tener productos creados con stock=0 y stock bajo del umbral."
+  - agent: "main"
+    message: "Investigando ambos problemas reportados por el usuario. Llamando a troubleshoot_agent para análisis de root cause."
