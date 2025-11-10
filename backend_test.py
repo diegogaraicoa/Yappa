@@ -56,14 +56,13 @@ class AlertsAPITester:
         """Create products with different stock levels for testing"""
         self.log("Creating test products with various stock levels...")
         
+        # First create basic products (ProductCreate only supports basic fields)
         test_products_data = [
             {
                 "name": "Producto Crítico - Sin Stock",
                 "quantity": 0,
                 "price": 10.0,
                 "cost": 5.0,
-                "min_stock_alert": 5.0,
-                "alert_enabled": True,
                 "description": "Producto con stock crítico (0 unidades)"
             },
             {
@@ -71,8 +70,6 @@ class AlertsAPITester:
                 "quantity": 3,
                 "price": 15.0,
                 "cost": 8.0,
-                "min_stock_alert": 5.0,
-                "alert_enabled": True,
                 "description": "Producto con stock bajo (3 unidades, umbral 5)"
             },
             {
@@ -80,8 +77,6 @@ class AlertsAPITester:
                 "quantity": 20,
                 "price": 12.0,
                 "cost": 6.0,
-                "min_stock_alert": 5.0,
-                "alert_enabled": True,
                 "description": "Producto con stock normal (20 unidades)"
             },
             {
@@ -89,8 +84,6 @@ class AlertsAPITester:
                 "quantity": 2,
                 "price": 8.0,
                 "cost": 4.0,
-                "min_stock_alert": 5.0,
-                "alert_enabled": False,
                 "description": "Producto con stock bajo pero alertas deshabilitadas"
             },
             {
@@ -98,10 +91,17 @@ class AlertsAPITester:
                 "quantity": 5,
                 "price": 18.0,
                 "cost": 9.0,
-                "min_stock_alert": 5.0,
-                "alert_enabled": True,
                 "description": "Producto exactamente en el umbral de alerta"
             }
+        ]
+        
+        # Alert settings to apply after creation
+        alert_settings = [
+            {"min_stock_alert": 5.0, "alert_enabled": True},   # Critical
+            {"min_stock_alert": 5.0, "alert_enabled": True},   # Warning
+            {"min_stock_alert": 5.0, "alert_enabled": True},   # Normal
+            {"min_stock_alert": 5.0, "alert_enabled": False},  # Disabled
+            {"min_stock_alert": 5.0, "alert_enabled": True},   # Limit
         ]
         
         created_products = []
