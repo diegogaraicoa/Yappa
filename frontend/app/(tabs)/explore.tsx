@@ -37,11 +37,10 @@ export default function ExploreScreen() {
     },
     {
       id: 5,
-      title: 'Reportes IA',
-      icon: 'bulb',
+      title: 'Mis Datos',
+      icon: 'analytics',
       color: '#9C27B0',
       route: '/insights',
-      badge: 'Próximamente',
     },
   ];
 
