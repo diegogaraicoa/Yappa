@@ -20,10 +20,16 @@ export default function HomeScreen() {
 
   const fetchAlertCount = async () => {
     try {
+      console.log('Fetching alerts from /api/alerts/low-stock...');
       const response = await api.get('/api/alerts/low-stock');
+      console.log('Alerts response:', response.data);
       setAlertCount(response.data.length);
-    } catch (error) {
+      console.log('Alert count set to:', response.data.length);
+    } catch (error: any) {
       console.error('Error fetching alerts:', error);
+      console.error('Error details:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      setAlertCount(0);
     }
   };
 
