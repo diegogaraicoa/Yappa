@@ -1084,6 +1084,46 @@ async def get_insights_history(
     
     return insights
 
+@api_router.post("/insights/send-whatsapp")
+async def send_insight_to_whatsapp(current_user: dict = Depends(get_current_user)):
+    """Send latest insight report via WhatsApp"""
+    from services.twilio_service import twilio_service
+    from services.ai_insights_service import ai_insights_service
+    
+    # Check if user has WhatsApp configured
+    if not current_user.get("whatsapp_number"):
+        raise HTTPException(
+            status_code=400, 
+            detail="No tienes configurado tu número de WhatsApp. Ve a Configuración para agregarlo."
+        )
+    
+    # Get latest insight
+    store_id = str(current_user.get("store_id"))
+    insight = await db.insights.find_one(
+        {"store_id": store_id},
+        sort=[("generated_at", -1)]
+    )
+    
+    if not insight:
+        raise HTTPException(status_code=404, detail="No hay reportes para enviar. Genera uno primero.")
+    
+    # Format for WhatsApp
+    message = ai_insights_service.format_insights_for_whatsapp(
+        {"success": True, "insights": insight.get("insights")}
+    )
+    
+    # Send via WhatsApp
+    result = twilio_service.send_whatsapp(current_user["whatsapp_number"], message)
+    
+    if not result.get('success'):
+        raise HTTPException(status_code=500, detail="Error al enviar WhatsApp")
+    
+    return {
+        "success": True,
+        "message": "Reporte enviado a WhatsApp correctamente",
+        "whatsapp_number": current_user["whatsapp_number"]
+    }
+
 
 app.include_router(api_router)
 
