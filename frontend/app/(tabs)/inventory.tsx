@@ -232,11 +232,20 @@ export default function InventoryScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await api.delete(`/api/products/${productId}`);
+              console.log('Deleting product:', productId);
+              const response = await api.delete(`/api/products/${productId}`);
+              console.log('Delete response:', response.status);
+              
+              // Immediately update local state
+              setProducts(prev => prev.filter(p => p._id !== productId));
+              
               Alert.alert('Éxito', 'Producto eliminado');
-              loadProducts();
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar el producto');
+              // Also reload from server to ensure sync
+              await loadProducts();
+            } catch (error: any) {
+              console.error('Delete error:', error);
+              console.error('Delete error response:', error.response?.data);
+              Alert.alert('Error', error.response?.data?.detail || 'No se pudo eliminar el producto');
             }
           },
         },
