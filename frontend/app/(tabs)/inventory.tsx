@@ -694,4 +694,60 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 8,
   },
+  alertsSection: {
+    backgroundColor: '#FFF3E0',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
+  },
+  alertsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  alertsSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#E65100',
+    marginLeft: 8,
+  },
+  alertsSectionSubtitle: {
+    fontSize: 13,
+    color: '#F57C00',
+    marginBottom: 16,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  switchLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+  },
+  alertLevelsInfo: {
+    marginTop: 12,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+  },
+  alertLevelItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  alertDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  alertLevelText: {
+    fontSize: 13,
+    color: '#666',
+  },
 });
