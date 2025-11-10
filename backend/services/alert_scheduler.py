@@ -272,12 +272,32 @@ def start_scheduler():
         replace_existing=True
     )
     
+    # Weekly AI insights on Monday at 9:30 AM (after weekly summary)
+    scheduler.add_job(
+        send_weekly_ai_insights,
+        CronTrigger(day_of_week='mon', hour=9, minute=30),
+        id='weekly_ai_insights',
+        name='Send weekly AI insights',
+        replace_existing=True
+    )
+    
+    # Monthly AI insights on 1st of month at 10:00 AM
+    scheduler.add_job(
+        send_monthly_ai_insights,
+        CronTrigger(day=1, hour=10, minute=0),
+        id='monthly_ai_insights',
+        name='Send monthly AI insights',
+        replace_existing=True
+    )
+    
     scheduler.start()
     print("Alert scheduler started successfully")
     print("Jobs scheduled:")
     print("  - Daily stock alerts: 8:00 AM")
     print("  - Daily sales summary: 8:00 PM")
     print("  - Weekly summary: Monday 9:00 AM")
+    print("  - Weekly AI insights: Monday 9:30 AM")
+    print("  - Monthly AI insights: 1st of month 10:00 AM")
 
 def stop_scheduler():
     """Stop the scheduler"""
