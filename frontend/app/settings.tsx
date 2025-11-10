@@ -203,19 +203,6 @@ export default function SettingsScreen() {
             />
             <Text style={styles.hint}>Incluye el código de país (ej: +593)</Text>
           </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email de Alertas</Text>
-            <TextInput
-              style={styles.input}
-              value={alertEmail}
-              onChangeText={setAlertEmail}
-              placeholder="tu-email@ejemplo.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              editable={alertsEnabled}
-            />
-          </View>
         </View>
 
         {/* Alert Types */}
