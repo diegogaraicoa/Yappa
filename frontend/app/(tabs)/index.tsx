@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,13 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { api } from '../../utils/api';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const [alertCount, setAlertCount] = useState(0);
 
   const handleLogout = () => {
     Alert.alert(
