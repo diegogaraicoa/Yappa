@@ -244,19 +244,51 @@ export default function ExpenseScreen() {
               >
                 <Text style={[styles.modalItemText, { color: '#666' }]}>Ninguno</Text>
               </TouchableOpacity>
-              {suppliers.map((supplier) => (
-                <TouchableOpacity
-                  key={supplier._id}
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setSelectedSupplier(supplier);
-                    setShowSupplierModal(false);
-                  }}
-                >
-                  <Text style={styles.modalItemText}>{supplier.name}</Text>
-                  <Text style={styles.modalItemSubtext}>{supplier.phone}</Text>
-                </TouchableOpacity>
-              ))}
+              {suppliers.length === 0 ? (
+                <View style={styles.emptyModalState}>
+                  <Ionicons name="business-outline" size={64} color="#ccc" />
+                  <Text style={styles.emptyModalTitle}>No hay proveedores</Text>
+                  <Text style={styles.emptyModalText}>
+                    Agrega tu primer proveedor para comenzar
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.createNewButton}
+                    onPress={() => {
+                      setShowSupplierModal(false);
+                      router.push('/suppliers');
+                    }}
+                  >
+                    <Ionicons name="add-circle" size={20} color="#fff" />
+                    <Text style={styles.createNewButtonText}>Crear Nuevo Proveedor</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  {suppliers.map((supplier) => (
+                    <TouchableOpacity
+                      key={supplier._id}
+                      style={styles.modalItem}
+                      onPress={() => {
+                        setSelectedSupplier(supplier);
+                        setShowSupplierModal(false);
+                      }}
+                    >
+                      <Text style={styles.modalItemText}>{supplier.name}</Text>
+                      <Text style={styles.modalItemSubtext}>{supplier.phone}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity
+                    style={styles.createNewButtonBottom}
+                    onPress={() => {
+                      setShowSupplierModal(false);
+                      router.push('/suppliers');
+                    }}
+                  >
+                    <Ionicons name="add-circle" size={20} color="#f44336" />
+                    <Text style={styles.createNewButtonBottomText}>Agregar Nuevo Proveedor</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </ScrollView>
           </View>
         </View>
