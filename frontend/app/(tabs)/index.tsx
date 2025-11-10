@@ -98,6 +98,26 @@ export default function HomeScreen() {
         <Text style={styles.welcomeText}>Bienvenido</Text>
         <Text style={styles.emailText}>{user?.email}</Text>
 
+        {alertCount > 0 && (
+          <TouchableOpacity 
+            style={styles.alertBanner}
+            onPress={() => router.push('/alerts')}
+          >
+            <View style={styles.alertBannerLeft}>
+              <Ionicons name="warning" size={24} color="#FF9800" />
+              <View style={styles.alertBannerText}>
+                <Text style={styles.alertBannerTitle}>¡Alertas de Stock!</Text>
+                <Text style={styles.alertBannerSubtitle}>
+                  {alertCount} producto{alertCount !== 1 ? 's' : ''} con stock bajo
+                </Text>
+              </View>
+            </View>
+            <View style={styles.alertBadgeHome}>
+              <Text style={styles.alertBadgeTextHome}>{alertCount}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         <View style={styles.grid}>
           {menuItems.map((item) => (
             <TouchableOpacity
