@@ -157,6 +157,8 @@ export default function InventoryScreen() {
         cost: '',
         description: '',
         category_id: '',
+        min_stock_alert: '10',
+        alert_enabled: true,
       });
       loadProducts();
     } catch (error: any) {
