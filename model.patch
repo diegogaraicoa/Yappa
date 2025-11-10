@@ -1,197 +1,364 @@
-diff --git a/frontend/app/(tabs)/explore.tsx b/frontend/app/(tabs)/explore.tsx
-index a64dc4b..99a5f86 100644
---- a/frontend/app/(tabs)/explore.tsx
-+++ b/frontend/app/(tabs)/explore.tsx
-@@ -116,4 +116,18 @@ const styles = StyleSheet.create({
-     marginTop: 12,
-     textAlign: 'center',
-   },
-+  badge: {
-+    position: 'absolute',
-+    top: 8,
-+    right: 8,
-+    backgroundColor: '#9C27B0',
-+    borderRadius: 12,
-+    paddingHorizontal: 8,
-+    paddingVertical: 4,
-+  },
-+  badgeText: {
-+    fontSize: 10,
-+    color: '#fff',
-+    fontWeight: '600',
-+  },
- });
+diff --git a/additional_alerts_test.py b/additional_alerts_test.py
+new file mode 100644
+index 0000000..94f788a
+--- /dev/null
++++ b/additional_alerts_test.py
+@@ -0,0 +1,125 @@
++#!/usr/bin/env python3
++"""
++Additional Edge Case Tests for Stock Alerts API
++"""
++
++import requests
++import json
++from datetime import datetime
++
++BASE_URL = "https://barrioshop.preview.emergentagent.com/api"
++
++def log(message, level="INFO"):
++    timestamp = datetime.now().strftime("%H:%M:%S")
++    print(f"[{timestamp}] {level}: {message}")
++
++def test_edge_cases():
++    """Test edge cases for the alerts API"""
++    log("🔍 Testing Edge Cases for Alerts API")
++    log("=" * 40)
++    
++    # Register user
++    user_data = {
++        "email": f"edgetest_{datetime.now().strftime('%Y%m%d_%H%M%S')}@test.com",
++        "password": "TestPassword123!",
++        "store_name": "Edge Test Store"
++    }
++    
++    response = requests.post(f"{BASE_URL}/auth/register", json=user_data)
++    if response.status_code != 200:
++        log("❌ Failed to register user", "ERROR")
++        return False
++    
++    token = response.json()["access_token"]
++    headers = {"Authorization": f"Bearer {token}"}
++    
++    # Test 1: Empty store (no products)
++    log("Test 1: Empty store - should return empty alerts")
++    response = requests.get(f"{BASE_URL}/alerts/low-stock", headers=headers)
++    if response.status_code == 200 and len(response.json()) == 0:
++        log("✅ Empty store returns empty alerts correctly")
++    else:
++        log("❌ Empty store test failed", "ERROR")
++        return False
++    
++    # Test 2: Product with decimal quantities
++    log("Test 2: Decimal quantities")
++    product_data = {
++        "name": "Producto Decimal",
++        "quantity": 2.5,
++        "price": 10.0,
++        "cost": 5.0
++    }
++    
++    response = requests.post(f"{BASE_URL}/products", json=product_data, headers=headers)
++    if response.status_code != 200:
++        log("❌ Failed to create decimal product", "ERROR")
++        return False
++    
++    product = response.json()
++    
++    # Set alert threshold higher than current quantity
++    alert_response = requests.put(
++        f"{BASE_URL}/products/{product['_id']}/alert-settings",
++        params={"min_stock_alert": 3.0, "alert_enabled": True},
++        headers=headers
++    )
++    
++    if alert_response.status_code == 200:
++        # Check alerts
++        alerts_response = requests.get(f"{BASE_URL}/alerts/low-stock", headers=headers)
++        alerts = alerts_response.json()
++        
++        if len(alerts) == 1 and alerts[0]['alert_level'] == 'warning':
++            log("✅ Decimal quantities handled correctly")
++        else:
++            log("❌ Decimal quantities test failed", "ERROR")
++            return False
++    
++    # Test 3: Very high threshold
++    log("Test 3: Very high alert threshold")
++    high_threshold_response = requests.put(
++        f"{BASE_URL}/products/{product['_id']}/alert-settings",
++        params={"min_stock_alert": 1000.0, "alert_enabled": True},
++        headers=headers
++    )
++    
++    if high_threshold_response.status_code == 200:
++        alerts_response = requests.get(f"{BASE_URL}/alerts/low-stock", headers=headers)
++        alerts = alerts_response.json()
++        
++        if len(alerts) == 1 and alerts[0]['alert_level'] == 'warning':
++            log("✅ High threshold handled correctly")
++        else:
++            log("❌ High threshold test failed", "ERROR")
++            return False
++    
++    # Test 4: Zero threshold
++    log("Test 4: Zero alert threshold")
++    zero_threshold_response = requests.put(
++        f"{BASE_URL}/products/{product['_id']}/alert-settings",
++        params={"min_stock_alert": 0.0, "alert_enabled": True},
++        headers=headers
++    )
++    
++    if zero_threshold_response.status_code == 200:
++        alerts_response = requests.get(f"{BASE_URL}/alerts/low-stock", headers=headers)
++        alerts = alerts_response.json()
++        
++        # Should not be in alerts since quantity (2.5) > threshold (0.0)
++        if len(alerts) == 0:
++            log("✅ Zero threshold handled correctly")
++        else:
++            log("❌ Zero threshold test failed", "ERROR")
++            return False
++    
++    # Cleanup
++    requests.delete(f"{BASE_URL}/products/{product['_id']}", headers=headers)
++    
++    log("=" * 40)
++    log("🎉 All edge case tests passed!")
++    return True
++
++if __name__ == "__main__":
++    success = test_edge_cases()
++    exit(0 if success else 1)
+\ No newline at end of file
 diff --git a/model.patch b/model.patch
-index 824c666..e69de29 100644
+index be4d726..2e0ea3c 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,169 +0,0 @@
+@@ -1,197 +0,0 @@
+-diff --git a/frontend/app/(tabs)/explore.tsx b/frontend/app/(tabs)/explore.tsx
+-index a64dc4b..99a5f86 100644
+---- a/frontend/app/(tabs)/explore.tsx
+-+++ b/frontend/app/(tabs)/explore.tsx
+-@@ -116,4 +116,18 @@ const styles = StyleSheet.create({
+-     marginTop: 12,
+-     textAlign: 'center',
+-   },
+-+  badge: {
+-+    position: 'absolute',
+-+    top: 8,
+-+    right: 8,
+-+    backgroundColor: '#9C27B0',
+-+    borderRadius: 12,
+-+    paddingHorizontal: 8,
+-+    paddingVertical: 4,
+-+  },
+-+  badgeText: {
+-+    fontSize: 10,
+-+    color: '#fff',
+-+    fontWeight: '600',
+-+  },
+- });
 -diff --git a/model.patch b/model.patch
--index ef039fb..e69de29 100644
+-index 824c666..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,164 +0,0 @@
---diff --git a/frontend/app/auth.tsx b/frontend/app/auth.tsx
---index 8891137..edc372c 100644
------ a/frontend/app/auth.tsx
---+++ b/frontend/app/auth.tsx
---@@ -123,6 +123,15 @@ export default function AuthScreen() {
---               {isLogin ? '\u00bfNo tienes cuenta? Reg\u00edstrate' : '\u00bfYa tienes cuenta? Inicia sesi\u00f3n'}
---             </Text>
---           </TouchableOpacity>
---+
---+          {isLogin && (
---+            <TouchableOpacity
---+              style={styles.forgotButton}
---+              onPress={() => router.push('/forgot-password')}
---+            >
---+              <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
---+            </TouchableOpacity>
---+          )}
---         </View>
---       </ScrollView>
---     </KeyboardAvoidingView>
---@@ -200,4 +209,13 @@ const styles = StyleSheet.create({
---     color: '#4CAF50',
---     fontSize: 16,
---   },
---+  forgotButton: {
---+    marginTop: 16,
---+    alignItems: 'center',
---+  },
---+  forgotText: {
---+    color: '#666',
---+    fontSize: 14,
---+    textDecorationLine: 'underline',
---+  },
--- });
+-@@ -1,169 +0,0 @@
 --diff --git a/model.patch b/model.patch
---index b262414..e69de29 100644
+--index ef039fb..e69de29 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,125 +0,0 @@
----diff --git a/frontend/app/(tabs)/explore.tsx b/frontend/app/(tabs)/explore.tsx
----index 460834b..d00fce9 100644
------- a/frontend/app/(tabs)/explore.tsx
----+++ b/frontend/app/(tabs)/explore.tsx
----@@ -1,13 +1,33 @@
---- import React from 'react';
---- import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
---- import { Ionicons } from '@expo/vector-icons';
----+import { useRouter } from 'expo-router';
---- 
---- export default function ExploreScreen() {
----+  const router = useRouter();
+--@@ -1,164 +0,0 @@
+---diff --git a/frontend/app/auth.tsx b/frontend/app/auth.tsx
+---index 8891137..edc372c 100644
+------ a/frontend/app/auth.tsx
+---+++ b/frontend/app/auth.tsx
+---@@ -123,6 +123,15 @@ export default function AuthScreen() {
+---               {isLogin ? '\u00bfNo tienes cuenta? Reg\u00edstrate' : '\u00bfYa tienes cuenta? Inicia sesi\u00f3n'}
+---             </Text>
+---           </TouchableOpacity>
 ---+
----   const exploreItems = [
-----    { id: 1, title: 'Clientes', icon: 'people', color: '#4CAF50' },
-----    { id: 2, title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
-----    { id: 3, title: 'Empleados', icon: 'person', color: '#2196F3' },
-----    { id: 4, title: 'Categor\u00edas', icon: 'list', color: '#9C27B0' },
----+    {
----+      id: 1,
----+      title: 'Clientes',
----+      icon: 'people',
----+      color: '#4CAF50',
----+      route: '/customers',
----+    },
----+    {
----+      id: 2,
----+      title: 'Proveedores',
----+      icon: 'briefcase',
----+      color: '#FF9800',
----+      route: '/suppliers',
----+    },
----+    {
----+      id: 3,
----+      title: 'Empleados',
----+      icon: 'person',
----+      color: '#2196F3',
----+      route: '/employees',
----+    },
----   ];
---- 
----   return (
----@@ -18,16 +38,16 @@ export default function ExploreScreen() {
---- 
----         <View style={styles.grid}>
----           {exploreItems.map((item) => (
-----            <TouchableOpacity key={item.id} style={styles.card}>
+---+          {isLogin && (
 ---+            <TouchableOpacity
----+              key={item.id}
----+              style={styles.card}
----+              onPress={() => router.push(item.route as any)}
+---+              style={styles.forgotButton}
+---+              onPress={() => router.push('/forgot-password')}
 ---+            >
----               <Ionicons name={item.icon as any} size={40} color={item.color} />
----               <Text style={styles.cardTitle}>{item.title}</Text>
----             </TouchableOpacity>
----           ))}
+---+              <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+---+            </TouchableOpacity>
+---+          )}
 ---         </View>
-----
-----        <View style={styles.infoCard}>
-----          <Text style={styles.infoText}>Pr\u00f3ximamente disponible</Text>
-----        </View>
----       </View>
----     </ScrollView>
----   );
----@@ -77,16 +97,4 @@ const styles = StyleSheet.create({
----     marginTop: 12,
----     textAlign: 'center',
+---       </ScrollView>
+---     </KeyboardAvoidingView>
+---@@ -200,4 +209,13 @@ const styles = StyleSheet.create({
+---     color: '#4CAF50',
+---     fontSize: 16,
 ---   },
-----  infoCard: {
-----    backgroundColor: '#E8F5E9',
-----    borderRadius: 12,
-----    padding: 16,
-----    marginTop: 24,
-----    alignItems: 'center',
-----  },
-----  infoText: {
-----    fontSize: 16,
-----    color: '#4CAF50',
-----    fontWeight: '600',
-----  },
+---+  forgotButton: {
+---+    marginTop: 16,
+---+    alignItems: 'center',
+---+  },
+---+  forgotText: {
+---+    color: '#666',
+---+    fontSize: 14,
+---+    textDecorationLine: 'underline',
+---+  },
 --- });
 ---diff --git a/model.patch b/model.patch
----index f61acc1..e69de29 100644
+---index b262414..e69de29 100644
 ------ a/model.patch
 ---+++ b/model.patch
----@@ -1,39 +0,0 @@
-----diff --git a/frontend/app/debts.tsx b/frontend/app/debts.tsx
-----index 9ca0219..5179bee 100644
-------- a/frontend/app/debts.tsx
-----+++ b/frontend/app/debts.tsx
-----@@ -12,7 +12,6 @@ import { useRouter } from 'expo-router';
+---@@ -1,125 +0,0 @@
+----diff --git a/frontend/app/(tabs)/explore.tsx b/frontend/app/(tabs)/explore.tsx
+----index 460834b..d00fce9 100644
+------- a/frontend/app/(tabs)/explore.tsx
+----+++ b/frontend/app/(tabs)/explore.tsx
+----@@ -1,13 +1,33 @@
+---- import React from 'react';
+---- import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 ---- import { Ionicons } from '@expo/vector-icons';
----- import api from '../utils/api';
----- import { format } from 'date-fns';
------import { es } from 'date-fns/locale';
+----+import { useRouter } from 'expo-router';
 ---- 
----- export default function DebtsScreen() {
-----   const router = useRouter();
-----@@ -152,7 +151,7 @@ export default function DebtsScreen() {
-----                 <Text style={styles.debtAmount}>${debt.amount.toFixed(2)}</Text>
-----               </View>
-----               <Text style={styles.debtDate}>
------                {format(new Date(debt.date), "d 'de' MMMM, yyyy", { locale: es })}
-----+                {format(new Date(debt.date), "d 'de' MMMM, yyyy")}
-----               </Text>
-----               {debt.notes && <Text style={styles.debtNotes}>{debt.notes}</Text>}
-----               <TouchableOpacity
+---- export default function ExploreScreen() {
+----+  const router = useRouter();
+----+
+----   const exploreItems = [
+-----    { id: 1, title: 'Clientes', icon: 'people', color: '#4CAF50' },
+-----    { id: 2, title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
+-----    { id: 3, title: 'Empleados', icon: 'person', color: '#2196F3' },
+-----    { id: 4, title: 'Categor\u00edas', icon: 'list', color: '#9C27B0' },
+----+    {
+----+      id: 1,
+----+      title: 'Clientes',
+----+      icon: 'people',
+----+      color: '#4CAF50',
+----+      route: '/customers',
+----+    },
+----+    {
+----+      id: 2,
+----+      title: 'Proveedores',
+----+      icon: 'briefcase',
+----+      color: '#FF9800',
+----+      route: '/suppliers',
+----+    },
+----+    {
+----+      id: 3,
+----+      title: 'Empleados',
+----+      icon: 'person',
+----+      color: '#2196F3',
+----+      route: '/employees',
+----+    },
+----   ];
+---- 
+----   return (
+----@@ -18,16 +38,16 @@ export default function ExploreScreen() {
+---- 
+----         <View style={styles.grid}>
+----           {exploreItems.map((item) => (
+-----            <TouchableOpacity key={item.id} style={styles.card}>
+----+            <TouchableOpacity
+----+              key={item.id}
+----+              style={styles.card}
+----+              onPress={() => router.push(item.route as any)}
+----+            >
+----               <Ionicons name={item.icon as any} size={40} color={item.color} />
+----               <Text style={styles.cardTitle}>{item.title}</Text>
+----             </TouchableOpacity>
+----           ))}
+----         </View>
+-----
+-----        <View style={styles.infoCard}>
+-----          <Text style={styles.infoText}>Pr\u00f3ximamente disponible</Text>
+-----        </View>
+----       </View>
+----     </ScrollView>
+----   );
+----@@ -77,16 +97,4 @@ const styles = StyleSheet.create({
+----     marginTop: 12,
+----     textAlign: 'center',
+----   },
+-----  infoCard: {
+-----    backgroundColor: '#E8F5E9',
+-----    borderRadius: 12,
+-----    padding: 16,
+-----    marginTop: 24,
+-----    alignItems: 'center',
+-----  },
+-----  infoText: {
+-----    fontSize: 16,
+-----    color: '#4CAF50',
+-----    fontWeight: '600',
+-----  },
+---- });
 ----diff --git a/model.patch b/model.patch
-----index 0ea3ed7..e69de29 100644
+----index f61acc1..e69de29 100644
 ------- a/model.patch
 ----+++ b/model.patch
-----@@ -1,13 +0,0 @@
------diff --git a/frontend/app/(tabs)/index.tsx b/frontend/app/(tabs)/index.tsx
------index c371dc6..66df22f 100644
--------- a/frontend/app/(tabs)/index.tsx
------+++ b/frontend/app/(tabs)/index.tsx
------@@ -85,7 +85,7 @@ export default function HomeScreen() {
------             <TouchableOpacity
------               key={item.id}
------               style={[styles.menuCard, { borderColor: item.color }]}
-------              onPress={item.action || (() => Alert.alert('Pr\u00f3ximamente', `${item.title} estar\u00e1 disponible pronto`))}
------+              onPress={item.action}
------             >
------               <Ionicons name={item.icon as any} size={48} color={item.color} />
------               <Text style={[styles.menuTitle, { color: item.color }]}>{item.title}</Text>
+----@@ -1,39 +0,0 @@
+-----diff --git a/frontend/app/debts.tsx b/frontend/app/debts.tsx
+-----index 9ca0219..5179bee 100644
+-------- a/frontend/app/debts.tsx
+-----+++ b/frontend/app/debts.tsx
+-----@@ -12,7 +12,6 @@ import { useRouter } from 'expo-router';
+----- import { Ionicons } from '@expo/vector-icons';
+----- import api from '../utils/api';
+----- import { format } from 'date-fns';
+------import { es } from 'date-fns/locale';
+----- 
+----- export default function DebtsScreen() {
+-----   const router = useRouter();
+-----@@ -152,7 +151,7 @@ export default function DebtsScreen() {
+-----                 <Text style={styles.debtAmount}>${debt.amount.toFixed(2)}</Text>
+-----               </View>
+-----               <Text style={styles.debtDate}>
+------                {format(new Date(debt.date), "d 'de' MMMM, yyyy", { locale: es })}
+-----+                {format(new Date(debt.date), "d 'de' MMMM, yyyy")}
+-----               </Text>
+-----               {debt.notes && <Text style={styles.debtNotes}>{debt.notes}</Text>}
+-----               <TouchableOpacity
+-----diff --git a/model.patch b/model.patch
+-----index 0ea3ed7..e69de29 100644
+-------- a/model.patch
+-----+++ b/model.patch
+-----@@ -1,13 +0,0 @@
+------diff --git a/frontend/app/(tabs)/index.tsx b/frontend/app/(tabs)/index.tsx
+------index c371dc6..66df22f 100644
+--------- a/frontend/app/(tabs)/index.tsx
+------+++ b/frontend/app/(tabs)/index.tsx
+------@@ -85,7 +85,7 @@ export default function HomeScreen() {
+------             <TouchableOpacity
+------               key={item.id}
+------               style={[styles.menuCard, { borderColor: item.color }]}
+-------              onPress={item.action || (() => Alert.alert('Pr\u00f3ximamente', `${item.title} estar\u00e1 disponible pronto`))}
+------+              onPress={item.action}
+------             >
+------               <Ionicons name={item.icon as any} size={48} color={item.color} />
+------               <Text style={[styles.menuTitle, { color: item.color }]}>{item.title}</Text>
+diff --git a/test_result.md b/test_result.md
+index 289fee1..01659d8 100644
+--- a/test_result.md
++++ b/test_result.md
+@@ -111,11 +111,14 @@ backend:
+     file: "/app/backend/server.py"
+     stuck_count: 0
+     priority: "high"
+-    needs_retesting: true
++    needs_retesting: false
+     status_history:
+       - working: true
+         agent: "main"
+         comment: "Endpoint /api/alerts/low-stock ya existente (líneas 775-790). Retorna productos con quantity <= min_stock_alert y alert_enabled=true. Incluye alert_level (critical/warning)."
++      - working: true
++        agent: "testing"
++        comment: "✅ COMPREHENSIVE TESTING COMPLETED: All 5 core tests passed + 4 edge cases validated. Authentication working correctly (401/403 for unauthorized). Alert logic verified: critical (qty=0), warning (qty>0 but <=threshold). Only alert_enabled=true products included. Response format correct with all required fields (_id, name, quantity, min_stock_alert, alert_level, alert_enabled). Edge cases tested: empty store, decimal quantities, high/zero thresholds. API is fully functional and robust."
+ 
+ frontend:
+   - task: "Pantalla de alertas (/alerts.tsx)"
+@@ -159,4 +162,6 @@ test_plan:
+ 
+ agent_communication:
+   - agent: "main"
+-    message: "He implementado la UI de alertas en app. Incluye: 1) Pantalla /alerts.tsx que muestra productos con stock bajo en cards con colores según nivel de alerta (crítico=rojo, warning=naranja), 2) Banner en Home que aparece cuando hay alertas y muestra el contador, 3) Pull-to-refresh y navegación. El backend ya tenía el endpoint funcionando. Necesito testing del backend primero para confirmar que el endpoint responde correctamente, luego testing frontend si el usuario lo aprueba."
+\ No newline at end of file
++    message: "He implementado la UI de alertas en app. Incluye: 1) Pantalla /alerts.tsx que muestra productos con stock bajo en cards con colores según nivel de alerta (crítico=rojo, warning=naranja), 2) Banner en Home que aparece cuando hay alertas y muestra el contador, 3) Pull-to-refresh y navegación. El backend ya tenía el endpoint funcionando. Necesito testing del backend primero para confirmar que el endpoint responde correctamente, luego testing frontend si el usuario lo aprueba."
++  - agent: "testing"
++    message: "✅ BACKEND TESTING COMPLETADO: El endpoint /api/alerts/low-stock está funcionando perfectamente. Realicé testing exhaustivo con 9 escenarios diferentes incluyendo casos edge. Todos los tests pasaron: autenticación requerida, lógica de alertas correcta (critical/warning), filtrado por alert_enabled, formato de respuesta válido, manejo de cantidades decimales, umbrales altos/bajos. El backend está listo para producción. Recomiendo proceder con testing frontend si el usuario lo solicita."
+\ No newline at end of file
