@@ -148,6 +148,8 @@ export default function InventoryScreen() {
         quantity: parseFloat(newProduct.quantity) || 0,
         price: parseFloat(newProduct.price),
         cost: parseFloat(newProduct.cost) || 0,
+        min_stock_alert: parseFloat(newProduct.min_stock_alert) || 10,
+        alert_enabled: newProduct.alert_enabled,
       });
       Alert.alert('Éxito', 'Producto creado correctamente');
       setShowProductModal(false);
