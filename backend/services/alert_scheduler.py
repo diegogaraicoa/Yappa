@@ -231,12 +231,12 @@ async def send_weekly_summary():
                     data
                 )
             
-            # Send Email
-            if user.get("alert_email"):
-                sendgrid_service.send_weekly_summary_email(
-                    user["alert_email"],
-                    data
-                )
+            # Email temporarily disabled
+            # if user.get("alert_email"):
+            #     sendgrid_service.send_weekly_summary_email(
+            #         user["alert_email"],
+            #         data
+            #     )
         
         print(f"[{datetime.now()}] Weekly summary sent")
     
