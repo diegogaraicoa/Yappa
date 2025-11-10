@@ -263,9 +263,9 @@ export default function SettingsScreen() {
 
         {/* Info Box */}
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle" size={24} color="#2196F3" />
+          <Ionicons name="logo-whatsapp" size={24} color="#25D366" />
           <Text style={styles.infoText}>
-            Las alertas incluyen: productos con stock bajo, resúmenes de ventas y gastos, 
+            Recibirás alertas por WhatsApp sobre: productos con stock bajo, resúmenes de ventas y gastos, 
             y recordatorios de deudas pendientes.
           </Text>
         </View>
