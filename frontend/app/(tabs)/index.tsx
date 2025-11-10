@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { api } from '../../utils/api';
+import api from '../../utils/api';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen() {
