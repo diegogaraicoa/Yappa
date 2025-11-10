@@ -20,7 +20,7 @@ export default function HomeScreen() {
 
   const fetchAlertCount = async () => {
     try {
-      const response = await api.get('/alerts/low-stock');
+      const response = await api.get('/api/alerts/low-stock');
       setAlertCount(response.data.length);
     } catch (error) {
       console.error('Error fetching alerts:', error);
