@@ -243,6 +243,122 @@ async def send_weekly_summary():
     except Exception as e:
         print(f"Error in weekly summary job: {str(e)}")
 
+async def send_weekly_ai_insights():
+    """Job: Send AI insights weekly on Monday"""
+    print(f"[{datetime.now()}] Running weekly AI insights job...")
+    
+    try:
+        from .ai_insights_service import ai_insights_service
+        
+        # Get all stores
+        stores = await db.users.find({}).to_list(10000)
+        
+        for user in stores:
+            store_id = str(user.get("store_id"))
+            if not store_id:
+                continue
+            
+            # Get last 7 days of data
+            seven_days_ago = datetime.now() - timedelta(days=7)
+            
+            sales = await db.sales.find({
+                "store_id": store_id,
+                "created_at": {"$gte": seven_days_ago}
+            }).to_list(1000)
+            
+            expenses = await db.expenses.find({
+                "store_id": store_id,
+                "created_at": {"$gte": seven_days_ago}
+            }).to_list(1000)
+            
+            products = await db.products.find({"store_id": store_id}).to_list(1000)
+            customers = await db.customers.find({"store_id": store_id}).to_list(1000)
+            
+            # Generate insights
+            insights = await ai_insights_service.generate_business_insights(
+                sales, expenses, products, customers
+            )
+            
+            if insights.get('success'):
+                # Save to DB
+                await db.insights.insert_one({
+                    "store_id": store_id,
+                    "user_id": user["_id"],
+                    "insights": insights.get('insights'),
+                    "metrics": insights.get('metrics'),
+                    "generated_at": datetime.now(),
+                    "period": "weekly",
+                    "period_days": 7
+                })
+                
+                # Send via WhatsApp
+                if user.get("whatsapp_number"):
+                    message = ai_insights_service.format_insights_for_whatsapp(insights)
+                    twilio_service.send_whatsapp(user["whatsapp_number"], message)
+        
+        print(f"[{datetime.now()}] Weekly AI insights sent")
+    
+    except Exception as e:
+        print(f"Error in weekly AI insights job: {str(e)}")
+
+async def send_monthly_ai_insights():
+    """Job: Send AI insights monthly on 1st"""
+    print(f"[{datetime.now()}] Running monthly AI insights job...")
+    
+    try:
+        from .ai_insights_service import ai_insights_service
+        
+        # Get all stores
+        stores = await db.users.find({}).to_list(10000)
+        
+        for user in stores:
+            store_id = str(user.get("store_id"))
+            if not store_id:
+                continue
+            
+            # Get last 30 days of data
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            
+            sales = await db.sales.find({
+                "store_id": store_id,
+                "created_at": {"$gte": thirty_days_ago}
+            }).to_list(1000)
+            
+            expenses = await db.expenses.find({
+                "store_id": store_id,
+                "created_at": {"$gte": thirty_days_ago}
+            }).to_list(1000)
+            
+            products = await db.products.find({"store_id": store_id}).to_list(1000)
+            customers = await db.customers.find({"store_id": store_id}).to_list(1000)
+            
+            # Generate insights
+            insights = await ai_insights_service.generate_business_insights(
+                sales, expenses, products, customers
+            )
+            
+            if insights.get('success'):
+                # Save to DB
+                await db.insights.insert_one({
+                    "store_id": store_id,
+                    "user_id": user["_id"],
+                    "insights": insights.get('insights'),
+                    "metrics": insights.get('metrics'),
+                    "generated_at": datetime.now(),
+                    "period": "monthly",
+                    "period_days": 30
+                })
+                
+                # Send via WhatsApp
+                if user.get("whatsapp_number"):
+                    message = ai_insights_service.format_insights_for_whatsapp(insights)
+                    twilio_service.send_whatsapp(user["whatsapp_number"], message)
+        
+        print(f"[{datetime.now()}] Monthly AI insights sent")
+    
+    except Exception as e:
+        print(f"Error in monthly AI insights job: {str(e)}")
+
 def start_scheduler():
     """Initialize and start the scheduler"""
     # Daily stock alerts at 8:00 AM
