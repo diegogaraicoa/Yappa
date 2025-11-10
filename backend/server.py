@@ -994,6 +994,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Initialize alert scheduler
+from services.alert_scheduler import start_scheduler, stop_scheduler
+
+@app.on_event("startup")
+async def startup_event():
+    """Start the alert scheduler when the app starts"""
+    start_scheduler()
+    logger.info("Application started successfully")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    """Cleanup on shutdown"""
+    stop_scheduler()
     client.close()
+    logger.info("Application shutdown complete")
