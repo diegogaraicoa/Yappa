@@ -98,14 +98,27 @@ export default function SaleScreen() {
         saleData.customer_name = `${selectedCustomer.name} ${selectedCustomer.lastname}`;
       }
 
-      await api.post('/api/sales', saleData);
-      Alert.alert('Éxito', 'Venta registrada correctamente', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      const response = await api.post('/api/sales', saleData);
+      console.log('Sale saved successfully:', response.data);
+      
+      // Show success message and navigate back immediately
+      Alert.alert(
+        '✅ Venta Guardada', 
+        'La venta se registró correctamente',
+        [
+          { 
+            text: 'OK', 
+            onPress: () => {
+              setLoading(false);
+              router.back();
+            }
+          }
+        ]
+      );
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Error al registrar la venta');
-    } finally {
+      console.error('Error saving sale:', error);
       setLoading(false);
+      Alert.alert('Error', error.response?.data?.detail || 'Error al registrar la venta');
     }
   };
 
