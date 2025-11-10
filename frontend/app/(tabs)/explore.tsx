@@ -30,6 +30,13 @@ export default function ExploreScreen() {
     },
     {
       id: 4,
+      title: 'Configuración',
+      icon: 'settings',
+      color: '#607D8B',
+      route: '/settings',
+    },
+    {
+      id: 5,
       title: 'Reportes IA',
       icon: 'bulb',
       color: '#9C27B0',
