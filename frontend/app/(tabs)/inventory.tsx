@@ -321,9 +321,20 @@ export default function InventoryScreen() {
                     </Text>
                   )}
                 </View>
-                <TouchableOpacity onPress={() => deleteProduct(product._id)}>
-                  <Ionicons name="trash-outline" size={20} color="#f44336" />
-                </TouchableOpacity>
+                <View style={styles.productActions}>
+                  <TouchableOpacity 
+                    onPress={() => openEditModal(product)}
+                    style={styles.actionIcon}
+                  >
+                    <Ionicons name="create-outline" size={20} color="#2196F3" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => deleteProduct(product._id)}
+                    style={styles.actionIcon}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#f44336" />
+                  </TouchableOpacity>
+                </View>
               </View>
               <View style={styles.productDetails}>
                 <View style={styles.productDetail}>
