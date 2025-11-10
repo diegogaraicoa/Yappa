@@ -163,5 +163,9 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "He implementado la UI de alertas en app. Incluye: 1) Pantalla /alerts.tsx que muestra productos con stock bajo en cards con colores según nivel de alerta (crítico=rojo, warning=naranja), 2) Banner en Home que aparece cuando hay alertas y muestra el contador, 3) Pull-to-refresh y navegación. El backend ya tenía el endpoint funcionando. Necesito testing del backend primero para confirmar que el endpoint responde correctamente, luego testing frontend si el usuario lo aprueba."
+  - agent: "testing_backend"
+    message: "Backend testing completado exitosamente. Endpoint /api/alerts/low-stock funcionando perfectamente con todos los casos de prueba pasados."
+  - agent: "main"
+    message: "Usuario aprobó testing frontend automático. Procedo con testing de: 1) Pantalla de alertas, 2) Banner en home, 3) Navegación. Usuario también solicitó agregar configuración de alertas en el formulario de productos."
   - agent: "testing"
     message: "✅ BACKEND TESTING COMPLETADO: El endpoint /api/alerts/low-stock está funcionando perfectamente. Realicé testing exhaustivo con 9 escenarios diferentes incluyendo casos edge. Todos los tests pasaron: autenticación requerida, lógica de alertas correcta (critical/warning), filtrado por alert_enabled, formato de respuesta válido, manejo de cantidades decimales, umbrales altos/bajos. El backend está listo para producción. Recomiendo proceder con testing frontend si el usuario lo solicita."
