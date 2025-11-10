@@ -62,6 +62,25 @@ export default function InsightsScreen() {
     }
   };
 
+  const sendToWhatsApp = async () => {
+    setSending(true);
+    try {
+      const response = await api.post('/api/insights/send-whatsapp');
+      Alert.alert(
+        '💬 Enviado a WhatsApp',
+        `Tu reporte fue enviado a ${response.data.whatsapp_number}. Revisa tu WhatsApp en unos segundos.`
+      );
+    } catch (error: any) {
+      console.error('Error sending to WhatsApp:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.detail || 'No se pudo enviar a WhatsApp. Verifica que tengas tu número configurado.'
+      );
+    } finally {
+      setSending(false);
+    }
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
     loadLatestInsight();
