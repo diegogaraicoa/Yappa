@@ -615,6 +615,13 @@ const styles = StyleSheet.create({
   productInfo: {
     flex: 1,
   },
+  productActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionIcon: {
+    padding: 4,
+  },
   productName: {
     fontSize: 16,
     fontWeight: '600',
