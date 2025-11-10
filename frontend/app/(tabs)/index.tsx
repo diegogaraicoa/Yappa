@@ -95,7 +95,14 @@ export default function HomeScreen() {
           <Ionicons name="storefront" size={24} color="#fff" />
           <Text style={styles.storeName}>{user?.store_name}</Text>
         </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+        <TouchableOpacity 
+          onPress={() => {
+            console.log('Logout button pressed');
+            handleLogout();
+          }} 
+          style={styles.logoutButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Ionicons name="log-out-outline" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
