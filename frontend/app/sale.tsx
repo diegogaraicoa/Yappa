@@ -374,20 +374,52 @@ export default function SaleScreen() {
               </Pressable>
             </View>
             <ScrollView>
-              {customers.map((customer) => (
-                <Pressable
-                  key={customer._id}
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setSelectedCustomer(customer);
-                    setShowCustomerModal(false);
-                  }}
-                >
-                  <Text style={styles.modalItemText}>
-                    {customer.name} {customer.lastname}
+              {customers.length === 0 ? (
+                <View style={styles.emptyModalState}>
+                  <Ionicons name="people-outline" size={64} color="#ccc" />
+                  <Text style={styles.emptyModalTitle}>No hay clientes</Text>
+                  <Text style={styles.emptyModalText}>
+                    Agrega tu primer cliente para comenzar
                   </Text>
-                </Pressable>
-              ))}
+                  <Pressable
+                    style={styles.createNewButton}
+                    onPress={() => {
+                      setShowCustomerModal(false);
+                      router.push('/customers');
+                    }}
+                  >
+                    <Ionicons name="add-circle" size={20} color="#fff" />
+                    <Text style={styles.createNewButtonText}>Crear Nuevo Cliente</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <>
+                  {customers.map((customer) => (
+                    <Pressable
+                      key={customer._id}
+                      style={styles.modalItem}
+                      onPress={() => {
+                        setSelectedCustomer(customer);
+                        setShowCustomerModal(false);
+                      }}
+                    >
+                      <Text style={styles.modalItemText}>
+                        {customer.name} {customer.lastname}
+                      </Text>
+                    </Pressable>
+                  ))}
+                  <Pressable
+                    style={styles.createNewButtonBottom}
+                    onPress={() => {
+                      setShowCustomerModal(false);
+                      router.push('/customers');
+                    }}
+                  >
+                    <Ionicons name="add-circle" size={20} color="#4CAF50" />
+                    <Text style={styles.createNewButtonBottomText}>Agregar Nuevo Cliente</Text>
+                  </Pressable>
+                </>
+              )}
             </ScrollView>
           </View>
         </View>
