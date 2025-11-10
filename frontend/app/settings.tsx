@@ -68,40 +68,10 @@ export default function SettingsScreen() {
   };
 
   const registerForPushNotifications = async () => {
-    if (!Device.isDevice) {
-      console.log('Must use physical device for Push Notifications');
-      return;
-    }
-
-    try {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        console.log('Failed to get push token for push notification!');
-        return;
-      }
-
-      const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: 'your-project-id' // This will use the default project ID from app.json
-      });
-      
-      const token = tokenData.data;
-      console.log('Expo Push Token:', token);
-      setExpoPushToken(token);
-      
-      // Save token to backend
-      await api.post('/api/user/notification-settings', {
-        expo_push_token: token
-      });
-    } catch (error) {
-      console.error('Error registering for push notifications:', error);
-    }
+    // Push notifications are not supported in Expo Go
+    // This functionality is disabled for now
+    console.log('Push notifications disabled (not supported in Expo Go)');
+    return;
   };
 
   const handleSave = async () => {
