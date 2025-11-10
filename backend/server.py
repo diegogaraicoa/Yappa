@@ -936,28 +936,29 @@ async def test_alerts(current_user: dict = Depends(get_current_user)):
         )
         results["whatsapp"] = whatsapp_result
     
-    # Test Email
-    if user.get("alert_email"):
-        email_result = sendgrid_service.send_email(
-            user["alert_email"],
-            "✅ Prueba de Alertas - BarrioShop",
-            """
-            <html>
-                <body style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h2 style="color: #4CAF50;">¡Prueba Exitosa! ✅</h2>
-                    <p>Tu email está configurado correctamente para recibir alertas de BarrioShop.</p>
-                    <p>Recibirás notificaciones sobre:</p>
-                    <ul>
-                        <li>📦 Stock bajo</li>
-                        <li>📊 Resumen diario de ventas</li>
-                        <li>📈 Resumen semanal</li>
-                        <li>💰 Recordatorios de deudas</li>
-                    </ul>
-                </body>
-            </html>
-            """
-        )
-        results["email"] = email_result
+    # Email temporarily disabled
+    # if user.get("alert_email"):
+    #     email_result = sendgrid_service.send_email(
+    #         user["alert_email"],
+    #         "✅ Prueba de Alertas - BarrioShop",
+    #         """
+    #         <html>
+    #             <body style="font-family: Arial, sans-serif; padding: 20px;">
+    #                 <h2 style="color: #4CAF50;">¡Prueba Exitosa! ✅</h2>
+    #                 <p>Tu email está configurado correctamente para recibir alertas de BarrioShop.</p>
+    #                 <p>Recibirás notificaciones sobre:</p>
+    #                 <ul>
+    #                     <li>📦 Stock bajo</li>
+    #                     <li>📊 Resumen diario de ventas</li>
+    #                     <li>📈 Resumen semanal</li>
+    #                     <li>💰 Recordatorios de deudas</li>
+    #                 </ul>
+    #             </body>
+    #         </html>
+    #         """
+    #     )
+    #     results["email"] = email_result
+    results["email"] = {"success": False, "error": "Email temporalmente desactivado"}
     
     # Test Push Notification
     if user.get("expo_push_token"):
