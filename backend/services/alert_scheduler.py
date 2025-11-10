@@ -66,12 +66,12 @@ async def send_daily_stock_alerts():
                                 product.get("min_stock_alert", 10)
                             )
                 
-                # Send Email (all products in one email)
-                if user.get("alert_email"):
-                    sendgrid_service.send_stock_alert_email(
-                        user["alert_email"],
-                        alert_products
-                    )
+                # Email temporarily disabled
+                # if user.get("alert_email"):
+                #     sendgrid_service.send_stock_alert_email(
+                #         user["alert_email"],
+                #         alert_products
+                #     )
                 
                 # Send Push Notifications
                 if user.get("expo_push_token"):
