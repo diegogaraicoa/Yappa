@@ -137,6 +137,37 @@ export default function InventoryScreen() {
     }
   };
 
+  const openEditModal = (product: any) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name,
+      quantity: product.quantity.toString(),
+      price: product.price.toString(),
+      cost: product.cost.toString(),
+      description: product.description || '',
+      category_id: product.category_id || '',
+      image: product.image || '',
+      min_stock_alert: (product.min_stock_alert || 10).toString(),
+      alert_enabled: product.alert_enabled !== false,
+    });
+    setShowProductModal(true);
+  };
+
+  const closeProductModal = () => {
+    setShowProductModal(false);
+    setEditingProduct(null);
+    setNewProduct({
+      name: '',
+      quantity: '',
+      price: '',
+      cost: '',
+      description: '',
+      category_id: '',
+      min_stock_alert: '10',
+      alert_enabled: true,
+    });
+  };
+
   const handleCreateProduct = async () => {
     if (!newProduct.name || !newProduct.price) {
       Alert.alert('Error', 'Ingresa al menos el nombre y precio del producto');
@@ -144,29 +175,29 @@ export default function InventoryScreen() {
     }
 
     try {
-      await api.post('/api/products', {
+      const productData = {
         ...newProduct,
         quantity: parseFloat(newProduct.quantity) || 0,
         price: parseFloat(newProduct.price),
         cost: parseFloat(newProduct.cost) || 0,
         min_stock_alert: parseFloat(newProduct.min_stock_alert) || 10,
         alert_enabled: newProduct.alert_enabled,
-      });
-      Alert.alert('Éxito', 'Producto creado correctamente');
-      setShowProductModal(false);
-      setNewProduct({
-        name: '',
-        quantity: '',
-        price: '',
-        cost: '',
-        description: '',
-        category_id: '',
-        min_stock_alert: '10',
-        alert_enabled: true,
-      });
+      };
+
+      if (editingProduct) {
+        // Actualizar producto existente
+        await api.put(`/api/products/${editingProduct._id}`, productData);
+        Alert.alert('Éxito', 'Producto actualizado correctamente');
+      } else {
+        // Crear nuevo producto
+        await api.post('/api/products', productData);
+        Alert.alert('Éxito', 'Producto creado correctamente');
+      }
+      
+      closeProductModal();
       loadProducts();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Error al crear producto');
+      Alert.alert('Error', error.response?.data?.detail || 'Error al guardar producto');
     }
   };
 
