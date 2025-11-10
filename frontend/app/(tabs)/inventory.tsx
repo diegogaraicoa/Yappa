@@ -393,6 +393,55 @@ export default function InventoryScreen() {
                 numberOfLines={3}
               />
 
+              <View style={styles.alertsSection}>
+                <View style={styles.alertsSectionHeader}>
+                  <Ionicons name="notifications" size={24} color="#FF9800" />
+                  <Text style={styles.alertsSectionTitle}>Configuración de Alertas</Text>
+                </View>
+                <Text style={styles.alertsSectionSubtitle}>
+                  Recibe notificaciones cuando el stock esté bajo
+                </Text>
+
+                <View style={styles.switchContainer}>
+                  <Text style={styles.switchLabel}>Activar alertas</Text>
+                  <Switch
+                    value={newProduct.alert_enabled}
+                    onValueChange={(value) =>
+                      setNewProduct({ ...newProduct, alert_enabled: value })
+                    }
+                    trackColor={{ false: '#ccc', true: '#4CAF50' }}
+                    thumbColor={newProduct.alert_enabled ? '#fff' : '#f4f3f4'}
+                  />
+                </View>
+
+                {newProduct.alert_enabled && (
+                  <View>
+                    <Text style={styles.inputLabel}>Stock mínimo para alerta</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={newProduct.min_stock_alert}
+                      onChangeText={(text) =>
+                        setNewProduct({ ...newProduct, min_stock_alert: text })
+                      }
+                      placeholder="10"
+                      keyboardType="numeric"
+                    />
+                    <View style={styles.alertLevelsInfo}>
+                      <View style={styles.alertLevelItem}>
+                        <View style={[styles.alertDot, { backgroundColor: '#FF9800' }]} />
+                        <Text style={styles.alertLevelText}>
+                          Advertencia: stock {'<='} mínimo
+                        </Text>
+                      </View>
+                      <View style={styles.alertLevelItem}>
+                        <View style={[styles.alertDot, { backgroundColor: '#f44336' }]} />
+                        <Text style={styles.alertLevelText}>Crítico: stock = 0</Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </View>
+
               <TouchableOpacity
                 style={styles.submitButton}
                 onPress={handleCreateProduct}
