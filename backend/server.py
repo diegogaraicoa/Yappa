@@ -881,18 +881,15 @@ class NotificationSettings(BaseModel):
 @api_router.get("/user/notification-settings")
 async def get_notification_settings(current_user: dict = Depends(get_current_user)):
     """Get user's notification settings"""
-    user = await db.users.find_one({"_id": ObjectId(current_user["user_id"])})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
+    # current_user is already the full user object from get_current_user
     return {
-        "whatsapp_number": user.get("whatsapp_number"),
-        "alert_email": user.get("alert_email"),
-        "expo_push_token": user.get("expo_push_token"),
-        "alerts_enabled": user.get("alerts_enabled", True),
-        "stock_alerts_enabled": user.get("stock_alerts_enabled", True),
-        "daily_summary_enabled": user.get("daily_summary_enabled", True),
-        "weekly_summary_enabled": user.get("weekly_summary_enabled", True),
+        "whatsapp_number": current_user.get("whatsapp_number"),
+        "alert_email": current_user.get("alert_email"),
+        "expo_push_token": current_user.get("expo_push_token"),
+        "alerts_enabled": current_user.get("alerts_enabled", True),
+        "stock_alerts_enabled": current_user.get("stock_alerts_enabled", True),
+        "daily_summary_enabled": current_user.get("daily_summary_enabled", True),
+        "weekly_summary_enabled": current_user.get("weekly_summary_enabled", True),
     }
 
 @api_router.post("/user/notification-settings")
@@ -904,12 +901,12 @@ async def update_notification_settings(
     update_data = settings.dict(exclude_unset=True)
     
     result = await db.users.update_one(
-        {"_id": ObjectId(current_user["user_id"])},
+        {"_id": current_user["_id"]},
         {"$set": update_data}
     )
     
-    if result.modified_count == 0:
-        raise HTTPException(status_code=400, detail="Failed to update settings")
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "Settings updated successfully"}
 
@@ -920,7 +917,8 @@ async def test_alerts(current_user: dict = Depends(get_current_user)):
     from services.sendgrid_service import sendgrid_service
     from services.expo_push_service import expo_push_service
     
-    user = await db.users.find_one({"_id": ObjectId(current_user["user_id"])})
+    # current_user is already the full user object
+    user = current_user
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
