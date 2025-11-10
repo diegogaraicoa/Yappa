@@ -102,10 +102,10 @@ export default function SettingsScreen() {
   };
 
   const handleTest = async () => {
-    if (!whatsappNumber && !alertEmail) {
+    if (!whatsappNumber) {
       Alert.alert(
         'Configuración Incompleta',
-        'Por favor configura al menos tu número de WhatsApp o email antes de enviar una prueba.'
+        'Por favor configura tu número de WhatsApp antes de enviar una prueba.'
       );
       return;
     }
@@ -115,29 +115,18 @@ export default function SettingsScreen() {
       const response = await api.post('/api/alerts/test');
       const results = response.data.results;
 
-      let message = 'Pruebas enviadas:\n\n';
-      
-      if (results.whatsapp) {
-        message += results.whatsapp.success 
-          ? '✅ WhatsApp: Enviado\n' 
-          : '❌ WhatsApp: Error\n';
+      // Only show WhatsApp result (email is disabled)
+      if (results.whatsapp && results.whatsapp.success) {
+        Alert.alert(
+          '🎉 Prueba Exitosa',
+          '✅ Mensaje enviado por WhatsApp.\n\nRevisa tu WhatsApp en los próximos segundos.'
+        );
+      } else {
+        Alert.alert(
+          'Error',
+          'No se pudo enviar el WhatsApp. Verifica que tu número esté correcto.'
+        );
       }
-      
-      if (results.email) {
-        message += results.email.success 
-          ? '✅ Email: Enviado\n' 
-          : '❌ Email: Error\n';
-      }
-      
-      if (results.push) {
-        message += results.push.success 
-          ? '✅ Push: Enviado\n' 
-          : '❌ Push: Error\n';
-      }
-
-      message += '\nRevisa tu WhatsApp y correo en los próximos segundos.';
-
-      Alert.alert('🎉 Prueba Enviada', message);
     } catch (error: any) {
       console.error('Error testing alerts:', error);
       Alert.alert('Error', 'No se pudo enviar la prueba. Verifica tu configuración.');
