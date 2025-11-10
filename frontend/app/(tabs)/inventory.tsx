@@ -634,10 +634,11 @@ const styles = StyleSheet.create({
   },
   productActions: {
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'center',
   },
   actionIcon: {
-    padding: 4,
+    padding: 8,
+    marginLeft: 8,
   },
   productName: {
     fontSize: 16,
