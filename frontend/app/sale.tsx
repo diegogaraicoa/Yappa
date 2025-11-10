@@ -101,20 +101,14 @@ export default function SaleScreen() {
       const response = await api.post('/api/sales', saleData);
       console.log('Sale saved successfully:', response.data);
       
-      // Show success message and navigate back immediately
-      Alert.alert(
-        '✅ Venta Guardada', 
-        'La venta se registró correctamente',
-        [
-          { 
-            text: 'OK', 
-            onPress: () => {
-              setLoading(false);
-              router.back();
-            }
-          }
-        ]
-      );
+      // Clear loading and navigate back BEFORE showing alert
+      setLoading(false);
+      router.back();
+      
+      // Show success message after navigation
+      setTimeout(() => {
+        Alert.alert('✅ Venta Guardada', 'La venta se registró correctamente');
+      }, 100);
     } catch (error: any) {
       console.error('Error saving sale:', error);
       setLoading(false);
