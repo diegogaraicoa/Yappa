@@ -111,11 +111,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Endpoint /api/alerts/low-stock ya existente (líneas 775-790). Retorna productos con quantity <= min_stock_alert y alert_enabled=true. Incluye alert_level (critical/warning)."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED: All 5 core tests passed + 4 edge cases validated. Authentication working correctly (401/403 for unauthorized). Alert logic verified: critical (qty=0), warning (qty>0 but <=threshold). Only alert_enabled=true products included. Response format correct with all required fields (_id, name, quantity, min_stock_alert, alert_level, alert_enabled). Edge cases tested: empty store, decimal quantities, high/zero thresholds. API is fully functional and robust."
 
 frontend:
   - task: "Pantalla de alertas (/alerts.tsx)"
