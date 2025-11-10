@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   ScrollView,
   TextInput,
   Alert,
@@ -101,14 +101,19 @@ export default function SaleScreen() {
       const response = await api.post('/api/sales', saleData);
       console.log('Sale saved successfully:', response.data);
       
-      // Clear loading and navigate back BEFORE showing alert
       setLoading(false);
-      router.back();
       
-      // Show success message after navigation
-      setTimeout(() => {
-        Alert.alert('✅ Venta Guardada', 'La venta se registró correctamente');
-      }, 100);
+      // Show success alert FIRST, then navigate after user dismisses it
+      Alert.alert(
+        '✅ Venta Guardada', 
+        'La venta se registró correctamente',
+        [
+          { 
+            text: 'OK', 
+            onPress: () => router.back()
+          }
+        ]
+      );
     } catch (error: any) {
       console.error('Error saving sale:', error);
       setLoading(false);
@@ -120,7 +125,6 @@ export default function SaleScreen() {
     setSelectedProducts([...selectedProducts, { ...product, saleQuantity: 1 }]);
     setShowProductModal(false);
     
-    // Calculate total
     const newTotal = [...selectedProducts, { ...product, saleQuantity: 1 }]
       .reduce((sum, p) => sum + (p.saleQuantity * p.price), 0);
     setTotal(newTotal.toString());
@@ -147,36 +151,40 @@ export default function SaleScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={styles.headerTitle}>Nueva Venta</Text>
         </View>
 
         <View style={styles.content}>
           <Text style={styles.questionText}>¿Cómo deseas registrar la venta?</Text>
-
-          <TouchableOpacity
-            style={[styles.optionCard, { borderColor: '#4CAF50' }]}
+          
+          <Pressable 
+            style={styles.optionButton}
             onPress={() => setWithInventory(true)}
           >
-            <Ionicons name="cube" size={48} color="#4CAF50" />
-            <Text style={[styles.optionTitle, { color: '#4CAF50' }]}>Con Inventario</Text>
-            <Text style={styles.optionDescription}>
-              Descuenta productos del inventario automáticamente
-            </Text>
-          </TouchableOpacity>
+            <Ionicons name="cube" size={32} color="#4CAF50" />
+            <View style={styles.optionTextContainer}>
+              <Text style={styles.optionTitle}>Con Inventario</Text>
+              <Text style={styles.optionDescription}>
+                Descuenta productos del inventario
+              </Text>
+            </View>
+          </Pressable>
 
-          <TouchableOpacity
-            style={[styles.optionCard, { borderColor: '#2196F3' }]}
+          <Pressable 
+            style={styles.optionButton}
             onPress={() => setWithInventory(false)}
           >
-            <Ionicons name="calculator" size={48} color="#2196F3" />
-            <Text style={[styles.optionTitle, { color: '#2196F3' }]}>Sin Inventario</Text>
-            <Text style={styles.optionDescription}>
-              Registra solo el monto de la venta
-            </Text>
-          </TouchableOpacity>
+            <Ionicons name="cash" size={32} color="#2196F3" />
+            <View style={styles.optionTextContainer}>
+              <Text style={styles.optionTitle}>Sin Inventario</Text>
+              <Text style={styles.optionDescription}>
+                Registro simple de ingreso
+              </Text>
+            </View>
+          </Pressable>
         </View>
       </View>
     );
@@ -188,64 +196,86 @@ export default function SaleScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <Pressable onPress={() => setWithInventory(null)} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
+        </Pressable>
         <Text style={styles.headerTitle}>
-          Venta {withInventory ? 'con' : 'sin'} Inventario
+          {withInventory ? 'Venta con Inventario' : 'Venta sin Inventario'}
         </Text>
       </View>
 
-      <ScrollView style={styles.scrollContent}>
+      <ScrollView style={styles.form}>
+        {/* Customer Selection */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Cliente</Text>
+          <Pressable 
+            style={styles.selectButton}
+            onPress={() => setShowCustomerModal(true)}
+          >
+            <Text style={styles.selectButtonText}>
+              {selectedCustomer 
+                ? `${selectedCustomer.name} ${selectedCustomer.lastname}`
+                : 'Seleccionar cliente (opcional)'}
+            </Text>
+            <Ionicons name="chevron-down" size={20} color="#666" />
+          </Pressable>
+        </View>
+
+        {/* Products (if with inventory) */}
         {withInventory && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Productos</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Productos *</Text>
             {selectedProducts.map((product, index) => (
-              <View key={index} style={styles.productItem}>
-                <View style={styles.productInfo}>
+              <View key={index} style={styles.selectedProduct}>
+                <View style={styles.productLeft}>
                   <Text style={styles.productName}>{product.name}</Text>
                   <Text style={styles.productPrice}>${product.price}</Text>
                 </View>
-                <View style={styles.productActions}>
+                <View style={styles.productRight}>
                   <TextInput
                     style={styles.quantityInput}
                     value={product.saleQuantity.toString()}
-                    onChangeText={(text) => updateProductQuantity(index, parseInt(text) || 1)}
+                    onChangeText={(text) => {
+                      const qty = parseFloat(text) || 1;
+                      updateProductQuantity(index, qty);
+                    }}
                     keyboardType="numeric"
                   />
-                  <TouchableOpacity onPress={() => removeProduct(index)}>
+                  <Pressable onPress={() => removeProduct(index)}>
                     <Ionicons name="close-circle" size={24} color="#f44336" />
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               </View>
             ))}
-            <TouchableOpacity
+            <Pressable 
               style={styles.addButton}
               onPress={() => setShowProductModal(true)}
             >
-              <Ionicons name="add-circle" size={24} color="#4CAF50" />
+              <Ionicons name="add-circle" size={20} color="#4CAF50" />
               <Text style={styles.addButtonText}>Agregar Producto</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         )}
 
-        <View style={styles.section}>
-          <Text style={styles.label}>Total (USD)</Text>
+        {/* Total */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Total *</Text>
           <TextInput
             style={styles.input}
             value={total}
             onChangeText={setTotal}
-            keyboardType="decimal-pad"
+            keyboardType="numeric"
             placeholder="0.00"
-            editable={!withInventory}
+            editable={!withInventory || selectedProducts.length === 0}
           />
         </View>
 
-        <View style={styles.section}>
+        {/* Payment Method */}
+        <View style={styles.inputGroup}>
           <Text style={styles.label}>Método de Pago</Text>
           <View style={styles.paymentMethods}>
             {paymentMethods.map((method) => (
-              <TouchableOpacity
+              <Pressable
                 key={method}
                 style={[
                   styles.paymentMethod,
@@ -261,63 +291,64 @@ export default function SaleScreen() {
                 >
                   {method}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </View>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Estado</Text>
-            <View style={styles.switchButtons}>
-              <TouchableOpacity
-                style={[styles.switchButton, paid && styles.switchButtonActive]}
-                onPress={() => setPaid(true)}
+        {/* Paid Status */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Estado</Text>
+          <View style={styles.paidToggle}>
+            <Pressable
+              style={[
+                styles.paidOption,
+                paid && styles.paidOptionActive,
+              ]}
+              onPress={() => setPaid(true)}
+            >
+              <Text
+                style={[
+                  styles.paidOptionText,
+                  paid && styles.paidOptionTextActive,
+                ]}
               >
-                <Text style={[styles.switchButtonText, paid && styles.switchButtonTextActive]}>
-                  Pagado
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.switchButton, !paid && styles.switchButtonActive]}
-                onPress={() => setPaid(false)}
+                Pagado
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.paidOption,
+                !paid && styles.paidOptionActive,
+              ]}
+              onPress={() => setPaid(false)}
+            >
+              <Text
+                style={[
+                  styles.paidOptionText,
+                  !paid && styles.paidOptionTextActive,
+                ]}
               >
-                <Text style={[styles.switchButtonText, !paid && styles.switchButtonTextActive]}>
-                  Por Cobrar
-                </Text>
-              </TouchableOpacity>
-            </View>
+                Por Cobrar
+              </Text>
+            </Pressable>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>Cliente (Opcional)</Text>
-          <TouchableOpacity
-            style={styles.customerButton}
-            onPress={() => setShowCustomerModal(true)}
-          >
-            <Text style={styles.customerButtonText}>
-              {selectedCustomer
-                ? `${selectedCustomer.name} ${selectedCustomer.lastname}`
-                : 'Seleccionar Cliente'}
-            </Text>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Notas (Opcional)</Text>
+        {/* Notes */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Notas</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
             value={notes}
             onChangeText={setNotes}
-            placeholder="Agregar notas..."
+            placeholder="Notas adicionales..."
             multiline
             numberOfLines={3}
           />
         </View>
 
-        <TouchableOpacity
+        <Pressable
           style={[styles.submitButton, loading && styles.submitButtonDisabled]}
           onPress={handleSubmit}
           disabled={loading}
@@ -325,22 +356,26 @@ export default function SaleScreen() {
           <Text style={styles.submitButtonText}>
             {loading ? 'Guardando...' : 'Guardar Venta'}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </ScrollView>
 
       {/* Customer Modal */}
-      <Modal visible={showCustomerModal} animationType="slide" transparent>
+      <Modal
+        visible={showCustomerModal}
+        animationType="slide"
+        transparent
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Seleccionar Cliente</Text>
-              <TouchableOpacity onPress={() => setShowCustomerModal(false)}>
+              <Pressable onPress={() => setShowCustomerModal(false)}>
                 <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
+              </Pressable>
             </View>
             <ScrollView>
               {customers.map((customer) => (
-                <TouchableOpacity
+                <Pressable
                   key={customer._id}
                   style={styles.modalItem}
                   onPress={() => {
@@ -351,8 +386,7 @@ export default function SaleScreen() {
                   <Text style={styles.modalItemText}>
                     {customer.name} {customer.lastname}
                   </Text>
-                  <Text style={styles.modalItemSubtext}>{customer.phone}</Text>
-                </TouchableOpacity>
+                </Pressable>
               ))}
             </ScrollView>
           </View>
@@ -360,31 +394,34 @@ export default function SaleScreen() {
       </Modal>
 
       {/* Product Modal */}
-      <Modal visible={showProductModal} animationType="slide" transparent>
+      <Modal
+        visible={showProductModal}
+        animationType="slide"
+        transparent
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Seleccionar Producto</Text>
-              <TouchableOpacity onPress={() => setShowProductModal(false)}>
+              <Pressable onPress={() => setShowProductModal(false)}>
                 <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
+              </Pressable>
             </View>
             <ScrollView>
               {products
                 .filter(p => !selectedProducts.find(sp => sp._id === p._id))
                 .map((product) => (
-                  <TouchableOpacity
+                  <Pressable
                     key={product._id}
                     style={styles.modalItem}
                     onPress={() => addProduct(product)}
                   >
                     <View>
                       <Text style={styles.modalItemText}>{product.name}</Text>
-                      <Text style={styles.modalItemSubtext}>
-                        Stock: {product.quantity} | ${product.price}
-                      </Text>
+                      <Text style={styles.modalItemSubtext}>${product.price}</Text>
                     </View>
-                  </TouchableOpacity>
+                    <Text style={styles.modalItemStock}>Stock: {product.quantity}</Text>
+                  </Pressable>
                 ))}
             </ScrollView>
           </View>
@@ -401,19 +438,20 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#4CAF50',
-    padding: 16,
-    paddingTop: 48,
+    padding: 20,
+    paddingTop: 50,
     flexDirection: 'row',
     alignItems: 'center',
   },
   backButton: {
+    marginRight: 16,
     padding: 8,
-    marginRight: 8,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
+    flex: 1,
   },
   content: {
     flex: 1,
@@ -421,48 +459,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   questionText: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
-    textAlign: 'center',
     marginBottom: 32,
+    textAlign: 'center',
   },
-  optionCard: {
+  optionButton: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
+    borderRadius: 12,
+    padding: 20,
     marginBottom: 16,
-    borderWidth: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
+  optionTextContainer: {
+    marginLeft: 16,
+    flex: 1,
+  },
   optionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
-    marginTop: 12,
+    color: '#333',
+    marginBottom: 4,
   },
   optionDescription: {
     fontSize: 14,
     color: '#666',
-    textAlign: 'center',
-    marginTop: 8,
   },
-  scrollContent: {
+  form: {
     flex: 1,
     padding: 20,
   },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
+  inputGroup: {
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
@@ -472,15 +507,76 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#ddd',
   },
   textArea: {
-    height: 100,
+    height: 80,
     textAlignVertical: 'top',
+  },
+  selectButton: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  selectButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  selectedProduct: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  productLeft: {
+    flex: 1,
+  },
+  productName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  productPrice: {
+    fontSize: 14,
+    color: '#666',
+  },
+  productRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  quantityInput: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 4,
+    padding: 8,
+    width: 60,
+    textAlign: 'center',
+    marginRight: 12,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 8,
+  },
+  addButtonText: {
+    fontSize: 16,
+    color: '#4CAF50',
+    fontWeight: '600',
+    marginLeft: 8,
   },
   paymentMethods: {
     flexDirection: 'row',
@@ -488,11 +584,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   paymentMethod: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#ddd',
   },
   paymentMethodActive: {
     backgroundColor: '#4CAF50',
@@ -506,115 +603,46 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
-  switchRow: {
+  paidToggle: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 12,
   },
-  switchButtons: {
-    flexDirection: 'row',
-    backgroundColor: '#e0e0e0',
+  paidOption: {
+    flex: 1,
+    paddingVertical: 12,
     borderRadius: 8,
-    padding: 4,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
-  switchButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  switchButtonActive: {
+  paidOptionActive: {
     backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
   },
-  switchButtonText: {
-    fontSize: 14,
+  paidOptionText: {
+    fontSize: 16,
     color: '#666',
   },
-  switchButtonTextActive: {
+  paidOptionTextActive: {
     color: '#fff',
     fontWeight: '600',
-  },
-  customerButton: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  customerButtonText: {
-    fontSize: 16,
-    color: '#333',
   },
   submitButton: {
     backgroundColor: '#4CAF50',
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 16,
     alignItems: 'center',
-    marginBottom: 32,
+    marginTop: 20,
+    marginBottom: 40,
   },
   submitButtonDisabled: {
-    opacity: 0.6,
+    backgroundColor: '#ccc',
   },
   submitButtonText: {
-    color: '#fff',
     fontSize: 18,
-    fontWeight: '600',
-  },
-  productItem: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  productInfo: {
-    flex: 1,
-  },
-  productName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  productPrice: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  productActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  quantityInput: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    padding: 8,
-    width: 60,
-    textAlign: 'center',
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  addButton: {
-    backgroundColor: '#E8F5E9',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  addButtonText: {
-    fontSize: 16,
-    color: '#4CAF50',
-    fontWeight: '600',
-    marginLeft: 8,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   modalContainer: {
     flex: 1,
@@ -625,8 +653,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '80%',
     padding: 20,
+    maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -642,16 +670,22 @@ const styles = StyleSheet.create({
   modalItem: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#f0f0f0',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   modalItemText: {
     fontSize: 16,
-    fontWeight: '600',
     color: '#333',
   },
   modalItemSubtext: {
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  modalItemStock: {
+    fontSize: 14,
+    color: '#4CAF50',
   },
 });
