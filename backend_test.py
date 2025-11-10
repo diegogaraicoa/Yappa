@@ -105,8 +105,9 @@ class AlertsAPITester:
         ]
         
         created_products = []
-        for product_data in test_products_data:
+        for i, product_data in enumerate(test_products_data):
             try:
+                # Create basic product
                 response = requests.post(
                     f"{self.base_url}/products",
                     json=product_data,
@@ -115,8 +116,31 @@ class AlertsAPITester:
                 
                 if response.status_code == 200:
                     product = response.json()
-                    created_products.append(product)
-                    self.log(f"✅ Created product: {product['name']} (qty: {product['quantity']}, alert: {product['alert_enabled']})")
+                    
+                    # Update alert settings using the alert settings endpoint
+                    alert_response = requests.put(
+                        f"{self.base_url}/products/{product['_id']}/alert-settings",
+                        params=alert_settings[i],
+                        headers=self.get_headers()
+                    )
+                    
+                    if alert_response.status_code == 200:
+                        # Get updated product to verify settings
+                        get_response = requests.get(
+                            f"{self.base_url}/products/{product['_id']}",
+                            headers=self.get_headers()
+                        )
+                        
+                        if get_response.status_code == 200:
+                            updated_product = get_response.json()
+                            created_products.append(updated_product)
+                            self.log(f"✅ Created product: {updated_product['name']} (qty: {updated_product['quantity']}, alert: {updated_product.get('alert_enabled', True)}, threshold: {updated_product.get('min_stock_alert', 10)})")
+                        else:
+                            created_products.append(product)
+                            self.log(f"⚠️ Created product but couldn't verify settings: {product['name']}")
+                    else:
+                        created_products.append(product)
+                        self.log(f"⚠️ Created product but couldn't update alert settings: {product['name']} - {alert_response.status_code}")
                 else:
                     self.log(f"❌ Failed to create product {product_data['name']}: {response.status_code}", "ERROR")
                     
