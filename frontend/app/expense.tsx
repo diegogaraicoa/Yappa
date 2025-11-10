@@ -84,14 +84,27 @@ export default function ExpenseScreen() {
         expenseData.supplier_name = selectedSupplier.name;
       }
 
-      await api.post('/api/expenses', expenseData);
-      Alert.alert('Éxito', 'Gasto registrado correctamente', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      const response = await api.post('/api/expenses', expenseData);
+      console.log('Expense saved successfully:', response.data);
+      
+      // Show success message and navigate back immediately
+      Alert.alert(
+        '✅ Gasto Guardado', 
+        'El gasto se registró correctamente',
+        [
+          { 
+            text: 'OK', 
+            onPress: () => {
+              setLoading(false);
+              router.back();
+            }
+          }
+        ]
+      );
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Error al registrar el gasto');
-    } finally {
+      console.error('Error saving expense:', error);
       setLoading(false);
+      Alert.alert('Error', error.response?.data?.detail || 'Error al registrar el gasto');
     }
   };
 
