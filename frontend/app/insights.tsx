@@ -18,6 +18,7 @@ export default function InsightsScreen() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [sending, setSending] = useState(false);
   const [latestInsight, setLatestInsight] = useState<any>(null);
 
   useEffect(() => {
