@@ -18,6 +18,21 @@ export default function HomeScreen() {
   const router = useRouter();
   const [alertCount, setAlertCount] = useState(0);
 
+  const fetchAlertCount = async () => {
+    try {
+      const response = await api.get('/alerts/low-stock');
+      setAlertCount(response.data.length);
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchAlertCount();
+    }, [])
+  );
+
   const handleLogout = () => {
     Alert.alert(
       'Cerrar Sesi\u00f3n',
