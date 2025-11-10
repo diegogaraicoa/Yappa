@@ -101,3 +101,62 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Implementar la UI de alertas en la app móvil para mostrar productos con stock bajo. Los usuarios deben poder ver alertas de productos que están por debajo de su umbral mínimo de stock, con información clara sobre el nivel de alerta (crítico o advertencia), y poder navegar fácilmente desde la pantalla de inicio."
+
+backend:
+  - task: "Endpoint de alertas de stock bajo"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Endpoint /api/alerts/low-stock ya existente (líneas 775-790). Retorna productos con quantity <= min_stock_alert y alert_enabled=true. Incluye alert_level (critical/warning)."
+
+frontend:
+  - task: "Pantalla de alertas (/alerts.tsx)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/alerts.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Nueva pantalla creada con: lista de productos con stock bajo, cards con colores según nivel (rojo=crítico, naranja=warning), imágenes, pull-to-refresh, estado vacío, navegación al inventario."
+  
+  - task: "Banner de alertas en Home"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/(tabs)/index.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Agregado banner visible en home cuando hay alertas. Muestra contador de alertas, es clickeable para ir a /alerts. Usa useFocusEffect para actualizar contador al volver a la pantalla."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Endpoint de alertas de stock bajo"
+    - "Pantalla de alertas (/alerts.tsx)"
+    - "Banner de alertas en Home"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "He implementado la UI de alertas en app. Incluye: 1) Pantalla /alerts.tsx que muestra productos con stock bajo en cards con colores según nivel de alerta (crítico=rojo, warning=naranja), 2) Banner en Home que aparece cuando hay alertas y muestra el contador, 3) Pull-to-refresh y navegación. El backend ya tenía el endpoint funcionando. Necesito testing del backend primero para confirmar que el endpoint responde correctamente, luego testing frontend si el usuario lo aprueba."
