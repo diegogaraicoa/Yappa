@@ -32,7 +32,7 @@ export default function AlertsScreen() {
 
   const fetchAlerts = async () => {
     try {
-      const response = await api.get('/alerts/low-stock');
+      const response = await api.get('/api/alerts/low-stock');
       setAlerts(response.data);
     } catch (error) {
       console.error('Error fetching alerts:', error);
