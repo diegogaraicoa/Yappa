@@ -775,14 +775,16 @@ async def delete_debt(debt_id: str, current_user: dict = Depends(get_current_use
 @api_router.get("/alerts/low-stock")
 async def get_low_stock_alerts(current_user: dict = Depends(get_current_user)):
     """Get all products with stock below their alert threshold"""
+    # Get all products for this store (alert_enabled defaults to True if not set)
     products = await db.products.find({
-        "store_id": current_user["store_id"],
-        "alert_enabled": True
+        "store_id": current_user["store_id"]
     }).to_list(1000)
     
     low_stock_products = []
     for product in products:
-        if product["quantity"] <= product.get("min_stock_alert", 10):
+        # Only include if alert_enabled is True or not set (default True)
+        alert_enabled = product.get("alert_enabled", True)
+        if alert_enabled and product["quantity"] <= product.get("min_stock_alert", 10):
             product["_id"] = str(product["_id"])
             product["alert_level"] = "critical" if product["quantity"] == 0 else "warning"
             low_stock_products.append(product)
