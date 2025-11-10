@@ -87,20 +87,14 @@ export default function ExpenseScreen() {
       const response = await api.post('/api/expenses', expenseData);
       console.log('Expense saved successfully:', response.data);
       
-      // Show success message and navigate back immediately
-      Alert.alert(
-        '✅ Gasto Guardado', 
-        'El gasto se registró correctamente',
-        [
-          { 
-            text: 'OK', 
-            onPress: () => {
-              setLoading(false);
-              router.back();
-            }
-          }
-        ]
-      );
+      // Clear loading and navigate back BEFORE showing alert
+      setLoading(false);
+      router.back();
+      
+      // Show success message after navigation
+      setTimeout(() => {
+        Alert.alert('✅ Gasto Guardado', 'El gasto se registró correctamente');
+      }, 100);
     } catch (error: any) {
       console.error('Error saving expense:', error);
       setLoading(false);
