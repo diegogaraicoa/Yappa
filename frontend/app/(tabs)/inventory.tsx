@@ -369,8 +369,10 @@ export default function InventoryScreen() {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Nuevo Producto</Text>
-              <TouchableOpacity onPress={() => setShowProductModal(false)}>
+              <Text style={styles.modalTitle}>
+                {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+              </Text>
+              <TouchableOpacity onPress={closeProductModal}>
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
