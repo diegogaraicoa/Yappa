@@ -136,17 +136,17 @@ async def send_daily_sales_summary():
                     total_expenses
                 )
             
-            # Send Email
-            if user.get("alert_email"):
-                sendgrid_service.send_daily_sales_email(
-                    user["alert_email"],
-                    {
-                        "date": today.strftime("%Y-%m-%d"),
-                        "total_sales": total_sales,
-                        "num_sales": len(sales),
-                        "total_expenses": total_expenses
-                    }
-                )
+            # Email temporarily disabled
+            # if user.get("alert_email"):
+            #     sendgrid_service.send_daily_sales_email(
+            #         user["alert_email"],
+            #         {
+            #             "date": today.strftime("%Y-%m-%d"),
+            #             "total_sales": total_sales,
+            #             "num_sales": len(sales),
+            #             "total_expenses": total_expenses
+            #         }
+            #     )
             
             # Send Push
             if user.get("expo_push_token"):
