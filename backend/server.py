@@ -975,6 +975,107 @@ async def test_alerts(current_user: dict = Depends(get_current_user)):
         "results": results
     }
 
+# ==================== AI INSIGHTS ====================
+
+@api_router.post("/insights/generate")
+async def generate_insights(current_user: dict = Depends(get_current_user)):
+    """Generate AI-powered business insights"""
+    from services.ai_insights_service import ai_insights_service
+    from datetime import datetime, timedelta
+    
+    try:
+        store_id = str(current_user.get("store_id"))
+        
+        # Get last 30 days of data
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        
+        # Fetch sales data
+        sales = await db.sales.find({
+            "store_id": store_id,
+            "created_at": {"$gte": thirty_days_ago}
+        }).to_list(1000)
+        
+        # Fetch expenses data
+        expenses = await db.expenses.find({
+            "store_id": store_id,
+            "created_at": {"$gte": thirty_days_ago}
+        }).to_list(1000)
+        
+        # Fetch products
+        products = await db.products.find({
+            "store_id": store_id
+        }).to_list(1000)
+        
+        # Fetch customers
+        customers = await db.customers.find({
+            "store_id": store_id
+        }).to_list(1000)
+        
+        # Generate insights
+        insights = await ai_insights_service.generate_business_insights(
+            sales, expenses, products, customers
+        )
+        
+        if not insights.get('success'):
+            raise HTTPException(status_code=500, detail=insights.get('error', 'Error generating insights'))
+        
+        # Save to database
+        insight_doc = {
+            "store_id": store_id,
+            "user_id": current_user["_id"],
+            "insights": insights.get('insights'),
+            "metrics": insights.get('metrics'),
+            "generated_at": datetime.now(),
+            "period_days": 30
+        }
+        
+        result = await db.insights.insert_one(insight_doc)
+        insight_doc["_id"] = str(result.inserted_id)
+        
+        return insight_doc
+    
+    except Exception as e:
+        logger.error(f"Error generating insights: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/insights/latest")
+async def get_latest_insight(current_user: dict = Depends(get_current_user)):
+    """Get the most recent insight report"""
+    store_id = str(current_user.get("store_id"))
+    
+    insight = await db.insights.find_one(
+        {"store_id": store_id},
+        sort=[("generated_at", -1)]
+    )
+    
+    if not insight:
+        raise HTTPException(status_code=404, detail="No insights found. Generate your first report!")
+    
+    insight["_id"] = str(insight["_id"])
+    insight["user_id"] = str(insight["user_id"])
+    
+    return insight
+
+@api_router.get("/insights/history")
+async def get_insights_history(
+    limit: int = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get historical insight reports"""
+    store_id = str(current_user.get("store_id"))
+    
+    insights = await db.insights.find(
+        {"store_id": store_id},
+        sort=[("generated_at", -1)],
+        limit=limit
+    ).to_list(limit)
+    
+    for insight in insights:
+        insight["_id"] = str(insight["_id"])
+        insight["user_id"] = str(insight["user_id"])
+    
+    return insights
+
 
 app.include_router(api_router)
 
