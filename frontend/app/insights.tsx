@@ -250,6 +250,23 @@ export default function InsightsScreen() {
           )}
         </Pressable>
 
+        {latestInsight && (
+          <Pressable
+            style={[styles.whatsappButton, sending && styles.buttonDisabled]}
+            onPress={sendToWhatsApp}
+            disabled={sending}
+          >
+            {sending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="logo-whatsapp" size={24} color="#fff" />
+                <Text style={styles.whatsappButtonText}>Enviar por WhatsApp</Text>
+              </>
+            )}
+          </Pressable>
+        )}
+
         <View style={styles.infoBox}>
           <Ionicons name="bulb" size={20} color="#FF9800" />
           <Text style={styles.infoText}>
