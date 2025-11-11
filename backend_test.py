@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for Stock Alerts Feature
-Tests the /api/alerts/low-stock endpoint functionality
+Backend Testing Suite for WhatsApp Registration and AI Reports
+Testing critical user-reported issues:
+1. WhatsApp field mandatory in registration
+2. Error 500 when sending AI reports via WhatsApp
 """
 
 import requests
 import json
-import sys
+import time
 from datetime import datetime
 
 # Configuration
 BASE_URL = "https://vendormate-13.preview.emergentagent.com/api"
+HEADERS = {"Content-Type": "application/json"}
 
-class AlertsAPITester:
+class BackendTester:
     def __init__(self):
         self.base_url = BASE_URL
         self.token = None
