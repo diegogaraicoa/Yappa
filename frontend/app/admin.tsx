@@ -745,6 +745,9 @@ function BulkUploadView({ onReload }: any) {
 // Reports View Component
 function ReportsView({ data }: any) {
   const history = data?.history || [];
+  const [expandedReport, setExpandedReport] = useState<string | null>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -757,6 +760,11 @@ function ReportsView({ data }: any) {
     });
   };
 
+  const openReport = (report: any) => {
+    setSelectedReport(report);
+    setShowReportModal(true);
+  };
+
   return (
     <ScrollView style={styles.scrollContent}>
       <Text style={styles.pageTitle}>Historial de Reportes IA</Text>
@@ -767,16 +775,24 @@ function ReportsView({ data }: any) {
         <View style={styles.emptyState}>
           <Ionicons name="document-text-outline" size={64} color="#ccc" />
           <Text style={styles.emptyText}>No hay reportes generados aún</Text>
+          <Text style={styles.emptySubtext}>
+            Ve a "Explorar → Mis Datos" en el app móvil para generar tu primer reporte
+          </Text>
         </View>
       ) : (
         history.map((report: any, index: number) => (
-          <View key={report._id || index} style={styles.reportCard}>
+          <TouchableOpacity 
+            key={report._id || index} 
+            style={styles.reportCard}
+            onPress={() => openReport(report)}
+          >
             <View style={styles.reportHeader}>
               <Ionicons name="document-text" size={24} color="#4CAF50" />
               <View style={styles.reportInfo}>
                 <Text style={styles.reportTitle}>Reporte #{history.length - index}</Text>
                 <Text style={styles.reportDate}>{formatDate(report.generated_at)}</Text>
               </View>
+              <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </View>
             {report.metrics && (
               <View style={styles.reportMetrics}>
@@ -791,9 +807,59 @@ function ReportsView({ data }: any) {
             <Text style={styles.reportInsights} numberOfLines={3}>
               {report.insights}
             </Text>
-          </View>
+            <Text style={styles.reportExpandText}>👆 Toca para ver completo</Text>
+          </TouchableOpacity>
         ))
       )}
+
+      {/* Report Detail Modal */}
+      <Modal visible={showReportModal} animationType="slide" transparent={false}>
+        <View style={styles.reportModalContainer}>
+          <View style={styles.reportModalHeader}>
+            <Text style={styles.reportModalTitle}>Reporte Completo</Text>
+            <TouchableOpacity onPress={() => setShowReportModal(false)}>
+              <Ionicons name="close" size={28} color="#333" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.reportModalContent}>
+            {selectedReport && (
+              <>
+                <View style={styles.reportModalInfo}>
+                  <Text style={styles.reportModalDate}>
+                    {formatDate(selectedReport.generated_at)}
+                  </Text>
+                  {selectedReport.metrics && (
+                    <View style={styles.reportModalMetrics}>
+                      <View style={styles.reportModalMetricCard}>
+                        <Text style={styles.reportModalMetricLabel}>Ventas</Text>
+                        <Text style={styles.reportModalMetricValue}>
+                          ${selectedReport.metrics.total_sales?.toFixed(2) || '0.00'}
+                        </Text>
+                      </View>
+                      <View style={styles.reportModalMetricCard}>
+                        <Text style={styles.reportModalMetricLabel}>Balance</Text>
+                        <Text style={[styles.reportModalMetricValue, {
+                          color: selectedReport.metrics.balance >= 0 ? '#4CAF50' : '#f44336'
+                        }]}>
+                          ${selectedReport.metrics.balance?.toFixed(2) || '0.00'}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.reportModalInsights}>
+                  <Text style={styles.reportModalInsightsTitle}>📊 Análisis Completo</Text>
+                  <Text style={styles.reportModalInsightsText}>
+                    {selectedReport.insights}
+                  </Text>
+                </View>
+              </>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
