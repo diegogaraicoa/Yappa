@@ -49,6 +49,23 @@ export default function InsightsScreen() {
     }
   };
 
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    Animated.sequence([
+      Animated.timing(toastAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(3000),
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setToast(null));
+  };
+
   const generateNewInsight = async () => {
     setGenerating(true);
     try {
@@ -57,19 +74,11 @@ export default function InsightsScreen() {
       });
       setLatestInsight(response.data);
       
-      // Mostrar mensaje de éxito después de que termine
-      setTimeout(() => {
-        Alert.alert(
-          '✅ Reporte Generado',
-          'Tu análisis de negocio está listo. Revisa los datos abajo.'
-        );
-      }, 300);
+      // Mostrar toast de éxito
+      showToast('✅ Reporte generado exitosamente');
     } catch (error: any) {
       console.error('Error generating insight:', error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.detail || 'No se pudo generar el reporte. Intenta de nuevo.'
-      );
+      showToast('❌ Error al generar el reporte', 'error');
     } finally {
       setGenerating(false);
     }
