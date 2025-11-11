@@ -122,15 +122,18 @@ backend:
 
   - task: "Registro con WhatsApp obligatorio"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Modificado endpoint /api/auth/register (líneas 289-372). UserRegister model ahora incluye whatsapp_number como campo obligatorio. Se valida formato (mínimo longitud, agrega + si no existe), se guarda en base de datos, y se inicializan flags de notificaciones (alerts_enabled, stock_alerts_enabled, etc) en true. Requiere testing de registro completo."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED: WhatsApp registration working correctly. CORE FUNCTIONALITY VERIFIED: 1) Registration fails with 422 when whatsapp_number field missing, 2) Registration fails with 400 when whatsapp_number is empty, 3) Auto-adds + prefix when missing (593992913093 → +593992913093), 4) Accepts numbers with + prefix correctly, 5) User notification settings properly configured with whatsapp_number, alerts_enabled=true, stock_alerts_enabled=true. Minor: Validation could be stricter (accepts very short numbers), but core requirement (mandatory field + auto-formatting) fully functional."
 
   - task: "Envío de reportes AI por WhatsApp"
     implemented: true
