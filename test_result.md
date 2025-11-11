@@ -204,11 +204,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Registro con WhatsApp obligatorio"
-    - "Envío de reportes AI por WhatsApp"
     - "Campo WhatsApp obligatorio en registro"
-  stuck_tasks:
-    - "Envío de reportes AI por WhatsApp"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
