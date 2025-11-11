@@ -304,20 +304,27 @@ export default function InsightsScreen() {
         </Pressable>
 
         {latestInsight && (
-          <Pressable
-            style={[styles.whatsappButton, sending && styles.buttonDisabled]}
-            onPress={sendToWhatsApp}
-            disabled={sending}
-          >
-            {sending ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Ionicons name="logo-whatsapp" size={24} color="#fff" />
-                <Text style={styles.whatsappButtonText}>Enviar por WhatsApp</Text>
-              </>
-            )}
-          </Pressable>
+          <>
+            <Pressable
+              style={[styles.whatsappButton, sending && styles.buttonDisabled]}
+              onPress={sendToWhatsApp}
+              disabled={sending}
+            >
+              {sending ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="logo-whatsapp" size={24} color="#fff" />
+                  <Text style={styles.whatsappButtonText}>Enviar por WhatsApp</Text>
+                </>
+              )}
+            </Pressable>
+
+            <Pressable style={styles.historyButton} onPress={openHistory}>
+              <Ionicons name="time" size={24} color="#2196F3" />
+              <Text style={styles.historyButtonText}>Ver Reportes Anteriores</Text>
+            </Pressable>
+          </>
         )}
 
         <View style={styles.infoBox}>
@@ -328,6 +335,69 @@ export default function InsightsScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Modal de Historial */}
+      <Modal
+        visible={showHistory}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowHistory(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>📚 Historial de Reportes</Text>
+              <Pressable onPress={() => setShowHistory(false)} style={styles.modalCloseButton}>
+                <Ionicons name="close" size={28} color="#666" />
+              </Pressable>
+            </View>
+
+            {loadingHistory ? (
+              <View style={styles.modalLoading}>
+                <ActivityIndicator size="large" color="#4CAF50" />
+                <Text style={styles.loadingText}>Cargando historial...</Text>
+              </View>
+            ) : historyReports.length === 0 ? (
+              <View style={styles.modalEmpty}>
+                <Ionicons name="file-tray-outline" size={64} color="#ccc" />
+                <Text style={styles.emptyTitle}>No hay reportes anteriores</Text>
+                <Text style={styles.emptyText}>
+                  Genera más reportes y podrás verlos aquí
+                </Text>
+              </View>
+            ) : (
+              <ScrollView style={styles.modalScroll}>
+                {historyReports.map((report, index) => (
+                  <Pressable
+                    key={report._id || index}
+                    style={styles.historyItem}
+                    onPress={() => viewHistoricalReport(report)}
+                  >
+                    <View style={styles.historyItemIcon}>
+                      <Ionicons name="document-text" size={32} color="#4CAF50" />
+                    </View>
+                    <View style={styles.historyItemContent}>
+                      <Text style={styles.historyItemTitle}>
+                        Reporte #{historyReports.length - index}
+                      </Text>
+                      <Text style={styles.historyItemDate}>
+                        {formatDate(report.generated_at)}
+                      </Text>
+                      {report.metrics && (
+                        <Text style={styles.historyItemStats}>
+                          Ventas: ${report.metrics.total_sales?.toFixed(2) || '0'} • 
+                          Balance: ${report.metrics.balance?.toFixed(2) || '0'}
+                        </Text>
+                      )}
+                    </View>
+                    <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
