@@ -43,21 +43,13 @@ export default function HomeScreen() {
   );
 
   const handleLogout = () => {
-    Alert.alert(
-      'Cerrar Sesi\u00f3n',
-      '\u00bfEst\u00e1s seguro de que quieres cerrar sesi\u00f3n?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Salir',
-          style: 'destructive',
-          onPress: async () => {
-            await signOut();
-            router.replace('/auth');
-          },
-        },
-      ]
-    );
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
+    setShowLogoutModal(false);
+    await signOut();
+    router.replace('/auth');
   };
 
   const menuItems = [
