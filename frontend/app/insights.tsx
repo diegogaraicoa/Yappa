@@ -9,6 +9,7 @@ import {
   Alert,
   RefreshControl,
   Modal,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +25,8 @@ export default function InsightsScreen() {
   const [showHistory, setShowHistory] = useState(false);
   const [historyReports, setHistoryReports] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [toastAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
     loadLatestInsight();
