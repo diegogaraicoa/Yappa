@@ -107,10 +107,13 @@ export default function InsightsScreen() {
         timeout: 30000 // 30 segundos
       });
       
-      Alert.alert(
-        '✅ Enviado a WhatsApp',
-        `Tu reporte fue enviado exitosamente a ${response.data.whatsapp_number}. Lo recibirás en unos segundos.`
-      );
+      // Pequeño delay para asegurar que el loading termine antes del alert
+      setTimeout(() => {
+        Alert.alert(
+          '✅ Enviado a WhatsApp',
+          `Tu reporte fue enviado exitosamente a ${response.data.whatsapp_number}. Lo recibirás en unos segundos.`
+        );
+      }, 300);
     } catch (error: any) {
       console.error('Error sending to WhatsApp:', error);
       
