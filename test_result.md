@@ -198,10 +198,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Endpoint de alertas de stock bajo"
-    - "Pantalla de alertas (/alerts.tsx)"
-    - "Banner de alertas en Home"
-  stuck_tasks: []
+    - "Registro con WhatsApp obligatorio"
+    - "Envío de reportes AI por WhatsApp"
+    - "Campo WhatsApp obligatorio en registro"
+  stuck_tasks:
+    - "Envío de reportes AI por WhatsApp"
   test_all: false
   test_priority: "high_first"
 
