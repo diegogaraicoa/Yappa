@@ -1163,6 +1163,226 @@ async def send_insight_to_whatsapp(current_user: dict = Depends(get_current_user
         )
 
 
+# ==================== ADMIN CONSOLE ENDPOINTS ====================
+
+@api_router.get("/admin/analytics")
+async def get_admin_analytics(current_user: dict = Depends(get_current_user)):
+    """Get analytics for admin console dashboard"""
+    store_id = current_user["store_id"]
+    
+    # Get date ranges
+    now = datetime.utcnow()
+    today_start = datetime(now.year, now.month, now.day)
+    week_start = today_start - timedelta(days=7)
+    month_start = datetime(now.year, now.month, 1)
+    
+    # Total products
+    total_products = await db.products.count_documents({"store_id": store_id})
+    low_stock_count = await db.products.count_documents({
+        "store_id": store_id,
+        "$expr": {"$lte": ["$quantity", "$min_stock_alert"]},
+        "alert_enabled": True
+    })
+    
+    # Sales analytics
+    sales_today = await db.sales.find({
+        "store_id": store_id,
+        "date": {"$gte": today_start},
+        "paid": True
+    }).to_list(1000)
+    
+    sales_week = await db.sales.find({
+        "store_id": store_id,
+        "date": {"$gte": week_start},
+        "paid": True
+    }).to_list(1000)
+    
+    sales_month = await db.sales.find({
+        "store_id": store_id,
+        "date": {"$gte": month_start},
+        "paid": True
+    }).to_list(1000)
+    
+    total_sales_today = sum(s["total"] for s in sales_today)
+    total_sales_week = sum(s["total"] for s in sales_week)
+    total_sales_month = sum(s["total"] for s in sales_month)
+    
+    # Expenses analytics
+    expenses_month = await db.expenses.find({
+        "store_id": store_id,
+        "date": {"$gte": month_start},
+        "paid": True
+    }).to_list(1000)
+    
+    total_expenses_month = sum(e["amount"] for e in expenses_month)
+    
+    # Customers and suppliers count
+    total_customers = await db.customers.count_documents({"store_id": store_id})
+    total_suppliers = await db.suppliers.count_documents({"store_id": store_id})
+    
+    # Debts
+    pending_debts = await db.debts.find({
+        "store_id": store_id,
+        "paid": False
+    }).to_list(1000)
+    
+    total_pending_debts = sum(d["amount"] for d in pending_debts)
+    
+    # Top selling products (this month)
+    product_sales = {}
+    for sale in sales_month:
+        for product in sale.get("products", []):
+            pid = product["product_id"]
+            if pid not in product_sales:
+                product_sales[pid] = {
+                    "product_id": pid,
+                    "product_name": product["product_name"],
+                    "quantity_sold": 0,
+                    "revenue": 0
+                }
+            product_sales[pid]["quantity_sold"] += product["quantity"]
+            product_sales[pid]["revenue"] += product["total"]
+    
+    top_products = sorted(product_sales.values(), key=lambda x: x["revenue"], reverse=True)[:5]
+    
+    return {
+        "products": {
+            "total": total_products,
+            "low_stock": low_stock_count
+        },
+        "sales": {
+            "today": total_sales_today,
+            "week": total_sales_week,
+            "month": total_sales_month,
+            "count_today": len(sales_today),
+            "count_week": len(sales_week),
+            "count_month": len(sales_month)
+        },
+        "expenses": {
+            "month": total_expenses_month
+        },
+        "balance": {
+            "month": total_sales_month - total_expenses_month
+        },
+        "customers": total_customers,
+        "suppliers": total_suppliers,
+        "debts": {
+            "total": total_pending_debts,
+            "count": len(pending_debts)
+        },
+        "top_products": top_products
+    }
+
+class BulkProductUpload(BaseModel):
+    products: List[dict]
+
+@api_router.post("/admin/products/bulk-upload")
+async def bulk_upload_products(
+    upload_data: BulkProductUpload,
+    current_user: dict = Depends(get_current_user)
+):
+    """Bulk upload products from CSV"""
+    store_id = current_user["store_id"]
+    
+    created_count = 0
+    updated_count = 0
+    errors = []
+    
+    for idx, product_data in enumerate(upload_data.products):
+        try:
+            # Validate required fields
+            if not product_data.get("name"):
+                errors.append(f"Row {idx + 1}: Name is required")
+                continue
+            
+            # Check if product exists by name
+            existing = await db.products.find_one({
+                "store_id": store_id,
+                "name": product_data["name"]
+            })
+            
+            # Prepare product document
+            product_doc = {
+                "store_id": store_id,
+                "name": product_data["name"],
+                "quantity": float(product_data.get("quantity", 0)),
+                "price": float(product_data.get("price", 0)),
+                "cost": float(product_data.get("cost", 0)),
+                "min_stock_alert": float(product_data.get("min_stock_alert", 10)),
+                "alert_enabled": product_data.get("alert_enabled", True),
+                "description": product_data.get("description", ""),
+                "image": product_data.get("image", None),
+            }
+            
+            # Handle category
+            if product_data.get("category"):
+                # Find or create category
+                category = await db.categories.find_one({
+                    "store_id": store_id,
+                    "name": product_data["category"],
+                    "type": "product"
+                })
+                if not category:
+                    cat_result = await db.categories.insert_one({
+                        "store_id": store_id,
+                        "name": product_data["category"],
+                        "type": "product",
+                        "created_at": datetime.utcnow()
+                    })
+                    product_doc["category_id"] = str(cat_result.inserted_id)
+                else:
+                    product_doc["category_id"] = str(category["_id"])
+            
+            if existing:
+                # Update existing product
+                await db.products.update_one(
+                    {"_id": existing["_id"]},
+                    {"$set": product_doc}
+                )
+                updated_count += 1
+            else:
+                # Create new product
+                product_doc["created_at"] = datetime.utcnow()
+                await db.products.insert_one(product_doc)
+                created_count += 1
+                
+        except Exception as e:
+            errors.append(f"Row {idx + 1}: {str(e)}")
+    
+    return {
+        "success": True,
+        "created": created_count,
+        "updated": updated_count,
+        "errors": errors,
+        "total_processed": len(upload_data.products)
+    }
+
+@api_router.get("/admin/products/template")
+async def get_bulk_upload_template():
+    """Get CSV template for bulk product upload"""
+    return {
+        "headers": [
+            "name",
+            "quantity",
+            "price",
+            "cost",
+            "category",
+            "min_stock_alert",
+            "alert_enabled",
+            "description"
+        ],
+        "example": {
+            "name": "Coca Cola 2L",
+            "quantity": "50",
+            "price": "2.50",
+            "cost": "1.80",
+            "category": "Bebidas",
+            "min_stock_alert": "10",
+            "alert_enabled": "true",
+            "description": "Gaseosa Coca Cola 2 litros"
+        }
+    }
+
 app.include_router(api_router)
 
 app.add_middleware(
