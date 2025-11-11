@@ -1383,6 +1383,393 @@ async def get_bulk_upload_template():
         }
     }
 
+# ==================== ADVANCED ANALYTICS ENDPOINTS ====================
+
+@api_router.get("/admin/products/analytics")
+async def get_products_analytics(current_user: dict = Depends(get_current_user)):
+    """Get detailed product analytics with profitability, margin, rotation"""
+    store_id = current_user["store_id"]
+    
+    # Get all products
+    products = await db.products.find({"store_id": store_id}).to_list(1000)
+    
+    # Get sales for product analysis
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    sales = await db.sales.find({
+        "store_id": store_id,
+        "date": {"$gte": thirty_days_ago},
+        "paid": True
+    }).to_list(5000)
+    
+    # Calculate metrics per product
+    product_metrics = {}
+    for product in products:
+        pid = str(product["_id"])
+        product_metrics[pid] = {
+            "_id": pid,
+            "name": product["name"],
+            "current_stock": product["quantity"],
+            "price": product["price"],
+            "cost": product["cost"],
+            "margin": ((product["price"] - product["cost"]) / product["price"] * 100) if product["price"] > 0 else 0,
+            "profit_per_unit": product["price"] - product["cost"],
+            "units_sold": 0,
+            "revenue": 0,
+            "profit": 0,
+            "days_to_stockout": None
+        }
+    
+    # Aggregate sales data
+    for sale in sales:
+        for item in sale.get("products", []):
+            pid = item["product_id"]
+            if pid in product_metrics:
+                product_metrics[pid]["units_sold"] += item["quantity"]
+                product_metrics[pid]["revenue"] += item["total"]
+                product_metrics[pid]["profit"] += item["total"] - (item["quantity"] * product_metrics[pid]["cost"])
+    
+    # Calculate rotation and predictions
+    for pid, metrics in product_metrics.items():
+        if metrics["units_sold"] > 0:
+            daily_avg = metrics["units_sold"] / 30
+            if daily_avg > 0 and metrics["current_stock"] > 0:
+                metrics["days_to_stockout"] = int(metrics["current_stock"] / daily_avg)
+            metrics["rotation_rate"] = daily_avg
+        else:
+            metrics["rotation_rate"] = 0
+    
+    # Sort by different criteria
+    by_profit = sorted(product_metrics.values(), key=lambda x: x["profit"], reverse=True)[:10]
+    by_margin = sorted(product_metrics.values(), key=lambda x: x["margin"], reverse=True)[:10]
+    low_margin = sorted([p for p in product_metrics.values() if p["margin"] < 20], key=lambda x: x["margin"])[:10]
+    stockout_soon = sorted([p for p in product_metrics.values() if p["days_to_stockout"] and p["days_to_stockout"] <= 7], key=lambda x: x["days_to_stockout"])
+    
+    return {
+        "top_by_profit": by_profit,
+        "top_by_margin": by_margin,
+        "low_margin_alert": low_margin,
+        "stockout_predictions": stockout_soon,
+        "total_products": len(products),
+        "avg_margin": sum(p["margin"] for p in product_metrics.values()) / len(product_metrics) if product_metrics else 0
+    }
+
+@api_router.get("/admin/customers/analytics")
+async def get_customers_analytics(current_user: dict = Depends(get_current_user)):
+    """Get detailed customer analytics"""
+    store_id = current_user["store_id"]
+    
+    # Get all customers
+    customers = await db.customers.find({"store_id": store_id}).to_list(1000)
+    
+    # Get sales and debts
+    sales = await db.sales.find({"store_id": store_id, "paid": True}).to_list(5000)
+    debts = await db.debts.find({"store_id": store_id, "type": "customer"}).to_list(1000)
+    
+    # Calculate metrics per customer
+    customer_metrics = {}
+    for customer in customers:
+        cid = str(customer["_id"])
+        customer_metrics[cid] = {
+            "_id": cid,
+            "name": f"{customer['name']} {customer['lastname']}",
+            "phone": customer.get("phone", ""),
+            "email": customer.get("email", ""),
+            "total_revenue": 0,
+            "total_purchases": 0,
+            "avg_purchase": 0,
+            "pending_debt": 0,
+            "last_purchase": None,
+            "days_since_purchase": None
+        }
+    
+    # Aggregate sales
+    for sale in sales:
+        if sale.get("customer_id"):
+            cid = sale["customer_id"]
+            if cid in customer_metrics:
+                customer_metrics[cid]["total_revenue"] += sale["total"]
+                customer_metrics[cid]["total_purchases"] += 1
+                if not customer_metrics[cid]["last_purchase"] or sale["date"] > customer_metrics[cid]["last_purchase"]:
+                    customer_metrics[cid]["last_purchase"] = sale["date"]
+    
+    # Calculate avg and days since
+    now = datetime.utcnow()
+    for cid, metrics in customer_metrics.items():
+        if metrics["total_purchases"] > 0:
+            metrics["avg_purchase"] = metrics["total_revenue"] / metrics["total_purchases"]
+        if metrics["last_purchase"]:
+            metrics["days_since_purchase"] = (now - metrics["last_purchase"]).days
+    
+    # Aggregate debts
+    for debt in debts:
+        if debt.get("customer_id") and not debt.get("paid", False):
+            cid = debt["customer_id"]
+            if cid in customer_metrics:
+                customer_metrics[cid]["pending_debt"] += debt["amount"]
+    
+    # Sort and analyze
+    top_by_revenue = sorted(customer_metrics.values(), key=lambda x: x["total_revenue"], reverse=True)[:10]
+    with_debts = sorted([c for c in customer_metrics.values() if c["pending_debt"] > 0], key=lambda x: x["pending_debt"], reverse=True)
+    inactive = sorted([c for c in customer_metrics.values() if c["days_since_purchase"] and c["days_since_purchase"] > 30], key=lambda x: x["days_since_purchase"], reverse=True)[:10]
+    
+    return {
+        "top_customers": top_by_revenue,
+        "customers_with_debts": with_debts,
+        "inactive_customers": inactive,
+        "total_customers": len(customers),
+        "total_debt": sum(c["pending_debt"] for c in customer_metrics.values()),
+        "avg_revenue_per_customer": sum(c["total_revenue"] for c in customer_metrics.values()) / len(customer_metrics) if customer_metrics else 0
+    }
+
+@api_router.get("/admin/suppliers/analytics")
+async def get_suppliers_analytics(current_user: dict = Depends(get_current_user)):
+    """Get detailed supplier analytics"""
+    store_id = current_user["store_id"]
+    
+    # Get all suppliers
+    suppliers = await db.suppliers.find({"store_id": store_id}).to_list(1000)
+    
+    # Get expenses and debts
+    expenses = await db.expenses.find({"store_id": store_id, "paid": True}).to_list(5000)
+    debts = await db.debts.find({"store_id": store_id, "type": "supplier"}).to_list(1000)
+    
+    # Calculate metrics per supplier
+    supplier_metrics = {}
+    for supplier in suppliers:
+        sid = str(supplier["_id"])
+        supplier_metrics[sid] = {
+            "_id": sid,
+            "name": supplier["name"],
+            "phone": supplier.get("phone", ""),
+            "email": supplier.get("email", ""),
+            "total_spent": 0,
+            "total_transactions": 0,
+            "avg_transaction": 0,
+            "pending_debt": 0,
+            "last_transaction": None
+        }
+    
+    # Aggregate expenses
+    for expense in expenses:
+        if expense.get("supplier_id"):
+            sid = expense["supplier_id"]
+            if sid in supplier_metrics:
+                supplier_metrics[sid]["total_spent"] += expense["amount"]
+                supplier_metrics[sid]["total_transactions"] += 1
+                if not supplier_metrics[sid]["last_transaction"] or expense["date"] > supplier_metrics[sid]["last_transaction"]:
+                    supplier_metrics[sid]["last_transaction"] = expense["date"]
+    
+    # Calculate averages
+    for sid, metrics in supplier_metrics.items():
+        if metrics["total_transactions"] > 0:
+            metrics["avg_transaction"] = metrics["total_spent"] / metrics["total_transactions"]
+    
+    # Aggregate debts
+    for debt in debts:
+        if debt.get("supplier_id") and not debt.get("paid", False):
+            sid = debt["supplier_id"]
+            if sid in supplier_metrics:
+                supplier_metrics[sid]["pending_debt"] += debt["amount"]
+    
+    top_by_spending = sorted(supplier_metrics.values(), key=lambda x: x["total_spent"], reverse=True)[:10]
+    with_debts = sorted([s for s in supplier_metrics.values() if s["pending_debt"] > 0], key=lambda x: x["pending_debt"], reverse=True)
+    
+    return {
+        "top_suppliers": top_by_spending,
+        "suppliers_with_debts": with_debts,
+        "total_suppliers": len(suppliers),
+        "total_debt_to_suppliers": sum(s["pending_debt"] for s in supplier_metrics.values()),
+        "total_spent": sum(s["total_spent"] for s in supplier_metrics.values())
+    }
+
+@api_router.get("/admin/comparisons")
+async def get_period_comparisons(current_user: dict = Depends(get_current_user)):
+    """Get week-over-week and month-over-month comparisons"""
+    store_id = current_user["store_id"]
+    now = datetime.utcnow()
+    
+    # Define periods
+    this_week_start = now - timedelta(days=now.weekday())
+    last_week_start = this_week_start - timedelta(days=7)
+    this_month_start = datetime(now.year, now.month, 1)
+    if now.month == 1:
+        last_month_start = datetime(now.year - 1, 12, 1)
+        last_month_end = datetime(now.year, 1, 1)
+    else:
+        last_month_start = datetime(now.year, now.month - 1, 1)
+        last_month_end = this_month_start
+    
+    # Get sales
+    this_week_sales = await db.sales.find({
+        "store_id": store_id,
+        "date": {"$gte": this_week_start},
+        "paid": True
+    }).to_list(5000)
+    
+    last_week_sales = await db.sales.find({
+        "store_id": store_id,
+        "date": {"$gte": last_week_start, "$lt": this_week_start},
+        "paid": True
+    }).to_list(5000)
+    
+    this_month_sales = await db.sales.find({
+        "store_id": store_id,
+        "date": {"$gte": this_month_start},
+        "paid": True
+    }).to_list(5000)
+    
+    last_month_sales = await db.sales.find({
+        "store_id": store_id,
+        "date": {"$gte": last_month_start, "$lt": last_month_end},
+        "paid": True
+    }).to_list(5000)
+    
+    # Calculate totals
+    this_week_total = sum(s["total"] for s in this_week_sales)
+    last_week_total = sum(s["total"] for s in last_week_sales)
+    this_month_total = sum(s["total"] for s in this_month_sales)
+    last_month_total = sum(s["total"] for s in last_month_sales)
+    
+    # Calculate changes
+    week_change = ((this_week_total - last_week_total) / last_week_total * 100) if last_week_total > 0 else 0
+    month_change = ((this_month_total - last_month_total) / last_month_total * 100) if last_month_total > 0 else 0
+    
+    # Day of week analysis
+    day_of_week_sales = {}
+    for sale in this_month_sales:
+        day_name = sale["date"].strftime("%A")
+        if day_name not in day_of_week_sales:
+            day_of_week_sales[day_name] = 0
+        day_of_week_sales[day_name] += sale["total"]
+    
+    best_day = max(day_of_week_sales.items(), key=lambda x: x[1]) if day_of_week_sales else ("N/A", 0)
+    
+    return {
+        "week_comparison": {
+            "this_week": this_week_total,
+            "last_week": last_week_total,
+            "change_percent": week_change,
+            "change_amount": this_week_total - last_week_total
+        },
+        "month_comparison": {
+            "this_month": this_month_total,
+            "last_month": last_month_total,
+            "change_percent": month_change,
+            "change_amount": this_month_total - last_month_total
+        },
+        "seasonality": {
+            "by_day_of_week": day_of_week_sales,
+            "best_day": {"day": best_day[0], "total": best_day[1]}
+        }
+    }
+
+# Bulk upload for customers
+class BulkCustomerUpload(BaseModel):
+    customers: List[dict]
+
+@api_router.post("/admin/customers/bulk-upload")
+async def bulk_upload_customers(
+    upload_data: BulkCustomerUpload,
+    current_user: dict = Depends(get_current_user)
+):
+    """Bulk upload customers from CSV"""
+    store_id = current_user["store_id"]
+    created_count = 0
+    updated_count = 0
+    errors = []
+    
+    for idx, customer_data in enumerate(upload_data.customers):
+        try:
+            if not customer_data.get("name"):
+                errors.append(f"Row {idx + 1}: Name is required")
+                continue
+            
+            # Check if exists by name
+            existing = await db.customers.find_one({
+                "store_id": store_id,
+                "name": customer_data["name"],
+                "lastname": customer_data.get("lastname", "")
+            })
+            
+            customer_doc = {
+                "store_id": store_id,
+                "name": customer_data["name"],
+                "lastname": customer_data.get("lastname", ""),
+                "phone": customer_data.get("phone", ""),
+                "email": customer_data.get("email", ""),
+            }
+            
+            if existing:
+                await db.customers.update_one({"_id": existing["_id"]}, {"$set": customer_doc})
+                updated_count += 1
+            else:
+                customer_doc["created_at"] = datetime.utcnow()
+                await db.customers.insert_one(customer_doc)
+                created_count += 1
+        except Exception as e:
+            errors.append(f"Row {idx + 1}: {str(e)}")
+    
+    return {
+        "success": True,
+        "created": created_count,
+        "updated": updated_count,
+        "errors": errors,
+        "total_processed": len(upload_data.customers)
+    }
+
+# Bulk upload for suppliers
+class BulkSupplierUpload(BaseModel):
+    suppliers: List[dict]
+
+@api_router.post("/admin/suppliers/bulk-upload")
+async def bulk_upload_suppliers(
+    upload_data: BulkSupplierUpload,
+    current_user: dict = Depends(get_current_user)
+):
+    """Bulk upload suppliers from CSV"""
+    store_id = current_user["store_id"]
+    created_count = 0
+    updated_count = 0
+    errors = []
+    
+    for idx, supplier_data in enumerate(upload_data.suppliers):
+        try:
+            if not supplier_data.get("name"):
+                errors.append(f"Row {idx + 1}: Name is required")
+                continue
+            
+            existing = await db.suppliers.find_one({
+                "store_id": store_id,
+                "name": supplier_data["name"]
+            })
+            
+            supplier_doc = {
+                "store_id": store_id,
+                "name": supplier_data["name"],
+                "phone": supplier_data.get("phone", ""),
+                "email": supplier_data.get("email", ""),
+                "type": supplier_data.get("type", ""),
+                "tax_id": supplier_data.get("tax_id", ""),
+            }
+            
+            if existing:
+                await db.suppliers.update_one({"_id": existing["_id"]}, {"$set": supplier_doc})
+                updated_count += 1
+            else:
+                supplier_doc["created_at"] = datetime.utcnow()
+                await db.suppliers.insert_one(supplier_doc)
+                created_count += 1
+        except Exception as e:
+            errors.append(f"Row {idx + 1}: {str(e)}")
+    
+    return {
+        "success": True,
+        "created": created_count,
+        "updated": updated_count,
+        "errors": errors,
+        "total_processed": len(upload_data.suppliers)
+    }
+
 app.include_router(api_router)
 
 app.add_middleware(
