@@ -49,21 +49,18 @@ export default function InsightsScreen() {
   const generateNewInsight = async () => {
     setGenerating(true);
     try {
-      // Mostrar mensaje de espera
-      Alert.alert(
-        '⏳ Generando Reporte',
-        'Esto puede tomar entre 10-20 segundos. Por favor espera...'
-      );
-      
       const response = await api.post('/api/insights/generate', {}, {
         timeout: 60000 // 60 segundos para AI
       });
       setLatestInsight(response.data);
       
-      Alert.alert(
-        '✅ Reporte Generado',
-        'Tu análisis de negocio está listo. Revisa los datos abajo.'
-      );
+      // Mostrar mensaje de éxito después de que termine
+      setTimeout(() => {
+        Alert.alert(
+          '✅ Reporte Generado',
+          'Tu análisis de negocio está listo. Revisa los datos abajo.'
+        );
+      }, 300);
     } catch (error: any) {
       console.error('Error generating insight:', error);
       Alert.alert(
