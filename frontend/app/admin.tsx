@@ -151,7 +151,223 @@ export default function AdminConsoleScreen() {
           {renderContent()}
         </View>
       </View>
+
+      {/* Floating Support Button */}
+      <TouchableOpacity
+        style={styles.floatingSupportButton}
+        onPress={() => setShowSupportModal(true)}
+      >
+        <Ionicons name="headset" size={28} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Support Modal */}
+      <SupportModal
+        visible={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+      />
     </View>
+  );
+}
+
+// Support Modal Component
+function SupportModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState('contact');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [priority, setPriority] = useState('medium');
+  const [sending, setSending] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!subject || !message) {
+      Alert.alert('Error', 'Por favor completa todos los campos');
+      return;
+    }
+
+    setSending(true);
+    try {
+      await api.post('/api/support/ticket', {
+        subject,
+        message,
+        priority,
+        contact_method: 'email'
+      });
+
+      Alert.alert(
+        '✅ Mensaje Enviado',
+        'Hemos recibido tu solicitud. Te contactaremos pronto por email.'
+      );
+      setSubject('');
+      setMessage('');
+      onClose();
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo enviar el mensaje. Intenta de nuevo.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const openWhatsAppSupport = () => {
+    const phone = '+593992913093'; // Tu número de soporte
+    const text = 'Hola, necesito ayuda con BarrioShop Admin Console';
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  const faqs = [
+    {
+      q: '¿Cómo cargo productos masivamente?',
+      a: 'Ve a "Carga Masiva" → Selecciona "Productos" → Descarga la plantilla → Llena los datos → Carga el archivo CSV'
+    },
+    {
+      q: '¿Cómo veo mis clientes inactivos?',
+      a: 'Ve a "Clientes" en el sidebar → Scroll hasta "Clientes Inactivos". Ahí verás quiénes no han comprado en más de 30 días.'
+    },
+    {
+      q: '¿Dónde están las predicciones de stock?',
+      a: 'Ve a "Productos" → Tab "Análisis" → Busca "Alertas de Stock". Verás productos que se agotarán pronto.'
+    },
+    {
+      q: '¿Cómo comparo ventas del mes?',
+      a: 'Ve al "Dashboard" → Verás comparaciones de semana vs semana y mes vs mes con porcentajes de cambio.'
+    },
+    {
+      q: '¿Puedo exportar los reportes?',
+      a: 'Próximamente. Por ahora puedes ver todos los reportes históricos en "Reportes IA".'
+    }
+  ];
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent={false}>
+      <View style={styles.supportModalContainer}>
+        <View style={styles.supportModalHeader}>
+          <Text style={styles.supportModalTitle}>💬 Centro de Ayuda</Text>
+          <TouchableOpacity onPress={onClose}>
+            <Ionicons name="close" size={28} color="#333" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Tabs */}
+        <View style={styles.supportTabs}>
+          <TouchableOpacity
+            style={[styles.supportTab, activeTab === 'contact' && styles.supportTabActive]}
+            onPress={() => setActiveTab('contact')}
+          >
+            <Text style={[styles.supportTabText, activeTab === 'contact' && styles.supportTabTextActive]}>
+              Contacto
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.supportTab, activeTab === 'faq' && styles.supportTabActive]}
+            onPress={() => setActiveTab('faq')}
+          >
+            <Text style={[styles.supportTabText, activeTab === 'faq' && styles.supportTabTextActive]}>
+              FAQs
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.supportModalContent}>
+          {activeTab === 'contact' ? (
+            <View>
+              {/* WhatsApp Option */}
+              <TouchableOpacity style={styles.whatsappSupportButton} onPress={openWhatsAppSupport}>
+                <Ionicons name="logo-whatsapp" size={32} color="#25D366" />
+                <View style={styles.whatsappSupportContent}>
+                  <Text style={styles.whatsappSupportTitle}>Chat por WhatsApp</Text>
+                  <Text style={styles.whatsappSupportSubtitle}>Respuesta inmediata</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={24} color="#ccc" />
+              </TouchableOpacity>
+
+              <View style={styles.supportDivider}>
+                <View style={styles.supportDividerLine} />
+                <Text style={styles.supportDividerText}>O</Text>
+                <View style={styles.supportDividerLine} />
+              </View>
+
+              {/* Email Form */}
+              <Text style={styles.supportFormTitle}>Envía un Mensaje</Text>
+
+              <Text style={styles.supportLabel}>Asunto *</Text>
+              <TextInput
+                style={styles.supportInput}
+                placeholder="¿En qué podemos ayudarte?"
+                value={subject}
+                onChangeText={setSubject}
+              />
+
+              <Text style={styles.supportLabel}>Prioridad</Text>
+              <View style={styles.priorityButtons}>
+                <TouchableOpacity
+                  style={[styles.priorityButton, priority === 'low' && styles.priorityButtonActive]}
+                  onPress={() => setPriority('low')}
+                >
+                  <Text style={[styles.priorityButtonText, priority === 'low' && styles.priorityButtonTextActive]}>
+                    Baja
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.priorityButton, priority === 'medium' && styles.priorityButtonActive]}
+                  onPress={() => setPriority('medium')}
+                >
+                  <Text style={[styles.priorityButtonText, priority === 'medium' && styles.priorityButtonTextActive]}>
+                    Media
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.priorityButton, priority === 'high' && styles.priorityButtonActive]}
+                  onPress={() => setPriority('high')}
+                >
+                  <Text style={[styles.priorityButtonText, priority === 'high' && styles.priorityButtonTextActive]}>
+                    Alta
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.supportLabel}>Mensaje *</Text>
+              <TextInput
+                style={[styles.supportInput, styles.supportTextArea]}
+                placeholder="Describe tu problema o pregunta..."
+                value={message}
+                onChangeText={setMessage}
+                multiline
+                numberOfLines={6}
+                textAlignVertical="top"
+              />
+
+              <TouchableOpacity
+                style={[styles.supportSubmitButton, sending && styles.supportSubmitButtonDisabled]}
+                onPress={handleSubmit}
+                disabled={sending}
+              >
+                {sending ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="send" size={20} color="#fff" />
+                    <Text style={styles.supportSubmitButtonText}>Enviar Mensaje</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <Text style={styles.supportNote}>
+                📧 Te responderemos por email en 24-48 horas
+              </Text>
+            </View>
+          ) : (
+            <View>
+              <Text style={styles.faqTitle}>Preguntas Frecuentes</Text>
+              {faqs.map((faq, index) => (
+                <View key={index} style={styles.faqItem}>
+                  <Text style={styles.faqQuestion}>{faq.q}</Text>
+                  <Text style={styles.faqAnswer}>{faq.a}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    </Modal>
   );
 }
 
