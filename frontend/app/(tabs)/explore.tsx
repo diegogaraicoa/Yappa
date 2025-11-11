@@ -9,13 +9,20 @@ export default function ExploreScreen() {
   const exploreItems = [
     {
       id: 1,
+      title: 'Admin Console',
+      icon: 'desktop',
+      color: '#E91E63',
+      route: '/admin',
+    },
+    {
+      id: 2,
       title: 'Clientes',
       icon: 'people',
       color: '#4CAF50',
       route: '/customers',
     },
     {
-      id: 2,
+      id: 3,
       title: 'Proveedores',
       icon: 'briefcase',
       color: '#FF9800',
