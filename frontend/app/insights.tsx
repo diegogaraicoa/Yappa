@@ -399,6 +399,27 @@ export default function InsightsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Animated.View
+          style={[
+            styles.toast,
+            {
+              backgroundColor: toast.type === 'success' ? '#4CAF50' : '#f44336',
+              opacity: toastAnim,
+              transform: [{
+                translateY: toastAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-100, 0]
+                })
+              }]
+            }
+          ]}
+        >
+          <Text style={styles.toastText}>{toast.message}</Text>
+        </Animated.View>
+      )}
     </View>
   );
 }
