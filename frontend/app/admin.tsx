@@ -1405,4 +1405,85 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
+  reportExpandText: {
+    fontSize: 12,
+    color: '#2196F3',
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  reportModalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  reportModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: 48,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#fff',
+  },
+  reportModalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  reportModalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  reportModalInfo: {
+    marginBottom: 24,
+  },
+  reportModalDate: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 16,
+  },
+  reportModalMetrics: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  reportModalMetricCard: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  reportModalMetricLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  reportModalMetricValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  reportModalInsights: {
+    backgroundColor: '#f9f9f9',
+    padding: 20,
+    borderRadius: 12,
+  },
+  reportModalInsightsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  reportModalInsightsText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+  },
 });
