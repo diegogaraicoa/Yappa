@@ -119,27 +119,16 @@ export default function InsightsScreen() {
         timeout: 30000 // 30 segundos
       });
       
-      // Pequeño delay para asegurar que el loading termine antes del alert
-      setTimeout(() => {
-        Alert.alert(
-          '✅ Enviado a WhatsApp',
-          `Tu reporte fue enviado exitosamente a ${response.data.whatsapp_number}. Lo recibirás en unos segundos.`
-        );
-      }, 300);
+      // Mostrar toast de éxito
+      showToast(`✅ Enviado a WhatsApp: ${response.data.whatsapp_number}`);
     } catch (error: any) {
       console.error('Error sending to WhatsApp:', error);
       
       // Si es timeout, el mensaje probablemente se envió de todos modos
       if (error.code === 'ECONNABORTED') {
-        Alert.alert(
-          '⏱️ Enviando...',
-          'El mensaje está siendo enviado. Si no lo recibes en 1 minuto, intenta de nuevo.'
-        );
+        showToast('⏱️ Mensaje enviándose...', 'error');
       } else {
-        Alert.alert(
-          'Error',
-          error.response?.data?.detail || 'No se pudo enviar a WhatsApp. Verifica que tengas tu número configurado.'
-        );
+        showToast('❌ Error al enviar WhatsApp', 'error');
       }
     } finally {
       setSending(false);
