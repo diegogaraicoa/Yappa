@@ -1770,6 +1770,59 @@ async def bulk_upload_suppliers(
         "total_processed": len(upload_data.suppliers)
     }
 
+# ==================== SUPPORT ENDPOINTS ====================
+
+class SupportTicket(BaseModel):
+    subject: str
+    message: str
+    priority: str = "medium"
+    contact_method: str = "email"
+
+@api_router.post("/support/ticket")
+async def create_support_ticket(
+    ticket: SupportTicket,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a support ticket"""
+    ticket_doc = {
+        "user_id": str(current_user["_id"]),
+        "store_id": current_user["store_id"],
+        "user_email": current_user["email"],
+        "subject": ticket.subject,
+        "message": ticket.message,
+        "priority": ticket.priority,
+        "contact_method": ticket.contact_method,
+        "status": "open",
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
+    }
+    
+    result = await db.support_tickets.insert_one(ticket_doc)
+    
+    # TODO: Send notification to support team
+    # For now, just log it
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"New support ticket created: {ticket.subject} from {current_user['email']}")
+    
+    return {
+        "success": True,
+        "ticket_id": str(result.inserted_id),
+        "message": "Tu solicitud ha sido recibida. Te contactaremos pronto."
+    }
+
+@api_router.get("/support/tickets")
+async def get_user_tickets(current_user: dict = Depends(get_current_user)):
+    """Get all support tickets for current user"""
+    tickets = await db.support_tickets.find({
+        "user_id": str(current_user["_id"])
+    }).sort("created_at", -1).to_list(50)
+    
+    for ticket in tickets:
+        ticket["_id"] = str(ticket["_id"])
+    
+    return tickets
+
 app.include_router(api_router)
 
 app.add_middleware(
