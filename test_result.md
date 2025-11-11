@@ -120,6 +120,33 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE TESTING COMPLETED: All 5 core tests passed + 4 edge cases validated. Authentication working correctly (401/403 for unauthorized). Alert logic verified: critical (qty=0), warning (qty>0 but <=threshold). Only alert_enabled=true products included. Response format correct with all required fields (_id, name, quantity, min_stock_alert, alert_level, alert_enabled). Edge cases tested: empty store, decimal quantities, high/zero thresholds. API is fully functional and robust."
 
+  - task: "Registro con WhatsApp obligatorio"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Modificado endpoint /api/auth/register (líneas 289-372). UserRegister model ahora incluye whatsapp_number como campo obligatorio. Se valida formato (mínimo longitud, agrega + si no existe), se guarda en base de datos, y se inicializan flags de notificaciones (alerts_enabled, stock_alerts_enabled, etc) en true. Requiere testing de registro completo."
+
+  - task: "Envío de reportes AI por WhatsApp"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Error 500 al intentar enviar reportes de IA por WhatsApp"
+      - working: "NA"
+        agent: "main"
+        comment: "Mejorado endpoint /api/insights/send-whatsapp (líneas 1088-1147). Agregado mejor logging con información del número de WhatsApp, longitud del mensaje, y resultado del envío. Mejorado manejo de errores con try/except específico y mensajes detallados. Requiere testing para validar si el error 500 está resuelto."
+
 frontend:
   - task: "Pantalla de alertas (/alerts.tsx)"
     implemented: true
