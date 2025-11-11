@@ -178,6 +178,18 @@ frontend:
         agent: "testing"
         comment: "✅ TESTING COMPLETED: Fixed critical import issue (changed from named import to default import). Fixed API URL issue (added /api prefix). Home screen banner logic working correctly - banner does not appear when no alerts exist (expected behavior). useFocusEffect properly implemented to fetch alert count on screen focus. Banner styling and layout ready for when alerts exist. Navigation to alerts screen implemented correctly."
 
+  - task: "Campo WhatsApp obligatorio en registro"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/auth.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Modificada pantalla de autenticación para incluir campo de WhatsApp en registro. Agregado estado whatsappNumber, validación de formato (mínimo 10 dígitos), mensaje de ayuda explicando para qué se usa el WhatsApp, y auto-formateo para agregar + si no lo tiene. Incluye icono de WhatsApp en verde. AuthContext.tsx actualizado para enviar whatsapp_number al backend. Necesita testing del flujo completo de registro."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
