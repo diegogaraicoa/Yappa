@@ -22,6 +22,7 @@ export default function AdminConsoleScreen() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>({});
   const [showSidebar, setShowSidebar] = useState(true);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   useEffect(() => {
     loadData();
