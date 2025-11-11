@@ -18,38 +18,14 @@ HEADERS = {"Content-Type": "application/json"}
 class BackendTester:
     def __init__(self):
         self.base_url = BASE_URL
-        self.token = None
-        self.user_data = None
-        self.test_products = []
+        self.headers = HEADERS
+        self.auth_token = None
+        self.test_user_email = f"testing_whatsapp_{int(time.time())}@test.com"
+        self.test_whatsapp = "+593992913093"
         
     def log(self, message, level="INFO"):
-        timestamp = datetime.now().strftime("%H:%M:%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"[{timestamp}] {level}: {message}")
-        
-    def register_test_user(self):
-        """Register a test user for authentication"""
-        self.log("Registering test user...")
-        
-        user_data = {
-            "email": f"alertstest_{datetime.now().strftime('%Y%m%d_%H%M%S')}@test.com",
-            "password": "TestPassword123!",
-            "store_name": "Alerts Test Store"
-        }
-        
-        try:
-            response = requests.post(f"{self.base_url}/auth/register", json=user_data)
-            if response.status_code == 200:
-                data = response.json()
-                self.token = data["access_token"]
-                self.user_data = data["user"]
-                self.log(f"✅ User registered successfully: {self.user_data['email']}")
-                return True
-            else:
-                self.log(f"❌ Registration failed: {response.status_code} - {response.text}", "ERROR")
-                return False
-        except Exception as e:
-            self.log(f"❌ Registration error: {str(e)}", "ERROR")
-            return False
     
     def get_headers(self):
         """Get authorization headers"""
