@@ -65,17 +65,30 @@ export default function InsightsScreen() {
   const sendToWhatsApp = async () => {
     setSending(true);
     try {
-      const response = await api.post('/api/insights/send-whatsapp');
+      // Aumentar timeout para WhatsApp (puede tardar varios segundos)
+      const response = await api.post('/api/insights/send-whatsapp', {}, {
+        timeout: 30000 // 30 segundos
+      });
+      
       Alert.alert(
-        '💬 Enviado a WhatsApp',
-        `Tu reporte fue enviado a ${response.data.whatsapp_number}. Revisa tu WhatsApp en unos segundos.`
+        '✅ Enviado a WhatsApp',
+        `Tu reporte fue enviado exitosamente a ${response.data.whatsapp_number}. Lo recibirás en unos segundos.`
       );
     } catch (error: any) {
       console.error('Error sending to WhatsApp:', error);
-      Alert.alert(
-        'Error',
-        error.response?.data?.detail || 'No se pudo enviar a WhatsApp. Verifica que tengas tu número configurado.'
-      );
+      
+      // Si es timeout, el mensaje probablemente se envió de todos modos
+      if (error.code === 'ECONNABORTED') {
+        Alert.alert(
+          '⏱️ Enviando...',
+          'El mensaje está siendo enviado. Si no lo recibes en 1 minuto, intenta de nuevo.'
+        );
+      } else {
+        Alert.alert(
+          'Error',
+          error.response?.data?.detail || 'No se pudo enviar a WhatsApp. Verifica que tengas tu número configurado.'
+        );
+      }
     } finally {
       setSending(false);
     }
