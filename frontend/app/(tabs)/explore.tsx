@@ -9,26 +9,20 @@ export default function ExploreScreen() {
   const exploreItems = [
     {
       id: 1,
-      title: 'Admin Console',
-      icon: 'desktop',
-      color: '#E91E63',
-      route: '/admin',
-    },
-    {
-      id: 2,
       title: 'Clientes',
       icon: 'people',
       color: '#4CAF50',
       route: '/customers',
     },
     {
-      id: 3,
+      id: 2,
       title: 'Proveedores',
       icon: 'briefcase',
       color: '#FF9800',
       route: '/suppliers',
     },
     // Empleados - Eliminado temporalmente para próxima versión
+    // Admin Console - Solo accesible desde web/desktop, no desde app móvil
     {
       id: 4,
       title: 'Configuración',
