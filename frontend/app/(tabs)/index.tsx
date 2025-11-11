@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
@@ -17,6 +19,7 @@ export default function HomeScreen() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const [alertCount, setAlertCount] = useState(0);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const fetchAlertCount = async () => {
     try {
