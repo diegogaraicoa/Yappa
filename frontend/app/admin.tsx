@@ -18,28 +18,51 @@ import * as DocumentPicker from 'expo-document-picker';
 
 export default function AdminConsoleScreen() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState('dashboard');
   const [loading, setLoading] = useState(true);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploadData, setUploadData] = useState<any[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [data, setData] = useState<any>({});
+  const [showSidebar, setShowSidebar] = useState(true);
 
   useEffect(() => {
     loadData();
-  }, [activeTab]);
+  }, [activeSection]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      if (activeTab === 'dashboard') {
-        const response = await api.get('/api/admin/analytics');
-        setAnalytics(response.data);
-      } else if (activeTab === 'products') {
-        const response = await api.get('/api/products');
-        setProducts(response.data);
+      switch (activeSection) {
+        case 'dashboard':
+          const [analytics, comparisons] = await Promise.all([
+            api.get('/api/admin/analytics'),
+            api.get('/api/admin/comparisons')
+          ]);
+          setData({ analytics: analytics.data, comparisons: comparisons.data });
+          break;
+        case 'products':
+          const [products, prodAnalytics] = await Promise.all([
+            api.get('/api/products'),
+            api.get('/api/admin/products/analytics')
+          ]);
+          setData({ products: products.data, analytics: prodAnalytics.data });
+          break;
+        case 'customers':
+          const [customers, custAnalytics] = await Promise.all([
+            api.get('/api/customers'),
+            api.get('/api/admin/customers/analytics')
+          ]);
+          setData({ customers: customers.data, analytics: custAnalytics.data });
+          break;
+        case 'suppliers':
+          const [suppliers, suppAnalytics] = await Promise.all([
+            api.get('/api/suppliers'),
+            api.get('/api/admin/suppliers/analytics')
+          ]);
+          setData({ suppliers: suppliers.data, analytics: suppAnalytics.data });
+          break;
+        case 'reports':
+          const history = await api.get('/api/insights/history?limit=20');
+          setData({ history: history.data });
+          break;
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -47,6 +70,480 @@ export default function AdminConsoleScreen() {
       setLoading(false);
     }
   };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+        </View>
+      );
+    }
+
+    switch (activeSection) {
+      case 'dashboard':
+        return <DashboardView data={data} />;
+      case 'products':
+        return <ProductsView data={data} onReload={loadData} />;
+      case 'customers':
+        return <CustomersView data={data} />;
+      case 'suppliers':
+        return <SuppliersView data={data} />;
+      case 'bulk-upload':
+        return <BulkUploadView onReload={loadData} />;
+      case 'reports':
+        return <ReportsView data={data} />;
+      default:
+        return <DashboardView data={data} />;
+    }
+  };
+
+  const menuItems = [
+    { id: 'dashboard', title: 'Dashboard', icon: 'stats-chart', color: '#4CAF50' },
+    { id: 'products', title: 'Productos', icon: 'cube', color: '#2196F3' },
+    { id: 'customers', title: 'Clientes', icon: 'people', color: '#9C27B0' },
+    { id: 'suppliers', title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
+    { id: 'bulk-upload', title: 'Carga Masiva', icon: 'cloud-upload', color: '#00BCD4' },
+    { id: 'reports', title: 'Reportes IA', icon: 'document-text', color: '#E91E63' },
+  ];
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => setShowSidebar(!showSidebar)} style={styles.menuButton}>
+          <Ionicons name="menu" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Admin Console</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+          <Ionicons name="close" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.body}>
+        {/* Sidebar */}
+        {showSidebar && (
+          <View style={styles.sidebar}>
+            {menuItems.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.menuItem,
+                  activeSection === item.id && styles.menuItemActive
+                ]}
+                onPress={() => setActiveSection(item.id)}
+              >
+                <Ionicons name={item.icon as any} size={22} color={activeSection === item.id ? item.color : '#666'} />
+                <Text style={[
+                  styles.menuItemText,
+                  activeSection === item.id && { color: item.color, fontWeight: '600' }
+                ]}>
+                  {item.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Main Content */}
+        <View style={styles.mainContent}>
+          {renderContent()}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// Dashboard View Component
+function DashboardView({ data }: any) {
+  const analytics = data?.analytics || {};
+  const comparisons = data?.comparisons || {};
+
+  return (
+    <ScrollView style={styles.scrollContent}>
+      <Text style={styles.pageTitle}>Dashboard Ejecutivo</Text>
+
+      {/* KPI Cards */}
+      <View style={styles.kpiGrid}>
+        <View style={[styles.kpiCard, { borderLeftColor: '#4CAF50' }]}>
+          <Text style={styles.kpiLabel}>Ventas del Mes</Text>
+          <Text style={styles.kpiValue}>${analytics.sales?.month?.toFixed(2) || '0.00'}</Text>
+          <Text style={styles.kpiSubtext}>{analytics.sales?.count_month || 0} transacciones</Text>
+        </View>
+
+        <View style={[styles.kpiCard, { borderLeftColor: '#2196F3' }]}>
+          <Text style={styles.kpiLabel}>Balance Mensual</Text>
+          <Text style={[styles.kpiValue, { color: analytics.balance?.month >= 0 ? '#4CAF50' : '#f44336' }]}>
+            ${analytics.balance?.month?.toFixed(2) || '0.00'}
+          </Text>
+          <Text style={styles.kpiSubtext}>Ventas - Gastos</Text>
+        </View>
+
+        <View style={[styles.kpiCard, { borderLeftColor: '#FF9800' }]}>
+          <Text style={styles.kpiLabel}>Total Productos</Text>
+          <Text style={styles.kpiValue}>{analytics.products?.total || 0}</Text>
+          <Text style={[styles.kpiSubtext, { color: '#f44336' }]}>
+            {analytics.products?.low_stock || 0} con stock bajo
+          </Text>
+        </View>
+
+        <View style={[styles.kpiCard, { borderLeftColor: '#9C27B0' }]}>
+          <Text style={styles.kpiLabel}>Deudas Pendientes</Text>
+          <Text style={styles.kpiValue}>${analytics.debts?.total?.toFixed(2) || '0.00'}</Text>
+          <Text style={styles.kpiSubtext}>{analytics.debts?.count || 0} deudas</Text>
+        </View>
+      </View>
+
+      {/* Comparisons */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>📊 Comparaciones de Período</Text>
+        
+        <View style={styles.comparisonCard}>
+          <Text style={styles.comparisonTitle}>Semana Actual vs Anterior</Text>
+          <View style={styles.comparisonRow}>
+            <View style={styles.comparisonCol}>
+              <Text style={styles.comparisonLabel}>Esta Semana</Text>
+              <Text style={styles.comparisonValue}>
+                ${comparisons.week_comparison?.this_week?.toFixed(2) || '0.00'}
+              </Text>
+            </View>
+            <View style={styles.comparisonCol}>
+              <Text style={styles.comparisonLabel}>Semana Pasada</Text>
+              <Text style={styles.comparisonValue}>
+                ${comparisons.week_comparison?.last_week?.toFixed(2) || '0.00'}
+              </Text>
+            </View>
+            <View style={styles.comparisonCol}>
+              <Text style={styles.comparisonLabel}>Cambio</Text>
+              <Text style={[
+                styles.comparisonValue,
+                { color: comparisons.week_comparison?.change_percent >= 0 ? '#4CAF50' : '#f44336' }
+              ]}>
+                {comparisons.week_comparison?.change_percent >= 0 ? '+' : ''}
+                {comparisons.week_comparison?.change_percent?.toFixed(1) || '0'}%
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.comparisonCard}>
+          <Text style={styles.comparisonTitle}>Mes Actual vs Anterior</Text>
+          <View style={styles.comparisonRow}>
+            <View style={styles.comparisonCol}>
+              <Text style={styles.comparisonLabel}>Este Mes</Text>
+              <Text style={styles.comparisonValue}>
+                ${comparisons.month_comparison?.this_month?.toFixed(2) || '0.00'}
+              </Text>
+            </View>
+            <View style={styles.comparisonCol}>
+              <Text style={styles.comparisonLabel}>Mes Pasado</Text>
+              <Text style={styles.comparisonValue}>
+                ${comparisons.month_comparison?.last_month?.toFixed(2) || '0.00'}
+              </Text>
+            </View>
+            <View style={styles.comparisonCol}>
+              <Text style={styles.comparisonLabel}>Cambio</Text>
+              <Text style={[
+                styles.comparisonValue,
+                { color: comparisons.month_comparison?.change_percent >= 0 ? '#4CAF50' : '#f44336' }
+              ]}>
+                {comparisons.month_comparison?.change_percent >= 0 ? '+' : ''}
+                {comparisons.month_comparison?.change_percent?.toFixed(1) || '0'}%
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Seasonality */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>📅 Análisis de Temporada</Text>
+        <View style={styles.seasonalityCard}>
+          <Text style={styles.seasonalityBest}>
+            🏆 Mejor día de ventas: {comparisons.seasonality?.best_day?.day || 'N/A'}
+          </Text>
+          <Text style={styles.seasonalityValue}>
+            ${comparisons.seasonality?.best_day?.total?.toFixed(2) || '0.00'}
+          </Text>
+        </View>
+      </View>
+
+      {/* Top Products */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>⭐ Top Productos del Mes</Text>
+        {analytics.top_products?.slice(0, 5).map((product: any, index: number) => (
+          <View key={index} style={styles.topItemCard}>
+            <Text style={styles.topItemRank}>#{index + 1}</Text>
+            <View style={styles.topItemContent}>
+              <Text style={styles.topItemName}>{product.product_name}</Text>
+              <Text style={styles.topItemStats}>
+                Cantidad: {product.quantity_sold} | Ingresos: ${product.revenue.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
+// Products View Component
+function ProductsView({ data, onReload }: any) {
+  const [activeTab, setActiveTab] = useState('analytics');
+  const products = data?.products || [];
+  const analytics = data?.analytics || {};
+
+  return (
+    <ScrollView style={styles.scrollContent}>
+      <Text style={styles.pageTitle}>Gestión de Productos</Text>
+
+      {/* Tabs */}
+      <View style={styles.tabs}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'analytics' && styles.activeTab]}
+          onPress={() => setActiveTab('analytics')}
+        >
+          <Text style={[styles.tabText, activeTab === 'analytics' && styles.activeTabText]}>
+            Análisis
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'inventory' && styles.activeTab]}
+          onPress={() => setActiveTab('inventory')}
+        >
+          <Text style={[styles.tabText, activeTab === 'inventory' && styles.activeTabText]}>
+            Inventario
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {activeTab === 'analytics' ? (
+        <View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>💰 Top por Rentabilidad</Text>
+            {analytics.top_by_profit?.slice(0, 5).map((product: any, index: number) => (
+              <View key={index} style={styles.productAnalyticsCard}>
+                <Text style={styles.productName}>{product.name}</Text>
+                <View style={styles.productStats}>
+                  <Text style={styles.productStat}>Ganancia: ${product.profit.toFixed(2)}</Text>
+                  <Text style={styles.productStat}>Margen: {product.margin.toFixed(1)}%</Text>
+                  <Text style={styles.productStat}>Vendidos: {product.units_sold}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>⚠️ Alertas de Stock</Text>
+            {analytics.stockout_predictions?.map((product: any, index: number) => (
+              <View key={index} style={[styles.productAnalyticsCard, { borderLeftColor: '#f44336' }]}>
+                <Text style={styles.productName}>{product.name}</Text>
+                <Text style={[styles.productAlert, { color: '#f44336' }]}>
+                  ⏰ Se agotará en {product.days_to_stockout} días
+                </Text>
+                <Text style={styles.productStat}>Stock actual: {product.current_stock}</Text>
+              </View>
+            ))}
+            {(!analytics.stockout_predictions || analytics.stockout_predictions.length === 0) && (
+              <Text style={styles.emptyText}>✅ No hay alertas de stock bajo</Text>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>⚡ Margen Bajo (Revisar Precios)</Text>
+            {analytics.low_margin_alert?.slice(0, 5).map((product: any, index: number) => (
+              <View key={index} style={[styles.productAnalyticsCard, { borderLeftColor: '#FF9800' }]}>
+                <Text style={styles.productName}>{product.name}</Text>
+                <Text style={[styles.productAlert, { color: '#FF9800' }]}>
+                  Margen: {product.margin.toFixed(1)}% - Considera aumentar precio
+                </Text>
+                <View style={styles.productStats}>
+                  <Text style={styles.productStat}>Precio: ${product.price}</Text>
+                  <Text style={styles.productStat}>Costo: ${product.cost}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📦 Inventario Completo</Text>
+          {products.map((product: any) => (
+            <View key={product._id} style={styles.inventoryCard}>
+              <Text style={styles.productName}>{product.name}</Text>
+              <View style={styles.inventoryRow}>
+                <Text style={styles.inventoryStat}>Stock: {product.quantity}</Text>
+                <Text style={styles.inventoryStat}>Precio: ${product.price}</Text>
+                <Text style={styles.inventoryStat}>Costo: ${product.cost}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+// Customers View Component
+function CustomersView({ data }: any) {
+  const customers = data?.customers || [];
+  const analytics = data?.analytics || {};
+
+  return (
+    <ScrollView style={styles.scrollContent}>
+      <Text style={styles.pageTitle}>Análisis de Clientes</Text>
+
+      <View style={styles.summaryRow}>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Total Clientes</Text>
+          <Text style={styles.summaryValue}>{analytics.total_customers || 0}</Text>
+        </View>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Deudas Totales</Text>
+          <Text style={[styles.summaryValue, { color: '#f44336' }]}>
+            ${analytics.total_debt?.toFixed(2) || '0.00'}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>⭐ Top Clientes por Ingresos</Text>
+        {analytics.top_customers?.map((customer: any, index: number) => (
+          <View key={index} style={styles.customerCard}>
+            <View style={styles.customerHeader}>
+              <Text style={styles.customerRank}>#{index + 1}</Text>
+              <View style={styles.customerInfo}>
+                <Text style={styles.customerName}>{customer.name}</Text>
+                <Text style={styles.customerDetail}>{customer.phone}</Text>
+              </View>
+              <Text style={styles.customerRevenue}>${customer.total_revenue.toFixed(2)}</Text>
+            </View>
+            <View style={styles.customerStats}>
+              <Text style={styles.customerStat}>Compras: {customer.total_purchases}</Text>
+              <Text style={styles.customerStat}>Promedio: ${customer.avg_purchase.toFixed(2)}</Text>
+              {customer.pending_debt > 0 && (
+                <Text style={[styles.customerStat, { color: '#f44336' }]}>
+                  Deuda: ${customer.pending_debt.toFixed(2)}
+                </Text>
+              )}
+            </View>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>💰 Clientes con Deudas</Text>
+        {analytics.customers_with_debts?.slice(0, 10).map((customer: any, index: number) => (
+          <View key={index} style={[styles.customerCard, { borderLeftColor: '#f44336' }]}>
+            <View style={styles.customerHeader}>
+              <View style={styles.customerInfo}>
+                <Text style={styles.customerName}>{customer.name}</Text>
+                <Text style={styles.customerDetail}>{customer.phone}</Text>
+              </View>
+              <Text style={[styles.customerRevenue, { color: '#f44336' }]}>
+                ${customer.pending_debt.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>😴 Clientes Inactivos (+30 días)</Text>
+        {analytics.inactive_customers?.map((customer: any, index: number) => (
+          <View key={index} style={[styles.customerCard, { borderLeftColor: '#FF9800' }]}>
+            <View style={styles.customerHeader}>
+              <View style={styles.customerInfo}>
+                <Text style={styles.customerName}>{customer.name}</Text>
+                <Text style={[styles.customerDetail, { color: '#FF9800' }]}>
+                  Última compra hace {customer.days_since_purchase} días
+                </Text>
+              </View>
+            </View>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
+// Suppliers View Component
+function SuppliersView({ data }: any) {
+  const suppliers = data?.suppliers || [];
+  const analytics = data?.analytics || {};
+
+  return (
+    <ScrollView style={styles.scrollContent}>
+      <Text style={styles.pageTitle}>Análisis de Proveedores</Text>
+
+      <View style={styles.summaryRow}>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Total Proveedores</Text>
+          <Text style={styles.summaryValue}>{analytics.total_suppliers || 0}</Text>
+        </View>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Gasto Total</Text>
+          <Text style={styles.summaryValue}>${analytics.total_spent?.toFixed(2) || '0.00'}</Text>
+        </View>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Deudas con Proveedores</Text>
+          <Text style={[styles.summaryValue, { color: '#f44336' }]}>
+            ${analytics.total_debt_to_suppliers?.toFixed(2) || '0.00'}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>🏢 Top Proveedores por Gasto</Text>
+        {analytics.top_suppliers?.map((supplier: any, index: number) => (
+          <View key={index} style={styles.supplierCard}>
+            <View style={styles.supplierHeader}>
+              <Text style={styles.supplierRank}>#{index + 1}</Text>
+              <View style={styles.supplierInfo}>
+                <Text style={styles.supplierName}>{supplier.name}</Text>
+                <Text style={styles.supplierDetail}>{supplier.phone}</Text>
+              </View>
+              <Text style={styles.supplierAmount}>${supplier.total_spent.toFixed(2)}</Text>
+            </View>
+            <View style={styles.supplierStats}>
+              <Text style={styles.supplierStat}>Transacciones: {supplier.total_transactions}</Text>
+              <Text style={styles.supplierStat}>Promedio: ${supplier.avg_transaction.toFixed(2)}</Text>
+              {supplier.pending_debt > 0 && (
+                <Text style={[styles.supplierStat, { color: '#f44336' }]}>
+                  Deuda: ${supplier.pending_debt.toFixed(2)}
+                </Text>
+              )}
+            </View>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>💳 Deudas con Proveedores</Text>
+        {analytics.suppliers_with_debts?.map((supplier: any, index: number) => (
+          <View key={index} style={[styles.supplierCard, { borderLeftColor: '#f44336' }]}>
+            <View style={styles.supplierHeader}>
+              <View style={styles.supplierInfo}>
+                <Text style={styles.supplierName}>{supplier.name}</Text>
+                <Text style={styles.supplierDetail}>{supplier.phone}</Text>
+              </View>
+              <Text style={[styles.supplierAmount, { color: '#f44336' }]}>
+                ${supplier.pending_debt.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
+// Bulk Upload View Component
+function BulkUploadView({ onReload }: any) {
+  const [uploadType, setUploadType] = useState('products');
+  const [uploadData, setUploadData] = useState<any[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async () => {
     try {
@@ -57,18 +554,14 @@ export default function AdminConsoleScreen() {
 
       if (result.canceled) return;
 
-      // Read file content
       const response = await fetch(result.assets[0].uri);
       const text = await response.text();
-
-      // Parse CSV
       const lines = text.split('\n');
       const headers = lines[0].split(',').map(h => h.trim());
       
       const parsedData = [];
       for (let i = 1; i < lines.length; i++) {
         if (!lines[i].trim()) continue;
-        
         const values = lines[i].split(',');
         const row: any = {};
         headers.forEach((header, index) => {
@@ -78,7 +571,7 @@ export default function AdminConsoleScreen() {
       }
 
       setUploadData(parsedData);
-      setShowUploadModal(true);
+      setShowModal(true);
     } catch (error) {
       Alert.alert('Error', 'No se pudo leer el archivo CSV');
     }
@@ -87,164 +580,126 @@ export default function AdminConsoleScreen() {
   const confirmUpload = async () => {
     setUploading(true);
     try {
-      const response = await api.post('/api/admin/products/bulk-upload', {
-        products: uploadData
-      });
+      let endpoint = '';
+      let payload: any = {};
 
-      setShowUploadModal(false);
+      switch (uploadType) {
+        case 'products':
+          endpoint = '/api/admin/products/bulk-upload';
+          payload = { products: uploadData };
+          break;
+        case 'customers':
+          endpoint = '/api/admin/customers/bulk-upload';
+          payload = { customers: uploadData };
+          break;
+        case 'suppliers':
+          endpoint = '/api/admin/suppliers/bulk-upload';
+          payload = { suppliers: uploadData };
+          break;
+      }
+
+      const response = await api.post(endpoint, payload);
+      setShowModal(false);
       Alert.alert(
         '✅ Carga Exitosa',
         `Creados: ${response.data.created}\nActualizados: ${response.data.updated}\nErrores: ${response.data.errors.length}`
       );
-      loadData();
+      onReload();
     } catch (error: any) {
-      Alert.alert('Error', 'No se pudo cargar los productos');
+      Alert.alert('Error', 'No se pudo cargar los datos');
     } finally {
       setUploading(false);
     }
   };
 
   const downloadTemplate = () => {
-    const csv = 'name,quantity,price,cost,category,min_stock_alert,alert_enabled,description\nCoca Cola 2L,50,2.50,1.80,Bebidas,10,true,Gaseosa Coca Cola 2 litros\n';
-    // En web, crear un link de descarga
+    let csv = '';
+    switch (uploadType) {
+      case 'products':
+        csv = 'name,quantity,price,cost,category,min_stock_alert,alert_enabled,description\nCoca Cola 2L,50,2.50,1.80,Bebidas,10,true,Gaseosa\n';
+        break;
+      case 'customers':
+        csv = 'name,lastname,phone,email\nJuan,Perez,+593999123456,juan@email.com\n';
+        break;
+      case 'suppliers':
+        csv = 'name,phone,email,type,tax_id\nDistribuidora XYZ,+593999654321,xyz@email.com,Mayorista,1234567890\n';
+        break;
+    }
+
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'plantilla_productos.csv';
+    a.download = `plantilla_${uploadType}.csv`;
     a.click();
   };
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Admin Console</Text>
-        <View style={{ width: 40 }} />
+    <ScrollView style={styles.scrollContent}>
+      <Text style={styles.pageTitle}>Carga Masiva de Datos</Text>
+
+      {/* Type Selector */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Selecciona el tipo de datos</Text>
+        <View style={styles.uploadTypeGrid}>
+          <TouchableOpacity
+            style={[styles.uploadTypeCard, uploadType === 'products' && styles.uploadTypeActive]}
+            onPress={() => setUploadType('products')}
+          >
+            <Ionicons name="cube" size={32} color={uploadType === 'products' ? '#4CAF50' : '#999'} />
+            <Text style={styles.uploadTypeText}>Productos</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.uploadTypeCard, uploadType === 'customers' && styles.uploadTypeActive]}
+            onPress={() => setUploadType('customers')}
+          >
+            <Ionicons name="people" size={32} color={uploadType === 'customers' ? '#4CAF50' : '#999'} />
+            <Text style={styles.uploadTypeText}>Clientes</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.uploadTypeCard, uploadType === 'suppliers' && styles.uploadTypeActive]}
+            onPress={() => setUploadType('suppliers')}
+          >
+            <Ionicons name="briefcase" size={32} color={uploadType === 'suppliers' ? '#4CAF50' : '#999'} />
+            <Text style={styles.uploadTypeText}>Proveedores</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'dashboard' && styles.activeTab]}
-          onPress={() => setActiveTab('dashboard')}
-        >
-          <Ionicons name="stats-chart" size={20} color={activeTab === 'dashboard' ? '#4CAF50' : '#666'} />
-          <Text style={[styles.tabText, activeTab === 'dashboard' && styles.activeTabText]}>
-            Dashboard
-          </Text>
+      {/* Actions */}
+      <View style={styles.section}>
+        <TouchableOpacity style={styles.actionButton} onPress={downloadTemplate}>
+          <Ionicons name="download" size={24} color="#fff" />
+          <Text style={styles.actionButtonText}>Descargar Plantilla</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'products' && styles.activeTab]}
-          onPress={() => setActiveTab('products')}
-        >
-          <Ionicons name="cube" size={20} color={activeTab === 'products' ? '#4CAF50' : '#666'} />
-          <Text style={[styles.tabText, activeTab === 'products' && styles.activeTabText]}>
-            Productos
-          </Text>
+        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#4CAF50' }]} onPress={handleFileUpload}>
+          <Ionicons name="cloud-upload" size={24} color="#fff" />
+          <Text style={styles.actionButtonText}>Cargar Archivo CSV</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
-      <ScrollView style={styles.content}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#4CAF50" />
-          </View>
-        ) : activeTab === 'dashboard' ? (
-          <View style={styles.dashboard}>
-            <Text style={styles.sectionTitle}>Resumen General</Text>
-
-            <View style={styles.statsGrid}>
-              <View style={[styles.statCard, { backgroundColor: '#4CAF50' }]}>
-                <Ionicons name="trending-up" size={32} color="#fff" />
-                <Text style={styles.statValue}>${analytics?.sales?.month?.toFixed(2) || '0'}</Text>
-                <Text style={styles.statLabel}>Ventas del Mes</Text>
-              </View>
-
-              <View style={[styles.statCard, { backgroundColor: '#FF9800' }]}>
-                <Ionicons name="cash" size={32} color="#fff" />
-                <Text style={styles.statValue}>${analytics?.balance?.month?.toFixed(2) || '0'}</Text>
-                <Text style={styles.statLabel}>Balance del Mes</Text>
-              </View>
-
-              <View style={[styles.statCard, { backgroundColor: '#2196F3' }]}>
-                <Ionicons name="cube" size={32} color="#fff" />
-                <Text style={styles.statValue}>{analytics?.products?.total || 0}</Text>
-                <Text style={styles.statLabel}>Total Productos</Text>
-              </View>
-
-              <View style={[styles.statCard, { backgroundColor: '#f44336' }]}>
-                <Ionicons name="alert-circle" size={32} color="#fff" />
-                <Text style={styles.statValue}>{analytics?.products?.low_stock || 0}</Text>
-                <Text style={styles.statLabel}>Stock Bajo</Text>
-              </View>
-            </View>
-
-            <Text style={styles.sectionTitle}>Productos Más Vendidos</Text>
-            {analytics?.top_products?.map((product: any, index: number) => (
-              <View key={index} style={styles.topProductCard}>
-                <Text style={styles.topProductName}>
-                  {index + 1}. {product.product_name}
-                </Text>
-                <Text style={styles.topProductStats}>
-                  Cantidad: {product.quantity_sold} | Ingresos: ${product.revenue.toFixed(2)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <View style={styles.productsSection}>
-            <View style={styles.productsHeader}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Buscar productos..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-              <TouchableOpacity style={styles.uploadButton} onPress={handleFileUpload}>
-                <Ionicons name="cloud-upload" size={20} color="#fff" />
-                <Text style={styles.uploadButtonText}>Cargar CSV</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.templateButton} onPress={downloadTemplate}>
-                <Ionicons name="download" size={20} color="#4CAF50" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderText, { flex: 2 }]}>Producto</Text>
-              <Text style={styles.tableHeaderText}>Cantidad</Text>
-              <Text style={styles.tableHeaderText}>Precio</Text>
-              <Text style={styles.tableHeaderText}>Costo</Text>
-            </View>
-
-            {filteredProducts.map((product) => (
-              <View key={product._id} style={styles.tableRow}>
-                <Text style={[styles.tableCell, { flex: 2 }]}>{product.name}</Text>
-                <Text style={styles.tableCell}>{product.quantity}</Text>
-                <Text style={styles.tableCell}>${product.price}</Text>
-                <Text style={styles.tableCell}>${product.cost}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+      {/* Instructions */}
+      <View style={styles.instructionsCard}>
+        <Text style={styles.instructionsTitle}>📝 Instrucciones</Text>
+        <Text style={styles.instructionsText}>
+          1. Descarga la plantilla CSV{`\n`}
+          2. Llena los datos en Excel o Google Sheets{`\n`}
+          3. Guarda como CSV{`\n`}
+          4. Carga el archivo usando el botón verde{`\n`}
+          5. Revisa la vista previa y confirma
+        </Text>
+      </View>
 
       {/* Upload Modal */}
-      <Modal visible={showUploadModal} animationType="slide" transparent={true}>
+      <Modal visible={showModal} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Vista Previa de Carga</Text>
+            <Text style={styles.modalTitle}>Vista Previa</Text>
             <Text style={styles.modalSubtitle}>
-              {uploadData.length} productos listos para cargar
+              {uploadData.length} registros listos para cargar
             </Text>
 
             <ScrollView style={styles.modalScroll}>
@@ -252,21 +707,19 @@ export default function AdminConsoleScreen() {
                 <View key={index} style={styles.previewItem}>
                   <Text style={styles.previewText}>{item.name}</Text>
                   <Text style={styles.previewSubtext}>
-                    ${item.price} | Stock: {item.quantity}
+                    {JSON.stringify(item).substring(0, 100)}...
                   </Text>
                 </View>
               ))}
               {uploadData.length > 5 && (
-                <Text style={styles.moreText}>
-                  ... y {uploadData.length - 5} más
-                </Text>
+                <Text style={styles.moreText}>... y {uploadData.length - 5} más</Text>
               )}
             </ScrollView>
 
             <View style={styles.modalButtons}>
               <Pressable
                 style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setShowUploadModal(false)}
+                onPress={() => setShowModal(false)}
               >
                 <Text style={styles.cancelButtonText}>Cancelar</Text>
               </Pressable>
@@ -285,7 +738,63 @@ export default function AdminConsoleScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
+  );
+}
+
+// Reports View Component
+function ReportsView({ data }: any) {
+  const history = data?.history || [];
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-EC', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <ScrollView style={styles.scrollContent}>
+      <Text style={styles.pageTitle}>Historial de Reportes IA</Text>
+
+      <Text style={styles.sectionTitle}>📚 Todos los Reportes Generados</Text>
+
+      {history.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="document-text-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyText}>No hay reportes generados aún</Text>
+        </View>
+      ) : (
+        history.map((report: any, index: number) => (
+          <View key={report._id || index} style={styles.reportCard}>
+            <View style={styles.reportHeader}>
+              <Ionicons name="document-text" size={24} color="#4CAF50" />
+              <View style={styles.reportInfo}>
+                <Text style={styles.reportTitle}>Reporte #{history.length - index}</Text>
+                <Text style={styles.reportDate}>{formatDate(report.generated_at)}</Text>
+              </View>
+            </View>
+            {report.metrics && (
+              <View style={styles.reportMetrics}>
+                <Text style={styles.reportMetric}>
+                  Ventas: ${report.metrics.total_sales?.toFixed(2) || '0.00'}
+                </Text>
+                <Text style={styles.reportMetric}>
+                  Balance: ${report.metrics.balance?.toFixed(2) || '0.00'}
+                </Text>
+              </View>
+            )}
+            <Text style={styles.reportInsights} numberOfLines={3}>
+              {report.insights}
+            </Text>
+          </View>
+        ))
+      )}
+    </ScrollView>
   );
 }
 
@@ -298,11 +807,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#1a237e',
     padding: 16,
     paddingTop: 48,
   },
-  backButton: {
+  menuButton: {
     padding: 8,
   },
   headerTitle: {
@@ -310,40 +819,84 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+  closeButton: {
+    padding: 8,
   },
-  tab: {
+  body: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  },
+  sidebar: {
+    width: 240,
+    backgroundColor: '#fff',
+    borderRightWidth: 1,
+    borderRightColor: '#e0e0e0',
     padding: 16,
-    gap: 8,
   },
-  activeTab: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#4CAF50',
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    gap: 12,
   },
-  tabText: {
+  menuItemActive: {
+    backgroundColor: '#f0f0f0',
+  },
+  menuItemText: {
     fontSize: 16,
     color: '#666',
   },
-  activeTabText: {
-    color: '#4CAF50',
-    fontWeight: '600',
+  mainContent: {
+    flex: 1,
   },
-  content: {
+  scrollContent: {
     flex: 1,
   },
   loadingContainer: {
-    padding: 40,
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    padding: 40,
   },
-  dashboard: {
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    padding: 24,
+    paddingBottom: 16,
+  },
+  kpiGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 16,
+    gap: 16,
+  },
+  kpiCard: {
+    width: 'calc(25% - 12px)',
+    minWidth: 200,
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+  },
+  kpiLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  kpiValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  kpiSubtext: {
+    fontSize: 12,
+    color: '#999',
+  },
+  section: {
     padding: 16,
   },
   sectionTitle: {
@@ -351,108 +904,365 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 16,
-    marginTop: 8,
   },
-  statsGrid: {
+  comparisonCard: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  comparisonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  comparisonRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 24,
+    justifyContent: 'space-around',
   },
-  statCard: {
-    width: '48%',
+  comparisonCol: {
+    alignItems: 'center',
+  },
+  comparisonLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 8,
+  },
+  comparisonValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  seasonalityCard: {
+    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
     alignItems: 'center',
   },
-  statValue: {
-    fontSize: 28,
+  seasonalityBest: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  seasonalityValue: {
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 8,
+    color: '#4CAF50',
   },
-  statLabel: {
+  topItemCard: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  topItemRank: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginRight: 16,
+    width: 40,
+  },
+  topItemContent: {
+    flex: 1,
+  },
+  topItemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  topItemStats: {
     fontSize: 14,
-    color: '#fff',
-    opacity: 0.9,
-    marginTop: 4,
+    color: '#666',
   },
-  topProductCard: {
+  tabs: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    gap: 8,
+    marginBottom: 16,
+  },
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+  },
+  activeTab: {
+    backgroundColor: '#4CAF50',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  activeTabText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  productAnalyticsCard: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  productName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  productStats: {
+    flexDirection: 'row',
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  productStat: {
+    fontSize: 14,
+    color: '#666',
+  },
+  productAlert: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  inventoryCard: {
     backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
   },
-  topProductName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+  inventoryRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 8,
   },
-  topProductStats: {
+  inventoryStat: {
     fontSize: 14,
     color: '#666',
   },
-  productsSection: {
-    padding: 16,
-  },
-  productsHeader: {
+  summaryRow: {
     flexDirection: 'row',
-    gap: 8,
+    paddingHorizontal: 16,
+    gap: 16,
     marginBottom: 16,
   },
-  searchInput: {
+  summaryCard: {
     flex: 1,
     backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    fontSize: 16,
-  },
-  uploadButton: {
-    flexDirection: 'row',
-    backgroundColor: '#4CAF50',
-    padding: 12,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    gap: 8,
   },
-  uploadButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  templateButton: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#4CAF50',
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
+  summaryLabel: {
+    fontSize: 12,
+    color: '#666',
     marginBottom: 8,
   },
-  tableHeaderText: {
-    flex: 1,
-    fontSize: 14,
+  summaryValue: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
   },
-  tableRow: {
-    flexDirection: 'row',
+  customerCard: {
     backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 4,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
   },
-  tableCell: {
+  customerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  customerRank: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginRight: 12,
+    width: 30,
+  },
+  customerInfo: {
     flex: 1,
+  },
+  customerName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  customerDetail: {
     fontSize: 14,
     color: '#666',
+    marginTop: 2,
+  },
+  customerRevenue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+  },
+  customerStats: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  customerStat: {
+    fontSize: 14,
+    color: '#666',
+  },
+  supplierCard: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800',
+  },
+  supplierHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  supplierRank: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FF9800',
+    marginRight: 12,
+    width: 30,
+  },
+  supplierInfo: {
+    flex: 1,
+  },
+  supplierName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  supplierDetail: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  supplierAmount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FF9800',
+  },
+  supplierStats: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  supplierStat: {
+    fontSize: 14,
+    color: '#666',
+  },
+  uploadTypeGrid: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  uploadTypeCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  uploadTypeActive: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#f1f8f4',
+  },
+  uploadTypeText: {
+    fontSize: 16,
+    color: '#333',
+    marginTop: 8,
+    fontWeight: '600',
+  },
+  actionButton: {
+    backgroundColor: '#2196F3',
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  instructionsCard: {
+    backgroundColor: '#E3F2FD',
+    padding: 20,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  instructionsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1976D2',
+    marginBottom: 12,
+  },
+  instructionsText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 22,
+  },
+  reportCard: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  reportHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  reportInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  reportTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  reportDate: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  reportMetrics: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 12,
+  },
+  reportMetric: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  reportInsights: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 16,
   },
   modalOverlay: {
     flex: 1,
@@ -492,7 +1302,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   previewSubtext: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
     marginTop: 4,
   },
