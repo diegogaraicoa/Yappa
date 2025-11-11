@@ -13,7 +13,7 @@ interface AuthContextData {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, storeName: string) => Promise<void>;
+  signUp: (email: string, password: string, storeName: string, whatsappNumber: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -52,16 +52,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setUser(userData);
     } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Error al iniciar sesi\u00f3n');
+      throw new Error(error.response?.data?.detail || 'Error al iniciar sesión');
     }
   }
 
-  async function signUp(email: string, password: string, storeName: string) {
+  async function signUp(email: string, password: string, storeName: string, whatsappNumber: string) {
     try {
       const response = await api.post('/api/auth/register', {
         email,
         password,
         store_name: storeName,
+        whatsapp_number: whatsappNumber,
       });
       const { access_token, user: userData } = response.data;
 

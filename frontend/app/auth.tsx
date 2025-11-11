@@ -19,6 +19,7 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [storeName, setStoreName] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const router = useRouter();
@@ -29,9 +30,21 @@ export default function AuthScreen() {
       return;
     }
 
-    if (!isLogin && !storeName) {
-      Alert.alert('Error', 'Por favor ingresa el nombre de tu tienda');
-      return;
+    if (!isLogin) {
+      if (!storeName) {
+        Alert.alert('Error', 'Por favor ingresa el nombre de tu tienda');
+        return;
+      }
+      if (!whatsappNumber) {
+        Alert.alert('Error', 'Por favor ingresa tu número de WhatsApp');
+        return;
+      }
+      // Validate WhatsApp number format
+      const cleanNumber = whatsappNumber.trim().replace(/\s+/g, '');
+      if (cleanNumber.length < 10) {
+        Alert.alert('Error', 'El número de WhatsApp debe tener al menos 10 dígitos');
+        return;
+      }
     }
 
     setLoading(true);
@@ -39,7 +52,12 @@ export default function AuthScreen() {
       if (isLogin) {
         await signIn(email, password);
       } else {
-        await signUp(email, password, storeName);
+        // Ensure number has + prefix for international format
+        let formattedNumber = whatsappNumber.trim().replace(/\s+/g, '');
+        if (!formattedNumber.startsWith('+')) {
+          formattedNumber = '+' + formattedNumber;
+        }
+        await signUp(email, password, storeName, formattedNumber);
       }
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -60,9 +78,9 @@ export default function AuthScreen() {
       >
         <View style={styles.header}>
           <Ionicons name="storefront" size={60} color="#4CAF50" />
-          <Text style={styles.title}>Mi Tienda</Text>
+          <Text style={styles.title}>BarrioShop</Text>
           <Text style={styles.subtitle}>
-            {isLogin ? 'Inicia sesi\u00f3n para continuar' : 'Registra tu tienda'}
+            {isLogin ? 'Inicia sesión para continuar' : 'Registra tu tienda'}
           </Text>
         </View>
 
@@ -71,7 +89,7 @@ export default function AuthScreen() {
             <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Correo electr\u00f3nico"
+              placeholder="Correo electrónico"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -84,7 +102,7 @@ export default function AuthScreen() {
             <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Contrase\u00f1a"
+              placeholder="Contraseña"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -93,16 +111,33 @@ export default function AuthScreen() {
           </View>
 
           {!isLogin && (
-            <View style={styles.inputContainer}>
-              <Ionicons name="storefront-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Nombre de tu tienda"
-                value={storeName}
-                onChangeText={setStoreName}
-                autoCapitalize="words"
-              />
-            </View>
+            <>
+              <View style={styles.inputContainer}>
+                <Ionicons name="storefront-outline" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nombre de tu tienda"
+                  value={storeName}
+                  onChangeText={setStoreName}
+                  autoCapitalize="words"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Ionicons name="logo-whatsapp" size={20} color="#25D366" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="WhatsApp (ej: +593992913093)"
+                  value={whatsappNumber}
+                  onChangeText={setWhatsappNumber}
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                />
+              </View>
+              <Text style={styles.helperText}>
+                📱 Tu número de WhatsApp es necesario para enviarte alertas de stock bajo y reportes de ventas.
+              </Text>
+            </>
           )}
 
           <TouchableOpacity
@@ -111,7 +146,7 @@ export default function AuthScreen() {
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? 'Cargando...' : isLogin ? 'Iniciar Sesi\u00f3n' : 'Registrarse'}
+              {loading ? 'Cargando...' : isLogin ? 'Iniciar Sesión' : 'Registrarse'}
             </Text>
           </TouchableOpacity>
 
@@ -120,7 +155,7 @@ export default function AuthScreen() {
             onPress={() => setIsLogin(!isLogin)}
           >
             <Text style={styles.switchText}>
-              {isLogin ? '\u00bfNo tienes cuenta? Reg\u00edstrate' : '\u00bfYa tienes cuenta? Inicia sesi\u00f3n'}
+              {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
             </Text>
           </TouchableOpacity>
 
@@ -184,6 +219,14 @@ const styles = StyleSheet.create({
     height: 56,
     fontSize: 16,
     color: '#333',
+  },
+  helperText: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: -8,
+    marginBottom: 16,
+    marginLeft: 4,
+    lineHeight: 18,
   },
   button: {
     backgroundColor: '#4CAF50',
