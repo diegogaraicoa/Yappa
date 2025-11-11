@@ -166,16 +166,23 @@ Sé conciso, práctico y motivador. Habla como un asesor amigo que quiere ayudar
         # Extract key parts from insights text
         insights_text = insights.get('insights', '')
         
-        # Truncate for WhatsApp (max ~1600 chars for good readability)
-        if len(insights_text) > 1600:
-            # Find a good break point
-            insights_text = insights_text[:1600]
-            last_section = insights_text.rfind('\n\n')
-            if last_section > 1000:
-                insights_text = insights_text[:last_section]
-            insights_text += "\n\n💬 Ver reporte completo en la app: Explorar → Mis Datos"
-        
+        # Header and footer
         header = "📊 *REPORTE DE TU NEGOCIO* 📊\n\n"
+        footer = "\n\n💬 Ver reporte completo en la app"
+        
+        # Calculate max length (Twilio limit is 1600, leave buffer for safety)
+        max_content_length = 1500 - len(header) - len(footer)
+        
+        # Truncate if needed
+        if len(insights_text) > max_content_length:
+            # Find a good break point (paragraph break)
+            truncated = insights_text[:max_content_length]
+            last_paragraph = truncated.rfind('\n\n')
+            if last_paragraph > 800:  # Keep at least 800 chars
+                insights_text = truncated[:last_paragraph]
+            else:
+                insights_text = truncated
+            insights_text += footer
         
         return header + insights_text
 
