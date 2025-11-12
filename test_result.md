@@ -155,11 +155,11 @@ backend:
 
   - task: "IA conversacional WhatsApp - Webhook y procesamiento"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/services/whatsapp_conversation_service.py"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -170,6 +170,9 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "SOLUCIÓN IMPLEMENTADA: Modificado process_sale_conversation y process_expense_conversation para usar output estructurado JSON de Claude. Cambios: 1) Sistema de prompts actualizado para solicitar respuestas en formato JSON con campos {message, data, ready}, 2) Agregada lógica para parsear JSON response y extraer datos estructurados, 3) conversation['data'] se actualiza automáticamente con datos extraídos en cada mensaje, 4) Verificación de confirmación movida al inicio del método antes de llamar a Claude. Backend reiniciado sin errores. Ahora Claude debe retornar tanto el mensaje al usuario como los datos estructurados, resolviendo el problema de extracción de datos."
+      - working: false
+        agent: "testing"
+        comment: "🔍 COMPREHENSIVE RE-TESTING COMPLETED - CRITICAL PROGRESS MADE BUT FINAL ISSUE REMAINS: ✅ MAJOR FIXES IMPLEMENTED: 1) JSON parsing issue RESOLVED - Claude responses wrapped in markdown code blocks now properly parsed, 2) Data extraction WORKING - conversation['data'] now correctly populated with structured data: {'products': [{'name': 'agua', 'quantity': 2, 'price': 1}], 'customer': 'Juan', 'payment_method': 'Efectivo', 'paid': True, 'total': 2}, 3) Claude integration FUNCTIONAL - LiteLLM calls successful, structured prompts working, 4) Webhook processing WORKING - all endpoints responding with 200 status. ❌ REMAINING CRITICAL ISSUE: Sales/expenses NOT registering in database despite conversation completion. Error: 'Error registering sale: product_id' - register_sale function failing during product ID resolution or database insertion. EVIDENCE: Conversations marked as 'completed' but 0 sales/expenses found in database. All core components functional except final registration step. RECOMMENDATION: Debug register_sale/register_expense functions - likely issue with product lookup by name or database insertion logic."
 
 frontend:
   - task: "Pantalla de alertas (/alerts.tsx)"
