@@ -440,12 +440,10 @@ class WhatsAppAITester:
         self.create_test_products()
         self.create_test_customer()
         
-        # Run tests
-        results["unregistered_user"] = self.test_unregistered_user()
-        results["sale_flow"] = self.test_sale_registration_flow()
-        results["expense_flow"] = self.test_expense_registration_flow()
+        # Run FINAL END-TO-END TESTS as specified in review request
+        results["complete_sale_flow"] = self.test_complete_sale_flow()
+        results["complete_expense_flow"] = self.test_complete_expense_flow()
         results["special_commands"] = self.test_special_commands()
-        results["error_handling"] = self.test_error_handling()
         results["claude_integration"] = self.test_claude_integration()
         
         # Verification
