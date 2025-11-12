@@ -307,20 +307,166 @@ Responde en español, de forma amigable pero profesional."""
     
     async def register_sale(self, conversation: Dict) -> Dict:
         """Register the sale in database"""
-        # This will be implemented to actually create the sale
-        # For now, return success
-        return {
-            "success": True,
-            "message": "✅ ¡Venta registrada exitosamente!\n\nEscribe 'venta' para registrar otra."
-        }
+        from bson import ObjectId
+        from datetime import datetime
+        
+        try:
+            data = conversation.get("data", {})
+            store_id = conversation["store_id"]
+            
+            # Extract data from conversation (Claude should have populated this)
+            products = data.get("products", [])
+            customer_name = data.get("customer", "Sin cliente")
+            payment_method = data.get("payment_method", "Efectivo")
+            paid = data.get("paid", True)
+            total = data.get("total", 0)
+            
+            if not products or total == 0:
+                return {
+                    "success": False,
+                    "message": "❌ No pude extraer todos los datos necesarios. Por favor intenta de nuevo."
+                }
+            
+            # Find customer if provided
+            customer_id = None
+            if customer_name and customer_name.lower() != "sin cliente":
+                customer = await self.db.customers.find_one({
+                    "store_id": store_id,
+                    "name": {"$regex": customer_name, "$options": "i"}
+                })
+                if customer:
+                    customer_id = str(customer["_id"])
+            
+            # Create sale
+            sale_doc = {
+                "store_id": store_id,
+                "date": datetime.utcnow(),
+                "products": products,
+                "total": total,
+                "payment_method": payment_method,
+                "paid": paid,
+                "customer_id": customer_id,
+                "customer_name": customer_name,
+                "notes": "Registrado vía WhatsApp",
+                "with_inventory": True,  # Default to yes
+                "synced": True,
+                "created_at": datetime.utcnow()
+            }
+            
+            # Update inventory
+            for product in products:
+                await self.db.products.update_one(
+                    {"_id": ObjectId(product["product_id"]), "store_id": store_id},
+                    {"$inc": {"quantity": -product["quantity"]}}
+                )
+            
+            # Create debt if not paid
+            if not paid and customer_id:
+                debt_doc = {
+                    "store_id": store_id,
+                    "type": "customer",
+                    "amount": total,
+                    "customer_id": customer_id,
+                    "related_name": customer_name,
+                    "date": datetime.utcnow(),
+                    "notes": "Venta vía WhatsApp - pendiente de pago",
+                    "paid": False,
+                    "synced": True,
+                    "created_at": datetime.utcnow()
+                }
+                await self.db.debts.insert_one(debt_doc)
+            
+            result = await self.db.sales.insert_one(sale_doc)
+            
+            return {
+                "success": True,
+                "message": f"✅ ¡Venta registrada exitosamente!\n\nTotal: ${total:.2f}\nCliente: {customer_name}\n{'✓ Pagado' if paid else '⚠️ Deuda registrada'}\n\nEscribe 'venta' para registrar otra."
+            }
+            
+        except Exception as e:
+            print(f"Error registering sale: {str(e)}")
+            return {
+                "success": False,
+                "message": "❌ Error al registrar la venta. Por favor intenta de nuevo."
+            }
     
     async def register_expense(self, conversation: Dict) -> Dict:
         """Register the expense in database"""
-        # This will be implemented to actually create the expense
-        return {
-            "success": True,
-            "message": "✅ ¡Gasto registrado exitosamente!\n\nEscribe 'gasto' para registrar otro."
-        }
+        from bson import ObjectId
+        from datetime import datetime
+        
+        try:
+            data = conversation.get("data", {})
+            store_id = conversation["store_id"]
+            
+            # Extract data
+            concept = data.get("concept", "Gasto vía WhatsApp")
+            amount = data.get("amount", 0)
+            supplier_name = data.get("supplier", "Sin proveedor")
+            category = data.get("category", "Otros")
+            payment_method = data.get("payment_method", "Efectivo")
+            paid = data.get("paid", True)
+            
+            if amount == 0:
+                return {
+                    "success": False,
+                    "message": "❌ No pude extraer todos los datos necesarios. Por favor intenta de nuevo."
+                }
+            
+            # Find supplier if provided
+            supplier_id = None
+            if supplier_name and supplier_name.lower() != "sin proveedor":
+                supplier = await self.db.suppliers.find_one({
+                    "store_id": store_id,
+                    "name": {"$regex": supplier_name, "$options": "i"}
+                })
+                if supplier:
+                    supplier_id = str(supplier["_id"])
+            
+            # Create expense
+            expense_doc = {
+                "store_id": store_id,
+                "date": datetime.utcnow(),
+                "category": category,
+                "amount": amount,
+                "supplier_id": supplier_id,
+                "supplier_name": supplier_name,
+                "payment_method": payment_method,
+                "paid": paid,
+                "notes": concept,
+                "synced": True,
+                "created_at": datetime.utcnow()
+            }
+            
+            # Create debt if not paid
+            if not paid and supplier_id:
+                debt_doc = {
+                    "store_id": store_id,
+                    "type": "supplier",
+                    "amount": amount,
+                    "supplier_id": supplier_id,
+                    "related_name": supplier_name,
+                    "date": datetime.utcnow(),
+                    "notes": f"Gasto vía WhatsApp - {concept}",
+                    "paid": False,
+                    "synced": True,
+                    "created_at": datetime.utcnow()
+                }
+                await self.db.debts.insert_one(debt_doc)
+            
+            result = await self.db.expenses.insert_one(expense_doc)
+            
+            return {
+                "success": True,
+                "message": f"✅ ¡Gasto registrado exitosamente!\n\nMonto: ${amount:.2f}\nConcepto: {concept}\nProveedor: {supplier_name}\n{'✓ Pagado' if paid else '⚠️ Deuda registrada'}\n\nEscribe 'gasto' para registrar otro."
+            }
+            
+        except Exception as e:
+            print(f"Error registering expense: {str(e)}")
+            return {
+                "success": False,
+                "message": "❌ Error al registrar el gasto. Por favor intenta de nuevo."
+            }
     
     async def complete_conversation(self, conversation_id):
         """Mark conversation as completed"""
