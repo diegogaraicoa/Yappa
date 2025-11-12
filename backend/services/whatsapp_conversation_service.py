@@ -267,23 +267,24 @@ IMPORTANTE:
 Responde en español, de forma amigable pero profesional."""
 
         try:
-            client = get_claude_client()
+            # Get API key
+            llm_key = os.environ.get("EMERGENT_LLM_KEY", "")
             
-            claude_messages = []
-            for msg in messages_history[-10:]:
-                claude_messages.append({
-                    "role": msg["role"],
-                    "content": msg["content"]
-                })
+            # Create a unique session ID for this conversation
+            session_id = f"expense_{conversation['_id']}"
             
-            response = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=500,
-                system=system_prompt,
-                messages=claude_messages
-            )
+            # Initialize LlmChat
+            chat = LlmChat(
+                api_key=llm_key,
+                session_id=session_id,
+                system_message=system_prompt
+            ).with_model("anthropic", "claude-4-sonnet-20250514")
             
-            bot_response = response.content[0].text
+            # Create user message
+            user_message = UserMessage(text=message)
+            
+            # Send message and get response
+            bot_response = await chat.send_message(user_message)
             
             if message.upper().strip() in ["SÍ", "SI", "CONFIRMAR", "OK", "YES"]:
                 result = await self.register_expense(conversation)
@@ -297,6 +298,8 @@ Responde en español, de forma amigable pero profesional."""
             
         except Exception as e:
             print(f"Error with Claude: {str(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
             return "❌ Error procesando tu mensaje. Intenta de nuevo."
     
     async def register_sale(self, conversation: Dict) -> Dict:
