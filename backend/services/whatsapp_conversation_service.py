@@ -307,14 +307,7 @@ Ejemplo:
         store_id = conversation["store_id"]
         data = conversation.get("data", {})
         
-        # Check if user is confirming
-        if message.upper().strip() in ["SÍ", "SI", "CONFIRMAR", "OK", "YES"]:
-            result = await self.register_expense(conversation)
-            if result["success"]:
-                await self.complete_conversation(conversation["_id"])
-                return result["message"]
-            else:
-                return result["message"]
+        # Note: Confirmation logic moved after Claude processing
         
         messages_history = conversation.get("messages", [])
         
