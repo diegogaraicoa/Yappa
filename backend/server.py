@@ -1823,6 +1823,81 @@ async def get_user_tickets(current_user: dict = Depends(get_current_user)):
     
     return tickets
 
+# ==================== WHATSAPP WEBHOOK ENDPOINTS ====================
+
+from fastapi import Form, Response
+from services.whatsapp_conversation_service import get_whatsapp_conversation_service
+from services.twilio_service import twilio_service
+
+@api_router.post("/whatsapp/webhook")
+async def whatsapp_webhook(
+    From: str = Form(...),
+    Body: str = Form(None),
+    MediaUrl0: str = Form(None),
+    NumMedia: int = Form(0)
+):
+    """Webhook to receive WhatsApp messages from Twilio"""
+    
+    try:
+        # Extract phone number (remove 'whatsapp:' prefix)
+        user_phone = From.replace("whatsapp:", "")
+        
+        # Find user by phone number
+        user = await db.users.find_one({"whatsapp_number": user_phone})
+        
+        if not user:
+            # Send error message
+            twilio_service.send_whatsapp(
+                user_phone,
+                "❌ Tu número no está registrado en BarrioShop. Por favor regístrate primero en el app."
+            )
+            return Response(content="", media_type="application/xml")
+        
+        store_id = user["store_id"]
+        
+        # Get conversation service
+        conv_service = get_whatsapp_conversation_service(db)
+        
+        # Handle audio messages
+        if NumMedia > 0 and MediaUrl0:
+            # Transcribe audio
+            transcribed_text = await conv_service.transcribe_audio(MediaUrl0)
+            
+            if transcribed_text:
+                message_text = transcribed_text
+            else:
+                twilio_service.send_whatsapp(
+                    user_phone,
+                    "❌ No pude transcribir tu nota de voz. Intenta de nuevo o escribe un mensaje de texto."
+                )
+                return Response(content="", media_type="application/xml")
+        else:
+            message_text = Body or ""
+        
+        if not message_text.strip():
+            twilio_service.send_whatsapp(
+                user_phone,
+                "👋 Envía un mensaje de texto o nota de voz para registrar ventas o gastos.\n\nEscribe 'ayuda' para ver instrucciones."
+            )
+            return Response(content="", media_type="application/xml")
+        
+        # Process message
+        bot_response = await conv_service.process_message(user_phone, store_id, message_text)
+        
+        # Send response
+        twilio_service.send_whatsapp(user_phone, bot_response)
+        
+        return Response(content="", media_type="application/xml")
+        
+    except Exception as e:
+        logger.error(f"Error in WhatsApp webhook: {str(e)}")
+        return Response(content="", media_type="application/xml")
+
+@api_router.get("/whatsapp/webhook")
+async def whatsapp_webhook_verify():
+    """Webhook verification for Twilio"""
+    return {"status": "ok"}
+
 app.include_router(api_router)
 
 app.add_middleware(
