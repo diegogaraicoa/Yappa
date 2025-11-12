@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 from openai import OpenAI
-from anthropic import Anthropic
+from emergentintegrations import get_integration
 
 # Initialize clients
 openai_client = None
@@ -19,7 +19,8 @@ def get_claude_client():
     global claude_client
     if claude_client is None:
         llm_key = os.environ.get("EMERGENT_LLM_KEY", "")
-        claude_client = Anthropic(api_key=llm_key)
+        # Use emergentintegrations for Claude
+        claude_client = get_integration("claude", api_key=llm_key)
     return claude_client
 
 
