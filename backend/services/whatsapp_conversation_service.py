@@ -490,11 +490,12 @@ Ejemplo:
             }
             
             # Update inventory
-            for product in products:
-                await self.db.products.update_one(
-                    {"_id": ObjectId(product["product_id"]), "store_id": store_id},
-                    {"$inc": {"quantity": -product["quantity"]}}
-                )
+            for product in sale_products:
+                if product["product_id"]:  # Only update if we found the product
+                    await self.db.products.update_one(
+                        {"_id": ObjectId(product["product_id"]), "store_id": store_id},
+                        {"$inc": {"quantity": -product["quantity"]}}
+                    )
             
             # Create debt if not paid
             if not paid and customer_id:
