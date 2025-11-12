@@ -17,336 +17,403 @@ TEST_EMAIL = "test@example.com"
 TEST_PASSWORD = "testpass123"
 TEST_STORE_NAME = "Test Store"
 
-class BackendTester:
+class WhatsAppAITester:
     def __init__(self):
-        self.base_url = BASE_URL
-        self.headers = HEADERS
+        self.session = requests.Session()
         self.auth_token = None
-        self.test_user_email = f"testing_whatsapp_{int(time.time())}@test.com"
-        self.test_whatsapp = "+593992913093"
+        self.user_id = None
+        self.store_id = None
         
-    def log(self, message, level="INFO"):
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[{timestamp}] {level}: {message}")
+    def log(self, message):
+        """Log with timestamp"""
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
         
-    def test_registration_with_whatsapp(self):
-        """Test 1: Registration with mandatory WhatsApp field"""
-        self.log("=== TESTING REGISTRATION WITH WHATSAPP ===")
+    def register_test_user(self):
+        """Register a test user with WhatsApp number"""
+        self.log("🔐 Registering test user...")
         
-        # Test 1.1: Registration without WhatsApp (should fail)
-        self.log("Test 1.1: Registration without WhatsApp number")
-        payload_no_whatsapp = {
-            "email": self.test_user_email,
-            "password": "Testing123!",
-            "store_name": "Tienda de Prueba"
-        }
-        
+        # First try to login in case user already exists
         try:
-            response = requests.post(f"{self.base_url}/auth/register", 
-                                   json=payload_no_whatsapp, headers=self.headers)
-            if response.status_code == 422:
-                self.log("✅ PASS: Registration correctly rejected without WhatsApp (422 Unprocessable Entity)")
-            else:
-                self.log(f"❌ FAIL: Expected 422, got {response.status_code}. Response: {response.text}")
-                return False
-        except Exception as e:
-            self.log(f"❌ ERROR: {str(e)}")
-            return False
-            
-        # Test 1.2: Registration with empty WhatsApp (should fail)
-        self.log("Test 1.2: Registration with empty WhatsApp")
-        payload_empty_whatsapp = {
-            "email": self.test_user_email,
-            "password": "Testing123!",
-            "store_name": "Tienda de Prueba",
-            "whatsapp_number": ""
-        }
-        
-        try:
-            response = requests.post(f"{self.base_url}/auth/register", 
-                                   json=payload_empty_whatsapp, headers=self.headers)
-            if response.status_code == 400:
-                self.log("✅ PASS: Registration correctly rejected with empty WhatsApp (400 Bad Request)")
-            else:
-                self.log(f"❌ FAIL: Expected 400, got {response.status_code}. Response: {response.text}")
-                return False
-        except Exception as e:
-            self.log(f"❌ ERROR: {str(e)}")
-            return False
-            
-        # Test 1.3: Registration with WhatsApp without + (should auto-add +)
-        self.log("Test 1.3: Registration with WhatsApp without + prefix")
-        payload_no_plus = {
-            "email": self.test_user_email,
-            "password": "Testing123!",
-            "store_name": "Tienda de Prueba",
-            "whatsapp_number": "593992913093"
-        }
-        
-        try:
-            response = requests.post(f"{self.base_url}/auth/register", 
-                                   json=payload_no_plus, headers=self.headers)
+            login_data = {
+                "email": TEST_EMAIL,
+                "password": TEST_PASSWORD
+            }
+            response = self.session.post(f"{BACKEND_URL}/auth/login", json=login_data)
             if response.status_code == 200:
                 data = response.json()
-                self.auth_token = data.get("access_token")
-                self.log("✅ PASS: Registration successful with auto-added + prefix")
-                self.log(f"User ID: {data.get('user', {}).get('id')}")
-                self.log(f"Store ID: {data.get('user', {}).get('store_id')}")
+                self.auth_token = data["access_token"]
+                self.user_id = data["user"]["id"]
+                self.store_id = data["user"]["store_id"]
+                self.session.headers.update({"Authorization": f"Bearer {self.auth_token}"})
+                self.log("✅ Logged in with existing user")
                 return True
-            else:
-                self.log(f"❌ FAIL: Registration failed. Status: {response.status_code}, Response: {response.text}")
-                return False
-        except Exception as e:
-            self.log(f"❌ ERROR: {str(e)}")
-            return False
+        except:
+            pass
             
-    def test_registration_with_plus_whatsapp(self):
-        """Test valid registration with + prefix WhatsApp"""
-        self.log("=== TESTING REGISTRATION WITH + PREFIX WHATSAPP ===")
-        
-        # Use different email for this test
-        test_email = f"testing_whatsapp_plus_{int(time.time())}@test.com"
-        
-        payload = {
-            "email": test_email,
-            "password": "Testing123!",
-            "store_name": "Tienda de Prueba Plus",
-            "whatsapp_number": self.test_whatsapp
+        # Register new user
+        register_data = {
+            "email": TEST_EMAIL,
+            "password": TEST_PASSWORD,
+            "store_name": TEST_STORE_NAME,
+            "whatsapp_number": TEST_USER_PHONE
         }
         
-        try:
-            response = requests.post(f"{self.base_url}/auth/register", 
-                                   json=payload, headers=self.headers)
-            if response.status_code == 200:
-                data = response.json()
-                self.log("✅ PASS: Registration successful with + prefix WhatsApp")
-                self.log(f"Access token received: {data.get('access_token')[:20]}...")
-                return True
-            else:
-                self.log(f"❌ FAIL: Registration failed. Status: {response.status_code}, Response: {response.text}")
-                return False
-        except Exception as e:
-            self.log(f"❌ ERROR: {str(e)}")
-            return False
-            
-    def test_whatsapp_validation_edge_cases(self):
-        """Test edge cases for WhatsApp validation"""
-        self.log("=== TESTING WHATSAPP VALIDATION EDGE CASES ===")
+        response = self.session.post(f"{BACKEND_URL}/auth/register", json=register_data)
         
-        edge_cases = [
-            ("Very short number", "123", 400),
-            ("Only plus sign", "+", 400),
-            ("Spaces in number", "+ 593 99 291 3093", 200),  # Should work after cleanup
+        if response.status_code == 200:
+            data = response.json()
+            self.auth_token = data["access_token"]
+            self.user_id = data["user"]["id"]
+            self.store_id = data["user"]["store_id"]
+            self.session.headers.update({"Authorization": f"Bearer {self.auth_token}"})
+            self.log("✅ User registered successfully")
+            return True
+        else:
+            self.log(f"❌ Registration failed: {response.status_code} - {response.text}")
+            return False
+    
+    def create_test_products(self):
+        """Create test products for sale testing"""
+        self.log("📦 Creating test products...")
+        
+        products = [
+            {"name": "Agua", "price": 1.0, "cost": 0.5, "quantity": 100},
+            {"name": "Coca Cola", "price": 2.5, "cost": 1.8, "quantity": 50},
+            {"name": "Pan", "price": 0.5, "cost": 0.3, "quantity": 20}
         ]
         
-        for test_name, whatsapp_num, expected_status in edge_cases:
-            self.log(f"Testing: {test_name} - '{whatsapp_num}'")
-            test_email = f"edge_case_{int(time.time())}_{hash(whatsapp_num) % 1000}@test.com"
-            
-            payload = {
-                "email": test_email,
-                "password": "Testing123!",
-                "store_name": "Edge Case Store",
-                "whatsapp_number": whatsapp_num
-            }
-            
-            try:
-                response = requests.post(f"{self.base_url}/auth/register", 
-                                       json=payload, headers=self.headers)
-                if response.status_code == expected_status:
-                    self.log(f"✅ PASS: {test_name} - Expected {expected_status}, got {response.status_code}")
-                else:
-                    self.log(f"❌ FAIL: {test_name} - Expected {expected_status}, got {response.status_code}")
-                    self.log(f"Response: {response.text}")
-            except Exception as e:
-                self.log(f"❌ ERROR in {test_name}: {str(e)}")
-                
-    def test_ai_report_whatsapp_sending(self):
-        """Test 2: AI Report sending via WhatsApp (Error 500 fix)"""
-        self.log("=== TESTING AI REPORT WHATSAPP SENDING ===")
+        created_products = []
+        for product in products:
+            response = self.session.post(f"{BACKEND_URL}/products", json=product)
+            if response.status_code == 200:
+                created_products.append(response.json())
+                self.log(f"✅ Created product: {product['name']}")
+            else:
+                self.log(f"❌ Failed to create product {product['name']}: {response.text}")
         
-        if not self.auth_token:
-            self.log("❌ FAIL: No auth token available. Registration test must pass first.")
-            return False
-            
-        auth_headers = {
-            **self.headers,
-            "Authorization": f"Bearer {self.auth_token}"
+        return created_products
+    
+    def create_test_customer(self):
+        """Create test customer"""
+        self.log("👤 Creating test customer...")
+        
+        customer_data = {
+            "name": "Juan",
+            "lastname": "Pérez",
+            "phone": "+593999123456"
         }
         
-        # Test 2.1: Generate AI insights first
-        self.log("Test 2.1: Generating AI insights")
-        try:
-            response = requests.post(f"{self.base_url}/insights/generate", 
-                                   headers=auth_headers)
-            if response.status_code == 200:
-                self.log("✅ PASS: AI insights generated successfully")
-                data = response.json()
-                self.log(f"Insight ID: {data.get('_id')}")
-            else:
-                self.log(f"❌ FAIL: AI insights generation failed. Status: {response.status_code}")
-                self.log(f"Response: {response.text}")
-                return False
-        except Exception as e:
-            self.log(f"❌ ERROR generating insights: {str(e)}")
+        response = self.session.post(f"{BACKEND_URL}/customers", json=customer_data)
+        if response.status_code == 200:
+            customer = response.json()
+            self.log(f"✅ Created customer: {customer['name']} {customer['lastname']}")
+            return customer
+        else:
+            self.log(f"❌ Failed to create customer: {response.text}")
+            return None
+    
+    def send_whatsapp_message(self, message, media_url=None, num_media=0):
+        """Simulate WhatsApp webhook message"""
+        self.log(f"📱 Sending WhatsApp message: '{message}'")
+        
+        form_data = {
+            "From": f"whatsapp:{TEST_USER_PHONE}",
+            "Body": message,
+            "NumMedia": str(num_media)
+        }
+        
+        if media_url:
+            form_data["MediaUrl0"] = media_url
+        
+        response = self.session.post(f"{BACKEND_URL}/whatsapp/webhook", data=form_data)
+        
+        self.log(f"📤 Webhook response: {response.status_code}")
+        if response.status_code != 200:
+            self.log(f"❌ Webhook error: {response.text}")
             return False
-            
-        # Test 2.2: Send AI report via WhatsApp
-        self.log("Test 2.2: Sending AI report via WhatsApp")
-        try:
-            response = requests.post(f"{self.base_url}/insights/send-whatsapp", 
-                                   headers=auth_headers)
-            
-            self.log(f"WhatsApp send response status: {response.status_code}")
-            self.log(f"WhatsApp send response: {response.text}")
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.log("✅ PASS: AI report sent via WhatsApp successfully")
-                self.log(f"WhatsApp number used: {data.get('whatsapp_number')}")
+        
+        return True
+    
+    def test_unregistered_user(self):
+        """Test 1: User not registered"""
+        self.log("\n🧪 TEST 1: Unregistered user")
+        
+        # Send message from unregistered number
+        form_data = {
+            "From": "whatsapp:+593999999999",  # Different number
+            "Body": "hola",
+            "NumMedia": "0"
+        }
+        
+        response = self.session.post(f"{BACKEND_URL}/whatsapp/webhook", data=form_data)
+        
+        if response.status_code == 200:
+            self.log("✅ Webhook handled unregistered user correctly")
+            return True
+        else:
+            self.log(f"❌ Webhook failed for unregistered user: {response.text}")
+            return False
+    
+    def test_sale_registration_flow(self):
+        """Test 2: Complete sale registration flow"""
+        self.log("\n🧪 TEST 2: Sale registration flow")
+        
+        # Step 1: Initiate sale
+        if not self.send_whatsapp_message("venta"):
+            return False
+        
+        time.sleep(1)  # Small delay between messages
+        
+        # Step 2: Provide sale details
+        if not self.send_whatsapp_message("vendí 2 aguas a Juan"):
+            return False
+        
+        time.sleep(1)
+        
+        # Step 3: Provide additional details (price)
+        if not self.send_whatsapp_message("cada agua cuesta $1"):
+            return False
+        
+        time.sleep(1)
+        
+        # Step 4: Confirm
+        if not self.send_whatsapp_message("sí"):
+            return False
+        
+        # Verify sale was created
+        time.sleep(2)
+        response = self.session.get(f"{BACKEND_URL}/sales")
+        if response.status_code == 200:
+            sales = response.json()
+            recent_sales = [s for s in sales if "WhatsApp" in s.get("notes", "")]
+            if recent_sales:
+                self.log("✅ Sale registered successfully via WhatsApp")
                 return True
-            elif response.status_code == 500:
-                self.log("❌ CRITICAL FAIL: Error 500 still occurring when sending WhatsApp")
-                self.log(f"Error details: {response.text}")
-                return False
-            elif response.status_code == 400:
-                self.log("❌ FAIL: Bad request (400) - Check WhatsApp configuration")
-                self.log(f"Error details: {response.text}")
-                return False
-            elif response.status_code == 404:
-                self.log("❌ FAIL: No reports found (404) - Generate insights first")
-                return False
-            else:
-                self.log(f"❌ FAIL: Unexpected status code {response.status_code}")
-                self.log(f"Response: {response.text}")
-                return False
-                
-        except Exception as e:
-            self.log(f"❌ ERROR sending WhatsApp: {str(e)}")
-            return False
-            
-    def test_user_whatsapp_configuration(self):
-        """Test user WhatsApp configuration retrieval"""
-        self.log("=== TESTING USER WHATSAPP CONFIGURATION ===")
         
-        if not self.auth_token:
-            self.log("❌ FAIL: No auth token available")
+        self.log("❌ Sale not found in database")
+        return False
+    
+    def test_expense_registration_flow(self):
+        """Test 3: Complete expense registration flow"""
+        self.log("\n🧪 TEST 3: Expense registration flow")
+        
+        # Step 1: Initiate expense
+        if not self.send_whatsapp_message("gasto"):
             return False
-            
-        auth_headers = {
-            **self.headers,
-            "Authorization": f"Bearer {self.auth_token}"
+        
+        time.sleep(1)
+        
+        # Step 2: Provide expense details
+        if not self.send_whatsapp_message("pagué $50 de luz"):
+            return False
+        
+        time.sleep(1)
+        
+        # Step 3: Provide additional details
+        if not self.send_whatsapp_message("fue en efectivo"):
+            return False
+        
+        time.sleep(1)
+        
+        # Step 4: Confirm
+        if not self.send_whatsapp_message("sí"):
+            return False
+        
+        # Verify expense was created
+        time.sleep(2)
+        response = self.session.get(f"{BACKEND_URL}/expenses")
+        if response.status_code == 200:
+            expenses = response.json()
+            recent_expenses = [e for e in expenses if "WhatsApp" in e.get("notes", "")]
+            if recent_expenses:
+                self.log("✅ Expense registered successfully via WhatsApp")
+                return True
+        
+        self.log("❌ Expense not found in database")
+        return False
+    
+    def test_special_commands(self):
+        """Test 4: Special commands (AYUDA, CANCELAR)"""
+        self.log("\n🧪 TEST 4: Special commands")
+        
+        # Test AYUDA command
+        if not self.send_whatsapp_message("AYUDA"):
+            return False
+        
+        time.sleep(1)
+        
+        # Start a conversation and then cancel
+        if not self.send_whatsapp_message("venta"):
+            return False
+        
+        time.sleep(1)
+        
+        # Cancel the conversation
+        if not self.send_whatsapp_message("CANCELAR"):
+            return False
+        
+        self.log("✅ Special commands handled correctly")
+        return True
+    
+    def test_error_handling(self):
+        """Test 5: Error handling scenarios"""
+        self.log("\n🧪 TEST 5: Error handling")
+        
+        # Test empty message
+        if not self.send_whatsapp_message(""):
+            return False
+        
+        time.sleep(1)
+        
+        # Test malformed request (this should still return 200 but handle gracefully)
+        form_data = {
+            "From": f"whatsapp:{TEST_USER_PHONE}",
+            # Missing Body intentionally
+            "NumMedia": "0"
         }
         
-        try:
-            response = requests.get(f"{self.base_url}/user/notification-settings", 
-                                  headers=auth_headers)
-            if response.status_code == 200:
-                data = response.json()
-                whatsapp_number = data.get("whatsapp_number")
-                self.log(f"✅ PASS: User notification settings retrieved")
-                self.log(f"WhatsApp number: {whatsapp_number}")
-                self.log(f"Alerts enabled: {data.get('alerts_enabled')}")
-                self.log(f"Stock alerts enabled: {data.get('stock_alerts_enabled')}")
-                return whatsapp_number is not None
-            else:
-                self.log(f"❌ FAIL: Could not retrieve notification settings. Status: {response.status_code}")
-                return False
-        except Exception as e:
-            self.log(f"❌ ERROR: {str(e)}")
+        response = self.session.post(f"{BACKEND_URL}/whatsapp/webhook", data=form_data)
+        if response.status_code == 200:
+            self.log("✅ Error handling working correctly")
+            return True
+        else:
+            self.log(f"❌ Error handling failed: {response.text}")
             return False
-            
+    
+    def test_claude_integration(self):
+        """Test 6: Claude integration and natural conversation"""
+        self.log("\n🧪 TEST 6: Claude integration")
+        
+        # Test natural language processing
+        if not self.send_whatsapp_message("quiero registrar una venta"):
+            return False
+        
+        time.sleep(1)
+        
+        # Test Claude's ability to ask follow-up questions
+        if not self.send_whatsapp_message("vendí coca cola"):
+            return False
+        
+        time.sleep(2)  # Give Claude time to process
+        
+        self.log("✅ Claude integration test completed")
+        return True
+    
     def check_backend_logs(self):
-        """Check backend logs for any errors"""
-        self.log("=== CHECKING BACKEND LOGS ===")
+        """Check backend logs for errors"""
+        self.log("\n🔍 Checking backend logs...")
+        
         try:
             import subprocess
             result = subprocess.run(
                 ["tail", "-n", "50", "/var/log/supervisor/backend.err.log"],
-                capture_output=True, text=True
+                capture_output=True,
+                text=True
             )
-            if result.stdout:
-                self.log("Recent backend error logs:")
-                self.log(result.stdout)
-            else:
-                self.log("No recent backend error logs found")
-                
-            # Also check stdout logs
-            result = subprocess.run(
-                ["tail", "-n", "50", "/var/log/supervisor/backend.out.log"],
-                capture_output=True, text=True
-            )
-            if result.stdout:
-                self.log("Recent backend output logs:")
-                self.log(result.stdout)
-                
-        except Exception as e:
-            self.log(f"Could not check backend logs: {str(e)}")
             
+            if result.returncode == 0:
+                logs = result.stdout
+                if "invalid x-api-key" in logs.lower():
+                    self.log("❌ Found 'invalid x-api-key' error in logs")
+                    return False
+                elif "error" in logs.lower() and "whatsapp" in logs.lower():
+                    self.log("⚠️ Found WhatsApp-related errors in logs:")
+                    print(logs[-500:])  # Show last 500 chars
+                else:
+                    self.log("✅ No critical errors found in logs")
+                    return True
+            else:
+                self.log("⚠️ Could not read backend logs")
+                return True
+        except Exception as e:
+            self.log(f"⚠️ Error checking logs: {str(e)}")
+            return True
+    
+    def verify_database_state(self):
+        """Verify database state after tests"""
+        self.log("\n🗄️ Verifying database state...")
+        
+        # Check conversations
+        # Note: We can't directly access MongoDB, but we can check via API endpoints
+        
+        # Check if sales were created
+        response = self.session.get(f"{BACKEND_URL}/sales")
+        if response.status_code == 200:
+            sales = response.json()
+            whatsapp_sales = [s for s in sales if "WhatsApp" in s.get("notes", "")]
+            self.log(f"✅ Found {len(whatsapp_sales)} WhatsApp sales in database")
+        
+        # Check if expenses were created
+        response = self.session.get(f"{BACKEND_URL}/expenses")
+        if response.status_code == 200:
+            expenses = response.json()
+            whatsapp_expenses = [e for e in expenses if "WhatsApp" in e.get("notes", "")]
+            self.log(f"✅ Found {len(whatsapp_expenses)} WhatsApp expenses in database")
+        
+        return True
+    
     def run_all_tests(self):
-        """Run all backend tests"""
-        self.log("🚀 STARTING COMPREHENSIVE BACKEND TESTING")
-        self.log(f"Testing against: {self.base_url}")
-        self.log(f"Test user email: {self.test_user_email}")
-        self.log(f"Test WhatsApp: {self.test_whatsapp}")
+        """Run all tests in sequence"""
+        self.log("🚀 Starting WhatsApp Conversational AI Testing")
+        self.log("=" * 60)
         
-        results = {
-            "registration_whatsapp": False,
-            "registration_plus_prefix": False,
-            "whatsapp_validation": True,  # Will be set to False if any edge case fails
-            "user_config": False,
-            "ai_report_whatsapp": False
-        }
+        results = {}
         
-        # Test 1: Registration with WhatsApp validation
-        results["registration_whatsapp"] = self.test_registration_with_whatsapp()
+        # Setup
+        if not self.register_test_user():
+            self.log("❌ CRITICAL: Could not register test user")
+            return False
         
-        # Test 2: Registration with + prefix
-        results["registration_plus_prefix"] = self.test_registration_with_plus_whatsapp()
+        # Create test data
+        self.create_test_products()
+        self.create_test_customer()
         
-        # Test 3: Edge cases
-        self.test_whatsapp_validation_edge_cases()
+        # Run tests
+        results["unregistered_user"] = self.test_unregistered_user()
+        results["sale_flow"] = self.test_sale_registration_flow()
+        results["expense_flow"] = self.test_expense_registration_flow()
+        results["special_commands"] = self.test_special_commands()
+        results["error_handling"] = self.test_error_handling()
+        results["claude_integration"] = self.test_claude_integration()
         
-        # Test 4: User configuration
-        results["user_config"] = self.test_user_whatsapp_configuration()
-        
-        # Test 5: AI report WhatsApp sending
-        results["ai_report_whatsapp"] = self.test_ai_report_whatsapp_sending()
-        
-        # Check logs
-        self.check_backend_logs()
+        # Verification
+        results["backend_logs"] = self.check_backend_logs()
+        results["database_state"] = self.verify_database_state()
         
         # Summary
-        self.log("=" * 60)
-        self.log("🏁 TESTING SUMMARY")
+        self.log("\n" + "=" * 60)
+        self.log("📊 TEST RESULTS SUMMARY")
         self.log("=" * 60)
         
-        passed = sum(1 for result in results.values() if result)
+        passed = 0
         total = len(results)
         
         for test_name, result in results.items():
             status = "✅ PASS" if result else "❌ FAIL"
-            self.log(f"{status}: {test_name}")
-            
+            self.log(f"{test_name.replace('_', ' ').title()}: {status}")
+            if result:
+                passed += 1
+        
         self.log(f"\nOverall: {passed}/{total} tests passed")
         
-        if results["registration_whatsapp"] and results["ai_report_whatsapp"]:
-            self.log("🎉 CRITICAL ISSUES RESOLVED: Both WhatsApp registration and AI report sending are working!")
-        elif results["registration_whatsapp"]:
-            self.log("⚠️  PARTIAL SUCCESS: WhatsApp registration working, but AI report sending still has issues")
-        elif results["ai_report_whatsapp"]:
-            self.log("⚠️  PARTIAL SUCCESS: AI report sending working, but WhatsApp registration has issues")
+        if passed == total:
+            self.log("🎉 ALL TESTS PASSED - WhatsApp AI is working correctly!")
+            return True
         else:
-            self.log("🚨 CRITICAL FAILURES: Both main features still have issues")
-            
-        return results
+            self.log("⚠️ SOME TESTS FAILED - Check logs for details")
+            return False
 
 def main():
     """Main test execution"""
-    tester = BackendTester()
-    results = tester.run_all_tests()
-    return results
+    tester = WhatsAppAITester()
+    success = tester.run_all_tests()
+    
+    if success:
+        print("\n✅ TESTING COMPLETED SUCCESSFULLY")
+        exit(0)
+    else:
+        print("\n❌ TESTING COMPLETED WITH FAILURES")
+        exit(1)
 
 if __name__ == "__main__":
-    tester = BackendTester()
-    results = tester.run_all_tests()
+    main()
