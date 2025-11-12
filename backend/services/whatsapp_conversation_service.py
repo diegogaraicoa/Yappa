@@ -444,6 +444,8 @@ Ejemplo:
             
             # Resolve product IDs and prepare sale products
             sale_products = []
+            all_products_found = True
+            
             for product_data in products:
                 product_name = product_data.get("name", "")
                 quantity = product_data.get("quantity", 0)
@@ -464,9 +466,11 @@ Ejemplo:
                         "total": quantity * price
                     })
                 else:
-                    # Product not found, create a generic entry
+                    # Product not found in inventory
+                    all_products_found = False
+                    # Create a placeholder ID to avoid empty string issues
                     sale_products.append({
-                        "product_id": "",
+                        "product_id": "000000000000000000000000",  # Placeholder ObjectId
                         "product_name": product_name,
                         "quantity": quantity,
                         "price": price,
@@ -484,7 +488,7 @@ Ejemplo:
                 "customer_id": customer_id,
                 "customer_name": customer_name,
                 "notes": "Registrado vía WhatsApp",
-                "with_inventory": True,  # Default to yes
+                "with_inventory": all_products_found,  # Only true if all products exist
                 "synced": True,
                 "created_at": datetime.utcnow()
             }
