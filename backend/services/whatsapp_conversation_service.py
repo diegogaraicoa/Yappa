@@ -22,6 +22,22 @@ class WhatsAppConversationService:
         self.db = db
         self.timeout_minutes = 5
     
+    def parse_claude_json(self, claude_response: str) -> dict:
+        """Parse Claude response, handling markdown code blocks"""
+        try:
+            # Remove markdown code blocks if present
+            json_text = claude_response.strip()
+            if json_text.startswith("```json"):
+                json_text = json_text[7:]  # Remove ```json
+            if json_text.endswith("```"):
+                json_text = json_text[:-3]  # Remove ```
+            json_text = json_text.strip()
+            
+            return json.loads(json_text)
+        except json.JSONDecodeError:
+            print(f"Claude response was not valid JSON: {claude_response}")
+            return None
+    
     async def transcribe_audio(self, audio_url: str) -> str:
         """Transcribe audio using Whisper API"""
         try:
