@@ -155,18 +155,21 @@ backend:
 
   - task: "IA conversacional WhatsApp - Webhook y procesamiento"
     implemented: true
-    working: false
+    working: "NA"
     file: "/app/backend/services/whatsapp_conversation_service.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Refactorizado whatsapp_conversation_service.py para usar emergentintegrations correctamente. Cambios: 1) Eliminado import incorrecto de get_integration, 2) Agregado import de LlmChat y UserMessage, 3) Refactorizado process_sale_conversation y process_expense_conversation para usar LlmChat con claude-4-sonnet-20250514, 4) Agregado mejor manejo de errores con traceback. El servicio ahora inicializa LlmChat correctamente con el EMERGENT_LLM_KEY y crea sesiones únicas por conversación. Backend reiniciado exitosamente sin errores. Necesita testing completo del webhook con simulación de mensajes de Twilio."
       - working: false
         agent: "testing"
-        comment: "❌ CRITICAL ISSUE IDENTIFIED: WhatsApp webhook responds correctly (200 status), Claude integration working (LiteLLM calls successful), Twilio sending messages (201 status), BUT sales/expenses not registering in database. ROOT CAUSE: Conversation service calls Claude but doesn't extract structured data from responses to populate conversation['data'] field. The register_sale/register_expense functions expect structured data (products, prices, etc.) but conversation['data'] remains empty. Claude responds with natural language but there's no parsing mechanism to extract structured information. EVIDENCE: Manual sale registration works perfectly, confirming core functionality is intact. Issue is specifically in data extraction from Claude responses in WhatsApp conversation flow."
+        comment: "Testing identificó FALLO ARQUITECTÓNICO CRÍTICO: Claude genera respuestas pero NO hay mecanismo para extraer datos estructurados y poblar conversation['data']. Las funciones register_sale/register_expense esperan datos estructurados (productos, precios, clientes) pero conversation['data'] siempre está vacío. El webhook funciona, Claude responde, Twilio envía mensajes, pero NO se registran ventas/gastos porque falta la extracción de datos."
+      - working: "NA"
+        agent: "main"
+        comment: "SOLUCIÓN IMPLEMENTADA: Modificado process_sale_conversation y process_expense_conversation para usar output estructurado JSON de Claude. Cambios: 1) Sistema de prompts actualizado para solicitar respuestas en formato JSON con campos {message, data, ready}, 2) Agregada lógica para parsear JSON response y extraer datos estructurados, 3) conversation['data'] se actualiza automáticamente con datos extraídos en cada mensaje, 4) Verificación de confirmación movida al inicio del método antes de llamar a Claude. Backend reiniciado sin errores. Ahora Claude debe retornar tanto el mensaje al usuario como los datos estructurados, resolviendo el problema de extracción de datos."
 
 frontend:
   - task: "Pantalla de alertas (/alerts.tsx)"
