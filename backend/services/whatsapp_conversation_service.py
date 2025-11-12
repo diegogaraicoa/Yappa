@@ -168,35 +168,71 @@ class WhatsAppConversationService:
         return None
     
     async def process_sale_conversation(self, conversation: Dict, message: str) -> str:
-        """Process sale conversation using Claude"""
+        """Process sale conversation using Claude with structured data extraction"""
         
         store_id = conversation["store_id"]
         data = conversation.get("data", {})
         
+        # Check if user is confirming
+        if message.upper().strip() in ["SÍ", "SI", "CONFIRMAR", "OK", "YES"]:
+            # Try to register the sale
+            result = await self.register_sale(conversation)
+            if result["success"]:
+                await self.complete_conversation(conversation["_id"])
+                return result["message"]
+            else:
+                return result["message"]
+        
         # Build conversation history for Claude
         messages_history = conversation.get("messages", [])
         
-        # System prompt
-        system_prompt = f"""Eres un asistente para registrar ventas en una tienda.
+        # System prompt with structured output
+        system_prompt = f"""Eres un asistente para registrar ventas en una tienda. DEBES responder SIEMPRE en formato JSON válido.
 
 Datos actuales de la venta:
 {json.dumps(data, indent=2, ensure_ascii=False)}
 
-Debes obtener:
-1. Producto(s): nombre y cantidad
-2. Precio: unitario o total
-3. Cliente: nombre (o "sin cliente" si es anónimo)
-4. Método de pago: Efectivo, Transferencia, Tarjeta, o DeUna
-5. Estado: ¿Ya pagó? (para detectar deudas)
+Información requerida:
+1. products: [{{name: string, quantity: number, price: number}}]
+2. customer: string (nombre del cliente o "Sin cliente")
+3. payment_method: "Efectivo" | "Transferencia" | "Tarjeta" | "DeUna"
+4. paid: boolean (true si ya pagó, false si es deuda)
+5. total: number
 
-IMPORTANTE:
-- Si el usuario menciona un producto que no existe en inventario, responde: "⚠️ El producto '[nombre]' no existe en tu inventario. Por favor créalo primero desde el app o Admin Console."
-- Si menciona un cliente que no existe, responde: "⚠️ El cliente '[nombre]' no existe. Por favor créalo primero desde el app o Admin Console."
-- Sé breve y directo
-- Haz UNA pregunta a la vez
-- Cuando tengas toda la información, genera un resumen y pide confirmación con "Confirma con SÍ"
+FORMATO DE RESPUESTA OBLIGATORIO:
+{{
+  "message": "Tu respuesta al usuario en español, breve y directa",
+  "data": {{
+    "products": [...],
+    "customer": "...",
+    "payment_method": "...",
+    "paid": true/false,
+    "total": 0
+  }},
+  "ready": true/false
+}}
 
-Responde en español, de forma amigable pero profesional."""
+REGLAS:
+- "message": Lo que le dirás al usuario
+- "data": Extrae TODA la información que el usuario haya proporcionado hasta ahora
+- "ready": true SOLO cuando tengas TODA la información necesaria
+- Sé breve, haz UNA pregunta a la vez
+- Cuando ready=true, genera un resumen completo y pide confirmación con "Confirma con SÍ"
+- Si faltan datos, pregunta específicamente por ellos
+- SIEMPRE responde en formato JSON válido
+
+Ejemplo:
+{{
+  "message": "¿Cuánto costó cada agua?",
+  "data": {{
+    "products": [{{"name": "agua", "quantity": 2, "price": 0}}],
+    "customer": "Juan",
+    "payment_method": "",
+    "paid": true,
+    "total": 0
+  }},
+  "ready": false
+}}"""
 
         # Call Claude using emergentintegrations
         try:
@@ -217,19 +253,25 @@ Responde en español, de forma amigable pero profesional."""
             user_message = UserMessage(text=message)
             
             # Send message and get response
-            bot_response = await chat.send_message(user_message)
+            claude_response = await chat.send_message(user_message)
             
-            # Check if user is confirming
-            if message.upper().strip() in ["SÍ", "SI", "CONFIRMAR", "OK", "YES"]:
-                # Try to register the sale
-                result = await self.register_sale(conversation)
-                if result["success"]:
-                    await self.complete_conversation(conversation["_id"])
-                    return result["message"]
-                else:
-                    return result["message"]
-            
-            return bot_response
+            # Parse JSON response
+            try:
+                response_data = json.loads(claude_response)
+                bot_message = response_data.get("message", "")
+                extracted_data = response_data.get("data", {})
+                ready = response_data.get("ready", False)
+                
+                # Update conversation data
+                if extracted_data:
+                    await self.update_conversation(conversation["_id"], {"data": extracted_data})
+                
+                return bot_message
+                
+            except json.JSONDecodeError:
+                # Fallback if Claude doesn't return JSON
+                print(f"Claude response was not valid JSON: {claude_response}")
+                return claude_response
             
         except Exception as e:
             print(f"Error with Claude: {str(e)}")
