@@ -495,7 +495,8 @@ Ejemplo:
             
             # Update inventory
             for product in sale_products:
-                if product["product_id"]:  # Only update if we found the product
+                # Only update if we found the product (not placeholder)
+                if product["product_id"] != "000000000000000000000000":
                     await self.db.products.update_one(
                         {"_id": ObjectId(product["product_id"]), "store_id": store_id},
                         {"$inc": {"quantity": -product["quantity"]}}
