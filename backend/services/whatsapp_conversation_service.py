@@ -3,25 +3,16 @@ import json
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 from openai import OpenAI
-from emergentintegrations import get_integration
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 # Initialize clients
 openai_client = None
-claude_client = None
 
 def get_openai_client():
     global openai_client
     if openai_client is None:
         openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
     return openai_client
-
-def get_claude_client():
-    global claude_client
-    if claude_client is None:
-        llm_key = os.environ.get("EMERGENT_LLM_KEY", "")
-        # Use emergentintegrations for Claude
-        claude_client = get_integration("claude", api_key=llm_key)
-    return claude_client
 
 
 class WhatsAppConversationService:
