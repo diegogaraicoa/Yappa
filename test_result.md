@@ -216,7 +216,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Campo WhatsApp obligatorio en registro"
+    - "IA conversacional WhatsApp - Webhook y procesamiento"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
