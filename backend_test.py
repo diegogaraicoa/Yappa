@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for WhatsApp Registration and AI Reports
-Testing critical user-reported issues:
-1. WhatsApp field mandatory in registration
-2. Error 500 when sending AI reports via WhatsApp
+Comprehensive Backend Testing for WhatsApp Conversational AI
+Testing all critical scenarios as specified in the review request
 """
 
 import requests
 import json
 import time
 from datetime import datetime
+import os
 
 # Configuration
-BASE_URL = "https://tienda-ai.preview.emergentagent.com/api"
-HEADERS = {"Content-Type": "application/json"}
+BACKEND_URL = "https://tienda-ai.preview.emergentagent.com/api"
+TEST_USER_PHONE = "+593992913093"
+TEST_EMAIL = "test@example.com"
+TEST_PASSWORD = "testpass123"
+TEST_STORE_NAME = "Test Store"
 
 class BackendTester:
     def __init__(self):
