@@ -267,10 +267,13 @@ Ejemplo:
             try:
                 response_data = self.parse_claude_json(claude_response)
                 if not response_data:
+                    print(f"DEBUG: Failed to parse Claude JSON: {claude_response}")
                     return claude_response
                 bot_message = response_data.get("message", "")
                 extracted_data = response_data.get("data", {})
                 ready = response_data.get("ready", False)
+                
+                print(f"DEBUG SALE: message='{message}', ready={ready}, data={extracted_data}")
                 
                 # Update conversation data
                 if extracted_data:
@@ -279,9 +282,11 @@ Ejemplo:
                 # Check if user is confirming and data is ready
                 if (message.upper().strip() in ["SÍ", "SI", "CONFIRMAR", "OK", "YES"] and 
                     ready and extracted_data):
+                    print(f"DEBUG: Attempting to register sale with data: {extracted_data}")
                     # Try to register the sale
                     conversation["data"] = extracted_data  # Update local conversation data
                     result = await self.register_sale(conversation)
+                    print(f"DEBUG: Sale registration result: {result}")
                     if result["success"]:
                         await self.complete_conversation(conversation["_id"])
                         return result["message"]
