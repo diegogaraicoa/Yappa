@@ -280,33 +280,71 @@ Ejemplo:
             return "❌ Error procesando tu mensaje. Intenta de nuevo."
     
     async def process_expense_conversation(self, conversation: Dict, message: str) -> str:
-        """Process expense conversation using Claude"""
+        """Process expense conversation using Claude with structured data extraction"""
         
         store_id = conversation["store_id"]
         data = conversation.get("data", {})
         
+        # Check if user is confirming
+        if message.upper().strip() in ["SÍ", "SI", "CONFIRMAR", "OK", "YES"]:
+            result = await self.register_expense(conversation)
+            if result["success"]:
+                await self.complete_conversation(conversation["_id"])
+                return result["message"]
+            else:
+                return result["message"]
+        
         messages_history = conversation.get("messages", [])
         
-        system_prompt = f"""Eres un asistente para registrar gastos en una tienda.
+        system_prompt = f"""Eres un asistente para registrar gastos en una tienda. DEBES responder SIEMPRE en formato JSON válido.
 
 Datos actuales del gasto:
 {json.dumps(data, indent=2, ensure_ascii=False)}
 
-Debes obtener:
-1. Concepto: descripción del gasto
-2. Monto: cantidad en dólares
-3. Proveedor: nombre (o "sin proveedor")
-4. Categoría: Compra de productos, Servicios, Salarios, Otros
-5. Método de pago: Efectivo, Transferencia, Tarjeta, DeUna
-6. Estado: ¿Ya pagó?
+Información requerida:
+1. concept: string (descripción del gasto)
+2. amount: number (monto en dólares)
+3. supplier: string (nombre del proveedor o "Sin proveedor")
+4. category: "Compra de productos" | "Servicios" | "Salarios" | "Otros"
+5. payment_method: "Efectivo" | "Transferencia" | "Tarjeta" | "DeUna"
+6. paid: boolean (true si ya pagó, false si es deuda)
 
-IMPORTANTE:
-- Si menciona un proveedor que no existe, responde: "⚠️ El proveedor '[nombre]' no existe. Por favor créalo primero desde el app o Admin Console."
-- Sé breve y directo
-- Haz UNA pregunta a la vez
-- Cuando tengas toda la información, genera un resumen y pide confirmación con "Confirma con SÍ"
+FORMATO DE RESPUESTA OBLIGATORIO:
+{{
+  "message": "Tu respuesta al usuario en español, breve y directa",
+  "data": {{
+    "concept": "...",
+    "amount": 0,
+    "supplier": "...",
+    "category": "...",
+    "payment_method": "...",
+    "paid": true/false
+  }},
+  "ready": true/false
+}}
 
-Responde en español, de forma amigable pero profesional."""
+REGLAS:
+- "message": Lo que le dirás al usuario
+- "data": Extrae TODA la información que el usuario haya proporcionado hasta ahora
+- "ready": true SOLO cuando tengas TODA la información necesaria
+- Sé breve, haz UNA pregunta a la vez
+- Cuando ready=true, genera un resumen completo y pide confirmación con "Confirma con SÍ"
+- Si faltan datos, pregunta específicamente por ellos
+- SIEMPRE responde en formato JSON válido
+
+Ejemplo:
+{{
+  "message": "¿Cómo pagaste este gasto?",
+  "data": {{
+    "concept": "pago de luz",
+    "amount": 50,
+    "supplier": "Sin proveedor",
+    "category": "Servicios",
+    "payment_method": "",
+    "paid": true
+  }},
+  "ready": false
+}}"""
 
         try:
             # Get API key
@@ -326,17 +364,25 @@ Responde en español, de forma amigable pero profesional."""
             user_message = UserMessage(text=message)
             
             # Send message and get response
-            bot_response = await chat.send_message(user_message)
+            claude_response = await chat.send_message(user_message)
             
-            if message.upper().strip() in ["SÍ", "SI", "CONFIRMAR", "OK", "YES"]:
-                result = await self.register_expense(conversation)
-                if result["success"]:
-                    await self.complete_conversation(conversation["_id"])
-                    return result["message"]
-                else:
-                    return result["message"]
-            
-            return bot_response
+            # Parse JSON response
+            try:
+                response_data = json.loads(claude_response)
+                bot_message = response_data.get("message", "")
+                extracted_data = response_data.get("data", {})
+                ready = response_data.get("ready", False)
+                
+                # Update conversation data
+                if extracted_data:
+                    await self.update_conversation(conversation["_id"], {"data": extracted_data})
+                
+                return bot_message
+                
+            except json.JSONDecodeError:
+                # Fallback if Claude doesn't return JSON
+                print(f"Claude response was not valid JSON: {claude_response}")
+                return claude_response
             
         except Exception as e:
             print(f"Error with Claude: {str(e)}")
