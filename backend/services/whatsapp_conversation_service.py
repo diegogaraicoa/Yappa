@@ -394,6 +394,18 @@ Ejemplo:
                 if extracted_data:
                     await self.update_conversation(conversation["_id"], {"data": extracted_data})
                 
+                # Check if user is confirming and data is ready
+                if (message.upper().strip() in ["SÍ", "SI", "CONFIRMAR", "OK", "YES"] and 
+                    ready and extracted_data):
+                    # Try to register the expense
+                    conversation["data"] = extracted_data  # Update local conversation data
+                    result = await self.register_expense(conversation)
+                    if result["success"]:
+                        await self.complete_conversation(conversation["_id"])
+                        return result["message"]
+                    else:
+                        return result["message"]
+                
                 return bot_message
                 
             except json.JSONDecodeError:
