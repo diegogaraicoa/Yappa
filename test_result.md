@@ -155,15 +155,18 @@ backend:
 
   - task: "IA conversacional WhatsApp - Webhook y procesamiento"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/services/whatsapp_conversation_service.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Refactorizado whatsapp_conversation_service.py para usar emergentintegrations correctamente. Cambios: 1) Eliminado import incorrecto de get_integration, 2) Agregado import de LlmChat y UserMessage, 3) Refactorizado process_sale_conversation y process_expense_conversation para usar LlmChat con claude-4-sonnet-20250514, 4) Agregado mejor manejo de errores con traceback. El servicio ahora inicializa LlmChat correctamente con el EMERGENT_LLM_KEY y crea sesiones únicas por conversación. Backend reiniciado exitosamente sin errores. Necesita testing completo del webhook con simulación de mensajes de Twilio."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE IDENTIFIED: WhatsApp webhook responds correctly (200 status), Claude integration working (LiteLLM calls successful), Twilio sending messages (201 status), BUT sales/expenses not registering in database. ROOT CAUSE: Conversation service calls Claude but doesn't extract structured data from responses to populate conversation['data'] field. The register_sale/register_expense functions expect structured data (products, prices, etc.) but conversation['data'] remains empty. Claude responds with natural language but there's no parsing mechanism to extract structured information. EVIDENCE: Manual sale registration works perfectly, confirming core functionality is intact. Issue is specifically in data extraction from Claude responses in WhatsApp conversation flow."
 
 frontend:
   - task: "Pantalla de alertas (/alerts.tsx)"
