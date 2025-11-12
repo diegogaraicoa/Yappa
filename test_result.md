@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implementar la UI de alertas en la app móvil para mostrar productos con stock bajo. Los usuarios deben poder ver alertas de productos que están por debajo de su umbral mínimo de stock, con información clara sobre el nivel de alerta (crítico o advertencia), y poder navegar fácilmente desde la pantalla de inicio."
+user_problem_statement: "Completar e implementar la funcionalidad de IA conversacional por WhatsApp que permite a los usuarios registrar ventas y gastos mediante mensajes de texto y notas de voz. El sistema debe usar Claude para mantener conversaciones naturales y Whisper para transcribir audio."
 
 backend:
   - task: "Endpoint de alertas de stock bajo"
