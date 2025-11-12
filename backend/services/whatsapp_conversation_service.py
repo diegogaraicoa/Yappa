@@ -522,6 +522,8 @@ Ejemplo:
             
         except Exception as e:
             print(f"Error registering sale: {str(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
             return {
                 "success": False,
                 "message": "❌ Error al registrar la venta. Por favor intenta de nuevo."
