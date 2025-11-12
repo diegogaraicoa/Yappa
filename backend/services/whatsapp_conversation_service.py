@@ -477,7 +477,7 @@ Ejemplo:
             sale_doc = {
                 "store_id": store_id,
                 "date": datetime.utcnow(),
-                "products": products,
+                "products": sale_products,
                 "total": total,
                 "payment_method": payment_method,
                 "paid": paid,
