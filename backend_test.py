@@ -232,44 +232,77 @@ class WhatsAppAITester:
             self.log(f"❌ Failed to fetch sales: {response.status_code}")
             return False
     
-    def test_expense_registration_flow(self):
-        """Test 3: Complete expense registration flow"""
-        self.log("\n🧪 TEST 3: Expense registration flow")
+    def test_complete_expense_flow(self):
+        """FINAL TEST: Complete end-to-end expense flow as specified in review request"""
+        self.log("\n💸 FINAL EXPENSE FLOW TEST: 'gasto' → expense details → payment → confirmation")
         
-        # Step 1: Initiate expense
+        # Get initial expenses count for verification
+        initial_response = self.session.get(f"{BACKEND_URL}/expenses")
+        initial_count = len(initial_response.json()) if initial_response.status_code == 200 else 0
+        self.log(f"📊 Initial expenses count: {initial_count}")
+        
+        # Step 1: Initiate expense with "gasto"
+        self.log("📝 Step 1: Initiating expense with 'gasto'")
         if not self.send_whatsapp_message("gasto"):
             return False
+        time.sleep(2)
         
-        time.sleep(1)
-        
-        # Step 2: Provide expense details
+        # Step 2: Provide complete expense details as specified in review request
+        self.log("📝 Step 2: Providing expense details - 'pagué $50 de luz'")
         if not self.send_whatsapp_message("pagué $50 de luz"):
             return False
+        time.sleep(2)
         
-        time.sleep(1)
-        
-        # Step 3: Provide additional details
-        if not self.send_whatsapp_message("fue en efectivo"):
+        # Step 3: Provide payment and category details as specified
+        self.log("📝 Step 3: Providing payment details - 'efectivo, servicios'")
+        if not self.send_whatsapp_message("efectivo, servicios"):
             return False
+        time.sleep(2)
         
-        time.sleep(1)
-        
-        # Step 4: Confirm
+        # Step 4: Confirm with "sí" as specified
+        self.log("📝 Step 4: Confirming with 'sí'")
         if not self.send_whatsapp_message("sí"):
             return False
+        time.sleep(3)  # Give more time for database insertion
         
-        # Verify expense was created
-        time.sleep(2)
+        # Step 5: VERIFY expense created in database
+        self.log("📝 Step 5: Verifying expense creation in database...")
         response = self.session.get(f"{BACKEND_URL}/expenses")
         if response.status_code == 200:
             expenses = response.json()
-            recent_expenses = [e for e in expenses if "WhatsApp" in e.get("notes", "")]
-            if recent_expenses:
-                self.log("✅ Expense registered successfully via WhatsApp")
-                return True
-        
-        self.log("❌ Expense not found in database")
-        return False
+            final_count = len(expenses)
+            self.log(f"📊 Final expenses count: {final_count}")
+            
+            if final_count > initial_count:
+                # Find the most recent expense
+                latest_expense = expenses[0] if expenses else None
+                if latest_expense:
+                    self.log("✅ EXPENSE CREATED! Verifying all fields populated:")
+                    self.log(f"   💰 Amount: ${latest_expense.get('amount', 0)}")
+                    self.log(f"   📝 Category: {latest_expense.get('category', 'N/A')}")
+                    self.log(f"   💳 Payment Method: {latest_expense.get('payment_method', 'N/A')}")
+                    self.log(f"   ✅ Paid: {latest_expense.get('paid', False)}")
+                    self.log(f"   📄 Notes: {latest_expense.get('notes', 'N/A')}")
+                    
+                    # Verify conversation['data'] was properly populated
+                    if (latest_expense.get('amount') == 50.0 and 
+                        latest_expense.get('category') == 'Servicios' and
+                        latest_expense.get('payment_method') == 'Efectivo' and
+                        'luz' in latest_expense.get('notes', '').lower()):
+                        self.log("🎉 CONVERSATION DATA EXTRACTION: WORKING PERFECTLY!")
+                        return True
+                    else:
+                        self.log("❌ CONVERSATION DATA MISMATCH - Data not extracted correctly")
+                        return False
+                else:
+                    self.log("❌ No expense data found")
+                    return False
+            else:
+                self.log("❌ CRITICAL FAILURE: Expense not created in database")
+                return False
+        else:
+            self.log(f"❌ Failed to fetch expenses: {response.status_code}")
+            return False
     
     def test_special_commands(self):
         """Test 4: Special commands (AYUDA, CANCELAR)"""
