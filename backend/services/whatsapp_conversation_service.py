@@ -189,15 +189,7 @@ class WhatsAppConversationService:
         store_id = conversation["store_id"]
         data = conversation.get("data", {})
         
-        # Check if user is confirming
-        if message.upper().strip() in ["SÍ", "SI", "CONFIRMAR", "OK", "YES"]:
-            # Try to register the sale
-            result = await self.register_sale(conversation)
-            if result["success"]:
-                await self.complete_conversation(conversation["_id"])
-                return result["message"]
-            else:
-                return result["message"]
+        # Note: Confirmation logic moved after Claude processing
         
         # Build conversation history for Claude
         messages_history = conversation.get("messages", [])
