@@ -442,6 +442,37 @@ Ejemplo:
                 if customer:
                     customer_id = str(customer["_id"])
             
+            # Resolve product IDs and prepare sale products
+            sale_products = []
+            for product_data in products:
+                product_name = product_data.get("name", "")
+                quantity = product_data.get("quantity", 0)
+                price = product_data.get("price", 0)
+                
+                # Find product by name
+                product = await self.db.products.find_one({
+                    "store_id": store_id,
+                    "name": {"$regex": product_name, "$options": "i"}
+                })
+                
+                if product:
+                    sale_products.append({
+                        "product_id": str(product["_id"]),
+                        "product_name": product["name"],
+                        "quantity": quantity,
+                        "price": price,
+                        "total": quantity * price
+                    })
+                else:
+                    # Product not found, create a generic entry
+                    sale_products.append({
+                        "product_id": "",
+                        "product_name": product_name,
+                        "quantity": quantity,
+                        "price": price,
+                        "total": quantity * price
+                    })
+            
             # Create sale
             sale_doc = {
                 "store_id": store_id,
