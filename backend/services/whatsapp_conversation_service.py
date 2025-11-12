@@ -273,7 +273,9 @@ Ejemplo:
             
             # Parse JSON response
             try:
-                response_data = json.loads(claude_response)
+                response_data = self.parse_claude_json(claude_response)
+                if not response_data:
+                    return claude_response
                 bot_message = response_data.get("message", "")
                 extracted_data = response_data.get("data", {})
                 ready = response_data.get("ready", False)
@@ -384,7 +386,9 @@ Ejemplo:
             
             # Parse JSON response
             try:
-                response_data = json.loads(claude_response)
+                response_data = self.parse_claude_json(claude_response)
+                if not response_data:
+                    return claude_response
                 bot_message = response_data.get("message", "")
                 extracted_data = response_data.get("data", {})
                 ready = response_data.get("ready", False)
