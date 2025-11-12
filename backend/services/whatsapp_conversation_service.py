@@ -619,7 +619,9 @@ Ejemplo:
                 }
                 await self.db.debts.insert_one(debt_doc)
             
+            print(f"DEBUG: About to insert expense_doc: {expense_doc}")
             result = await self.db.expenses.insert_one(expense_doc)
+            print(f"DEBUG: Expense inserted with ID: {result.inserted_id}")
             
             return {
                 "success": True,
