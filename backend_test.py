@@ -160,44 +160,77 @@ class WhatsAppAITester:
             self.log(f"❌ Webhook failed for unregistered user: {response.text}")
             return False
     
-    def test_sale_registration_flow(self):
-        """Test 2: Complete sale registration flow"""
-        self.log("\n🧪 TEST 2: Sale registration flow")
+    def test_complete_sale_flow(self):
+        """FINAL TEST: Complete end-to-end sale flow as specified in review request"""
+        self.log("\n🛒 FINAL SALE FLOW TEST: 'venta' → product details → payment → confirmation")
         
-        # Step 1: Initiate sale
+        # Get initial sales count for verification
+        initial_response = self.session.get(f"{BACKEND_URL}/sales")
+        initial_count = len(initial_response.json()) if initial_response.status_code == 200 else 0
+        self.log(f"📊 Initial sales count: {initial_count}")
+        
+        # Step 1: Initiate sale with "venta"
+        self.log("📝 Step 1: Initiating sale with 'venta'")
         if not self.send_whatsapp_message("venta"):
             return False
+        time.sleep(2)
         
-        time.sleep(1)  # Small delay between messages
-        
-        # Step 2: Provide sale details
-        if not self.send_whatsapp_message("vendí 2 aguas a Juan"):
+        # Step 2: Provide complete sale details as specified in review request
+        self.log("📝 Step 2: Providing sale details - 'vendí 2 aguas a Juan por $2 total'")
+        if not self.send_whatsapp_message("vendí 2 aguas a Juan por $2 total"):
             return False
+        time.sleep(2)
         
-        time.sleep(1)
-        
-        # Step 3: Provide additional details (price)
-        if not self.send_whatsapp_message("cada agua cuesta $1"):
+        # Step 3: Provide payment method as specified
+        self.log("📝 Step 3: Providing payment method - 'efectivo y ya pagó'")
+        if not self.send_whatsapp_message("efectivo y ya pagó"):
             return False
+        time.sleep(2)
         
-        time.sleep(1)
-        
-        # Step 4: Confirm
+        # Step 4: Confirm with "sí" as specified
+        self.log("📝 Step 4: Confirming with 'sí'")
         if not self.send_whatsapp_message("sí"):
             return False
+        time.sleep(3)  # Give more time for database insertion
         
-        # Verify sale was created
-        time.sleep(2)
+        # Step 5: VERIFY sale created in database with all fields populated
+        self.log("📝 Step 5: Verifying sale creation in database...")
         response = self.session.get(f"{BACKEND_URL}/sales")
         if response.status_code == 200:
             sales = response.json()
-            recent_sales = [s for s in sales if "WhatsApp" in s.get("notes", "")]
-            if recent_sales:
-                self.log("✅ Sale registered successfully via WhatsApp")
-                return True
-        
-        self.log("❌ Sale not found in database")
-        return False
+            final_count = len(sales)
+            self.log(f"📊 Final sales count: {final_count}")
+            
+            if final_count > initial_count:
+                # Find the most recent sale
+                latest_sale = sales[0] if sales else None
+                if latest_sale:
+                    self.log("✅ SALE CREATED! Verifying all fields populated:")
+                    self.log(f"   💰 Total: ${latest_sale.get('total', 0)}")
+                    self.log(f"   👤 Customer: {latest_sale.get('customer_name', 'N/A')}")
+                    self.log(f"   💳 Payment Method: {latest_sale.get('payment_method', 'N/A')}")
+                    self.log(f"   ✅ Paid: {latest_sale.get('paid', False)}")
+                    self.log(f"   📦 Products: {len(latest_sale.get('products', []))}")
+                    
+                    # Verify conversation['data'] was properly populated
+                    if (latest_sale.get('total') == 2.0 and 
+                        latest_sale.get('customer_name') == 'Juan' and
+                        latest_sale.get('payment_method') == 'Efectivo' and
+                        latest_sale.get('paid') == True):
+                        self.log("🎉 CONVERSATION DATA EXTRACTION: WORKING PERFECTLY!")
+                        return True
+                    else:
+                        self.log("❌ CONVERSATION DATA MISMATCH - Data not extracted correctly")
+                        return False
+                else:
+                    self.log("❌ No sale data found")
+                    return False
+            else:
+                self.log("❌ CRITICAL FAILURE: Sale not created in database")
+                return False
+        else:
+            self.log(f"❌ Failed to fetch sales: {response.status_code}")
+            return False
     
     def test_expense_registration_flow(self):
         """Test 3: Complete expense registration flow"""
