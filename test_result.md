@@ -153,6 +153,18 @@ backend:
         agent: "testing"
         comment: "✅ CRITICAL ISSUE RESOLVED: Error 500 completely fixed! COMPREHENSIVE TESTING COMPLETED: 1) AI insights generation working (POST /api/insights/generate returns 200 with valid insight ID), 2) WhatsApp sending working perfectly (POST /api/insights/send-whatsapp returns 200 with success message), 3) Twilio integration functional (logs show successful API call with status 201, message queued), 4) Proper error handling and logging implemented, 5) User WhatsApp number correctly retrieved and used (+593992913093). Backend logs confirm: 'WhatsApp send result: {success: True, message_sid: SM..., status: queued}'. The user-reported Error 500 is completely resolved."
 
+  - task: "IA conversacional WhatsApp - Webhook y procesamiento"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/services/whatsapp_conversation_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Refactorizado whatsapp_conversation_service.py para usar emergentintegrations correctamente. Cambios: 1) Eliminado import incorrecto de get_integration, 2) Agregado import de LlmChat y UserMessage, 3) Refactorizado process_sale_conversation y process_expense_conversation para usar LlmChat con claude-4-sonnet-20250514, 4) Agregado mejor manejo de errores con traceback. El servicio ahora inicializa LlmChat correctamente con el EMERGENT_LLM_KEY y crea sesiones únicas por conversación. Backend reiniciado exitosamente sin errores. Necesita testing completo del webhook con simulación de mensajes de Twilio."
+
 frontend:
   - task: "Pantalla de alertas (/alerts.tsx)"
     implemented: true
