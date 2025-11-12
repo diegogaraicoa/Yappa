@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://vendormate-13.preview.emergentagent.com/api"
+BASE_URL = "https://tienda-ai.preview.emergentagent.com/api"
 HEADERS = {"Content-Type": "application/json"}
 
 class BackendTester:
