@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for WhatsApp Conversational AI
-Testing all critical scenarios as specified in the review request
+FINAL END-TO-END VERIFICATION - WhatsApp Conversational AI
+Focus: Complete sale and expense flows with database verification
+As requested in the review request
 """
 
 import requests
@@ -9,13 +10,18 @@ import json
 import time
 from datetime import datetime
 import os
+from dotenv import load_dotenv
 
-# Configuration
-BACKEND_URL = "https://tienda-ai.preview.emergentagent.com/api"
+# Load environment variables
+load_dotenv('/app/backend/.env')
+load_dotenv('/app/frontend/.env')
+
+# Configuration from environment
+BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://tienda-ai.preview.emergentagent.com') + "/api"
 TEST_USER_PHONE = "+593992913093"
-TEST_EMAIL = "test@example.com"
-TEST_PASSWORD = "testpass123"
-TEST_STORE_NAME = "Test Store"
+TEST_EMAIL = "maria.gonzalez@test.com"
+TEST_PASSWORD = "MiTienda2025!"
+TEST_STORE_NAME = "Tienda María"
 
 class WhatsAppAITester:
     def __init__(self):
