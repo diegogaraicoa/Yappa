@@ -17,6 +17,332 @@ async def seed_tutorials():
     await db.tutorials.delete_many({})
     
     tutorials = [
+        # CRÍTICO - OBLIGATORIOS
+        {
+            "title": "🎯 PASO 1: Configura Tu Tienda (OBLIGATORIO)",
+            "description": "Antes de empezar, DEBES configurar proveedores y productos. Este es el paso más importante para el éxito de tu negocio.",
+            "category": "critical",
+            "content": """# 🎯 PASO 1: Configura Tu Tienda
+
+## ⚠️ ¿Por Qué Es OBLIGATORIO?
+
+**Sin proveedores y productos configurados, NO podrás:**
+- ❌ Hacer seguimiento real de inventario
+- ❌ Calcular márgenes de ganancia
+- ❌ Ver reportes precisos
+- ❌ Tomar decisiones basadas en datos
+- ❌ Aprovechar las alertas automáticas
+
+## 📋 Orden Correcto (MUY IMPORTANTE)
+
+### Paso 1: Agregar Proveedores PRIMERO
+
+**¿Por qué primero?**
+Porque cada producto debe estar asociado a un proveedor. Si no tienes proveedores, no sabrás:
+- De dónde viene el producto
+- A quién contactar para reordenar
+- Cuál es tu precio de compra real
+
+**Cómo agregar un proveedor:**
+1. Ve al menú principal
+2. Toca "Proveedores"
+3. Presiona el botón "+" (más)
+4. Llena la información:
+   - **Nombre:** Nombre del proveedor
+   - **Contacto:** Teléfono o WhatsApp
+   - **Dirección:** (Opcional)
+   - **Notas:** Días de entrega, horarios, etc.
+5. Guarda
+
+💡 **Consejo:** Empieza con tus 3-5 proveedores principales.
+
+### Paso 2: Agregar Productos DESPUÉS
+
+**Ahora sí, agrega tus productos:**
+
+1. Ve al menú principal
+2. Toca "Inventario" o "Productos"
+3. Presiona el botón "+" (más)
+4. Completa TODO:
+   - **Nombre:** Nombre claro del producto
+   - **Proveedor:** ⚠️ SELECCIONA el proveedor (paso 1)
+   - **Precio de venta:** Lo que cobras
+   - **Precio de compra:** Lo que pagas al proveedor
+   - **Stock inicial:** Cantidad actual
+   - **Stock mínimo:** Para alertas (ej: 10)
+   - **Categoría:** Organización
+5. Guarda
+
+### Paso 3: Activa las Alertas
+
+**¡MUY IMPORTANTE!**
+Ve a Configuración → Alertas y activa TODAS:
+- ✅ Alertas de stock bajo
+- ✅ Resumen de ventas
+- ✅ Reportes semanales
+- ✅ Insights de IA
+
+(Ver tutorial "Activa las Alertas")
+
+## ✅ Checklist de Verificación
+
+Marca cada punto al completarlo:
+
+### Paso 1: Proveedores
+- [ ] Agregué al menos 1 proveedor
+- [ ] Incluí información de contacto
+- [ ] Agregué notas útiles (días de entrega)
+
+### Paso 2: Productos
+- [ ] Agregué al menos 3 productos
+- [ ] TODOS tienen proveedor asignado
+- [ ] Definí precio de venta Y de compra
+- [ ] Configuré stock mínimo
+- [ ] Ingresé cantidad inicial
+
+### Paso 3: Alertas
+- [ ] Activé todas las alertas
+- [ ] Verifiqué que mi WhatsApp esté registrado
+
+## 🎯 Resultado Esperado
+
+Después de completar estos pasos:
+- ✅ Sabrás exactamente qué tienes en stock
+- ✅ Recibirás alertas cuando productos estén bajos
+- ✅ Podrás calcular ganancias reales
+- ✅ Los reportes serán precisos y útiles
+- ✅ Podrás rastrear todo tu negocio
+
+## 🚨 Errores Comunes
+
+❌ **Error:** Agregar productos sin proveedores
+✅ **Correcto:** Primero proveedores, luego productos
+
+❌ **Error:** No poner precio de compra
+✅ **Correcto:** Siempre incluir precio de compra para calcular ganancia
+
+❌ **Error:** Stock mínimo en 0
+✅ **Correcto:** Definir stock mínimo realista (ej: 10, 15, 20)
+
+❌ **Error:** No activar alertas
+✅ **Correcto:** Activar TODAS las alertas desde el inicio
+
+## 🎓 ¿Listo?
+
+Una vez completada esta configuración inicial:
+1. Regresa al menú de Capacitación
+2. Continúa con "Cómo Registrar una Venta"
+3. Explora las demás funciones
+
+**¡No saltees este paso! Es la base de todo.** 🏗️""",
+            "duration_minutes": 10,
+            "order": 0
+        },
+        {
+            "title": "⚡ Activa las Alertas (OBLIGATORIO)",
+            "description": "Configura las notificaciones para recibir avisos importantes sobre tu negocio. Sin esto, perderás información crítica.",
+            "category": "critical",
+            "content": """# ⚡ Activa las Alertas
+
+## ⚠️ ¿Por Qué Es OBLIGATORIO?
+
+**Sin alertas activadas:**
+- ❌ NO sabrás cuando productos estén por acabarse
+- ❌ NO recibirás resúmenes de ventas
+- ❌ NO aprovecharás los reportes de IA
+- ❌ NO recibirás recordatorios de deudas
+- ❌ Perderás ventas por falta de stock
+
+## 📱 Tipos de Alertas
+
+### 1. Alertas de Stock Bajo 📦
+**¿Qué es?**
+Te avisa cuando un producto llega al stock mínimo.
+
+**Ejemplo:**
+"⚠️ Coca Cola tiene solo 5 unidades. Stock mínimo: 10"
+
+**¿Cuándo llega?**
+- Todos los días a las 8:00 AM
+- Solo si hay productos bajo stock mínimo
+
+### 2. Resumen Diario de Ventas 💰
+**¿Qué es?**
+Un resumen de todas las ventas del día.
+
+**Incluye:**
+- Total vendido
+- Productos más vendidos
+- Clientes frecuentes
+- Métodos de pago usados
+
+**¿Cuándo llega?**
+- Todos los días a las 8:00 PM
+
+### 3. Resumen Semanal 📊
+**¿Qué es?**
+Análisis completo de la semana.
+
+**Incluye:**
+- Ventas vs semana anterior
+- Mejor y peor día
+- Top 5 productos
+- Recomendaciones
+
+**¿Cuándo llega?**
+- Todos los lunes a las 9:00 AM
+
+### 4. Insights de IA 🤖
+**¿Qué es?**
+Análisis inteligente con recomendaciones personalizadas.
+
+**Incluye:**
+- Tendencias detectadas
+- Productos sin movimiento
+- Oportunidades de mejora
+- Alertas de clientes con deudas altas
+
+**¿Cuándo llega?**
+- Semanal: Lunes 9:30 AM
+- Mensual: Día 1 del mes 10:00 AM
+
+## 📋 Cómo Activar las Alertas
+
+### Paso 1: Ve a Configuración
+1. Abre el menú principal
+2. Toca tu nombre o ícono de perfil
+3. Selecciona "Configuración" o "Settings"
+
+### Paso 2: Encuentra la Sección de Alertas
+Busca:
+- "Alertas"
+- "Notificaciones"
+- "Avisos"
+
+### Paso 3: Activa TODAS las Opciones
+
+**Activa estos switches:**
+- ✅ Alertas habilitadas (switch principal)
+- ✅ Alertas de stock bajo
+- ✅ Resumen de ventas diario
+- ✅ Resumen semanal
+- ✅ Insights de IA
+
+### Paso 4: Verifica tu WhatsApp
+
+**MUY IMPORTANTE:**
+1. En la misma pantalla, verifica que tengas tu número de WhatsApp registrado
+2. Debe estar en formato: +593XXXXXXXXX (con código de país)
+3. Si no lo tienes, agrégalo AHORA
+
+### Paso 5: Guarda Cambios
+- Presiona "Guardar" o "Save"
+- Deberías ver un mensaje de confirmación
+
+## ✅ Checklist de Activación
+
+Marca cada punto:
+
+### Configuración Básica
+- [ ] Entré a Configuración
+- [ ] Encontré la sección de Alertas
+- [ ] Activé el switch principal de alertas
+
+### Tipos de Alertas
+- [ ] Activé alertas de stock bajo
+- [ ] Activé resumen diario de ventas
+- [ ] Activé resumen semanal
+- [ ] Activé insights de IA
+
+### Verificación
+- [ ] Mi número de WhatsApp está registrado
+- [ ] El número tiene código de país (+593)
+- [ ] Guardé los cambios
+- [ ] Vi mensaje de confirmación
+
+## 🧪 Prueba que Funciona
+
+**Para probar las alertas:**
+
+1. **Stock Bajo:**
+   - Edita un producto
+   - Reduce el stock por debajo del mínimo
+   - Espera hasta las 8:00 AM del día siguiente
+   - Deberías recibir la alerta
+
+2. **Resumen Diario:**
+   - Registra al menos 1 venta hoy
+   - Espera hasta las 8:00 PM
+   - Recibirás el resumen
+
+3. **WhatsApp AI:**
+   - Envía "AYUDA" al número de WhatsApp del asistente
+   - Si recibes respuesta, todo está bien configurado
+
+## 📬 ¿Dónde Llegarán las Alertas?
+
+**Todas las alertas llegan a:**
+- 📱 Tu WhatsApp registrado
+- 🔔 Notificaciones push en el app (si activaste)
+
+**NO llegarán a:**
+- ❌ Email (por ahora)
+- ❌ SMS
+
+## 🚨 Problemas Comunes
+
+### "No me llegan alertas"
+
+**Solución:**
+1. Verifica que el switch principal esté activado
+2. Confirma tu número de WhatsApp
+3. Revisa que tenga código de país
+4. Espera a la hora programada
+5. Verifica que haya datos para alertar (ventas, productos bajos)
+
+### "Solo me llegan algunas"
+
+**Solución:**
+1. Revisa que TODAS las opciones estén activadas
+2. Guarda cambios nuevamente
+3. Reinicia la app
+
+### "El número está mal"
+
+**Solución:**
+1. Edita tu perfil
+2. Actualiza el número con formato: +593XXXXXXXXX
+3. Guarda
+4. Vuelve a configurar alertas
+
+## 🎯 Resultado Esperado
+
+Después de activar las alertas:
+- ✅ Recibirás notificaciones diarias por WhatsApp
+- ✅ Sabrás cuando reabastecer productos
+- ✅ Tendrás resúmenes automáticos
+- ✅ Aprovecharás la IA para mejorar
+- ✅ No perderás información importante
+
+## 💡 Tips Importantes
+
+1. **No desactives las alertas** - Son tu asistente 24/7
+2. **Lee los reportes** - Tienen información valiosa
+3. **Actúa en las alertas** - Si hay stock bajo, reordena
+4. **Usa el asistente de WhatsApp** - Ahorra tiempo registrando ventas
+
+## 🎓 Siguiente Paso
+
+Una vez configuradas las alertas:
+1. Regresa al menú de Capacitación
+2. Aprende "Cómo Registrar una Venta"
+3. Explora "Tu Asistente de WhatsApp"
+
+**¡Las alertas son tu mejor herramienta!** 🚀""",
+            "duration_minutes": 8,
+            "order": 1
+        },
+        
         # BÁSICO
         {
             "title": "Bienvenido a BarrioShop",
