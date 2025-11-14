@@ -112,6 +112,7 @@ export default function AdminConsoleScreen() {
     { id: 'suppliers', title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
     { id: 'bulk-upload', title: 'Carga Masiva', icon: 'cloud-upload', color: '#00BCD4' },
     { id: 'reports', title: 'Reportes IA', icon: 'document-text', color: '#E91E63' },
+    { id: 'training', title: 'Capacitación', icon: 'school', color: '#9C27B0' },
   ];
 
   return (
