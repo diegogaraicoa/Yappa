@@ -98,6 +98,8 @@ export default function AdminConsoleScreen() {
         return <BulkUploadView onReload={loadData} />;
       case 'reports':
         return <ReportsView data={data} />;
+      case 'training':
+        return <TrainingView data={data} />;
       default:
         return <DashboardView data={data} />;
     }
