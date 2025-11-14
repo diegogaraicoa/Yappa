@@ -64,6 +64,10 @@ export default function AdminConsoleScreen() {
           const history = await api.get('/api/insights/history?limit=20');
           setData({ history: history.data });
           break;
+        case 'training':
+          const tutorials = await api.get('/api/training');
+          setData({ tutorials: tutorials.data });
+          break;
       }
     } catch (error) {
       console.error('Error loading data:', error);
