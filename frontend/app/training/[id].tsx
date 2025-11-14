@@ -32,7 +32,6 @@ export default function TutorialDetailScreen() {
   const { id } = useLocalSearchParams();
   const [tutorial, setTutorial] = useState<Tutorial | null>(null);
   const [loading, setLoading] = useState(true);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadTutorial();
@@ -43,9 +42,6 @@ export default function TutorialDetailScreen() {
       setLoading(true);
       const response = await axios.get(`${API_URL}/api/training/${id}`);
       setTutorial(response.data);
-      
-      // Parse steps from markdown if they exist
-      parseStepsFromContent(response.data.content);
     } catch (error) {
       console.error('Error loading tutorial:', error);
       Alert.alert('Error', 'No se pudo cargar el tutorial');
@@ -53,24 +49,6 @@ export default function TutorialDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const parseStepsFromContent = (content: string) => {
-    // Extract interactive steps from markdown
-    // Look for patterns like "### Paso 1:" or "**Paso 1:**"
-    const stepRegex = /###?\s*(Paso\s+\d+:|Step\s+\d+:)/gi;
-    const matches = content.match(stepRegex);
-    // We'll handle this client-side for now
-  };
-
-  const toggleStep = (stepIndex: number) => {
-    const newCompleted = new Set(completedSteps);
-    if (newCompleted.has(stepIndex)) {
-      newCompleted.delete(stepIndex);
-    } else {
-      newCompleted.add(stepIndex);
-    }
-    setCompletedSteps(newCompleted);
   };
 
   const getCategoryColor = (category: string) => {
