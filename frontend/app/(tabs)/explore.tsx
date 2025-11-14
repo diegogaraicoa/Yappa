@@ -59,10 +59,6 @@ export default function ExploreScreen() {
               key={item.id}
               style={styles.card}
               onPress={() => {
-                if (item.badge) {
-                  // Placeholder - no navegar aún
-                  return;
-                }
                 router.push(item.route as any);
               }}
             >
