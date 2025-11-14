@@ -170,44 +170,6 @@ export default function TutorialDetailScreen() {
           </View>
         </View>
 
-        {steps.length > 0 && (
-          <View style={styles.stepsSection}>
-            <Text style={styles.sectionTitle}>📋 Pasos a Seguir</Text>
-            {steps.map((step, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.stepCard}
-                onPress={() => toggleStep(index)}
-              >
-                <View style={styles.stepHeader}>
-                  <View style={[
-                    styles.checkbox,
-                    completedSteps.has(index) && styles.checkboxChecked
-                  ]}>
-                    {completedSteps.has(index) && (
-                      <Ionicons name="checkmark" size={16} color="#FFF" />
-                    )}
-                  </View>
-                  <Text style={[
-                    styles.stepTitle,
-                    completedSteps.has(index) && styles.stepTitleCompleted
-                  ]}>
-                    {step.title}
-                  </Text>
-                </View>
-                <Text style={styles.stepContent}>{step.content}</Text>
-              </TouchableOpacity>
-            ))}
-            
-            {completedSteps.size === steps.length && steps.length > 0 && (
-              <View style={styles.completionBanner}>
-                <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-                <Text style={styles.completionText}>¡Completado! 🎉</Text>
-              </View>
-            )}
-          </View>
-        )}
-
         <View style={styles.contentSection}>
           <Text style={styles.sectionTitle}>📖 Contenido del Tutorial</Text>
           <View style={styles.markdownContainer}>
