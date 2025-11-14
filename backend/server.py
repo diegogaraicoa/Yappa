@@ -1991,7 +1991,16 @@ async def get_categories():
         {"id": "reports", "name": "Reportes", "description": "Entiende tus datos"}
     ]
 
+# Include routers
 app.include_router(api_router)
+
+# Include new auth routes
+try:
+    from routes.auth_routes import router as auth_router
+    app.include_router(auth_router, prefix="/api")
+    logger.info("New auth routes loaded successfully")
+except Exception as e:
+    logger.error(f"Error loading auth routes: {e}")
 
 app.add_middleware(
     CORSMiddleware,
