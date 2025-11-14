@@ -1858,19 +1858,13 @@ async def whatsapp_webhook(
         # Get conversation service
         conv_service = get_whatsapp_conversation_service(db)
         
-        # Handle audio messages
+        # Handle audio messages (temporarily disabled)
         if NumMedia > 0 and MediaUrl0:
-            # Transcribe audio
-            transcribed_text = await conv_service.transcribe_audio(MediaUrl0)
-            
-            if transcribed_text:
-                message_text = transcribed_text
-            else:
-                twilio_service.send_whatsapp(
-                    user_phone,
-                    "❌ No pude transcribir tu nota de voz. Intenta de nuevo o escribe un mensaje de texto."
-                )
-                return Response(content="", media_type="application/xml")
+            twilio_service.send_whatsapp(
+                user_phone,
+                "🎤 Las notas de voz están temporalmente deshabilitadas.\n\nPor favor, escribe tu mensaje de texto.\n\nEjemplo: 'venta' o 'vendí 2 aguas a Juan por $2'"
+            )
+            return Response(content="", media_type="application/xml")
         else:
             message_text = Body or ""
         
