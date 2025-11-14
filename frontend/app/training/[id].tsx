@@ -189,45 +189,7 @@ export default function TutorialDetailScreen() {
   );
 }
 
-function extractSteps(content: string): Array<{ title: string; content: string }> {
-  // Extract steps from content that match patterns like:
-  // ### Paso 1: Title
-  // or **Paso 1:** Title
-  
-  const steps: Array<{ title: string; content: string }> = [];
-  const lines = content.split('\n');
-  
-  let currentStep: { title: string; content: string } | null = null;
-  
-  for (const line of lines) {
-    // Check for step headers
-    const stepMatch = line.match(/^###?\s*(Paso\s+\d+:.*)/i) || line.match(/^\*\*(Paso\s+\d+:.*?)\*\*/i);
-    
-    if (stepMatch) {
-      // Save previous step
-      if (currentStep) {
-        steps.push(currentStep);
-      }
-      
-      // Start new step
-      currentStep = {
-        title: stepMatch[1].replace(/\*\*/g, '').trim(),
-        content: ''
-      };
-    } else if (currentStep && line.trim() && !line.startsWith('#')) {
-      // Add content to current step
-      currentStep.content += line.trim() + ' ';
-    }
-  }
-  
-  // Add last step
-  if (currentStep) {
-    steps.push(currentStep);
-  }
-  
-  return steps;
-}
-
+ 
 function getCategoryName(category: string): string {
   const names: Record<string, string> = {
     basic: 'Básico',
