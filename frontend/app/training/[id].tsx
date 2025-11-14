@@ -138,9 +138,6 @@ export default function TutorialDetailScreen() {
     return null;
   }
 
-  // Extract steps for interactive checklist
-  const steps = extractSteps(tutorial.content);
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
