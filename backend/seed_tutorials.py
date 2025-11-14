@@ -441,7 +441,7 @@ AI: ✅ ¡Venta registrada!
 
 [Próximamente - Video demostrativo]""",
             "duration_minutes": 3,
-            "order": 2
+            "order": 3
         },
         {
             "title": "Gestión de Inventario",
