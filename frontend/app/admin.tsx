@@ -1088,6 +1088,154 @@ function ReportsView({ data }: any) {
   );
 }
 
+
+// Training View Component
+function TrainingView({ data }: any) {
+  const tutorials = data?.tutorials || [];
+  const [selectedTutorial, setSelectedTutorial] = useState<any>(null);
+  const [showTutorialModal, setShowTutorialModal] = useState(false);
+
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      basic: '#4CAF50',
+      intermediate: '#FF9800',
+      advanced: '#F44336',
+      whatsapp: '#25D366',
+      reports: '#2196F3',
+      critical: '#E91E63',
+    };
+    return colors[category] || '#9E9E9E';
+  };
+
+  const getCategoryName = (category: string) => {
+    const names: Record<string, string> = {
+      basic: 'Básico',
+      intermediate: 'Intermedio',
+      advanced: 'Avanzado',
+      whatsapp: 'WhatsApp AI',
+      reports: 'Reportes',
+      critical: '⚠️ OBLIGATORIO',
+    };
+    return names[category] || category;
+  };
+
+  const openTutorial = async (tutorial: any) => {
+    try {
+      const response = await api.get(`/api/training/${tutorial._id}`);
+      setSelectedTutorial(response.data);
+      setShowTutorialModal(true);
+    } catch (error) {
+      console.error('Error loading tutorial:', error);
+    }
+  };
+
+  return (
+    <ScrollView style={styles.scrollContent}>
+      <Text style={styles.pageTitle}>📚 Capacitación</Text>
+      <Text style={styles.sectionTitle}>Aprende a usar BarrioShop</Text>
+
+      {tutorials.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="school-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyText}>No hay tutoriales disponibles</Text>
+        </View>
+      ) : (
+        tutorials.map((tutorial: any) => (
+          <TouchableOpacity
+            key={tutorial._id}
+            style={styles.tutorialCard}
+            onPress={() => openTutorial(tutorial)}
+          >
+            <View style={styles.tutorialHeader}>
+              <View
+                style={[
+                  styles.tutorialIconContainer,
+                  { backgroundColor: getCategoryColor(tutorial.category) + '20' },
+                ]}
+              >
+                <Ionicons
+                  name="book-outline"
+                  size={24}
+                  color={getCategoryColor(tutorial.category)}
+                />
+              </View>
+              <View style={styles.tutorialInfo}>
+                <Text style={styles.tutorialTitle}>{tutorial.title}</Text>
+                <Text style={styles.tutorialDescription} numberOfLines={2}>
+                  {tutorial.description}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.tutorialFooter}>
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryBadgeText}>
+                  {getCategoryName(tutorial.category)}
+                </Text>
+              </View>
+              <View style={styles.durationContainer}>
+                <Ionicons name="time-outline" size={16} color="#666" />
+                <Text style={styles.durationText}>{tutorial.duration_minutes} min</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))
+      )}
+
+      {/* Tutorial Detail Modal */}
+      <Modal visible={showTutorialModal} animationType="slide" transparent={false}>
+        <View style={styles.tutorialModalContainer}>
+          <View style={styles.tutorialModalHeader}>
+            <Text style={styles.tutorialModalTitle}>
+              {selectedTutorial?.title || 'Tutorial'}
+            </Text>
+            <TouchableOpacity onPress={() => setShowTutorialModal(false)}>
+              <Ionicons name="close" size={28} color="#333" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.tutorialModalContent}>
+            {selectedTutorial && (
+              <>
+                <View style={styles.tutorialModalMeta}>
+                  <View
+                    style={[
+                      styles.categoryBadge,
+                      {
+                        backgroundColor: getCategoryColor(selectedTutorial.category),
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.categoryBadgeText, { color: '#FFF' }]}>
+                      {getCategoryName(selectedTutorial.category)}
+                    </Text>
+                  </View>
+                  <View style={styles.durationContainer}>
+                    <Ionicons name="time-outline" size={16} color="#666" />
+                    <Text style={styles.durationText}>
+                      {selectedTutorial.duration_minutes} minutos
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={styles.tutorialModalDescription}>
+                  {selectedTutorial.description}
+                </Text>
+
+                <View style={styles.tutorialModalBody}>
+                  <Text style={styles.tutorialModalBodyText}>
+                    {selectedTutorial.content}
+                  </Text>
+                </View>
+              </>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
+    </ScrollView>
+  );
+}
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
