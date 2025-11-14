@@ -8,6 +8,14 @@ export default function ExploreScreen() {
 
   const exploreItems = [
     {
+      id: 0,
+      title: '📚 Capacitación',
+      icon: 'school',
+      color: '#E91E63',
+      route: '/training',
+      badge: '¡NUEVO!',
+    },
+    {
       id: 1,
       title: 'Clientes',
       icon: 'people',
