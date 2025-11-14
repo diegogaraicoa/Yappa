@@ -2004,6 +2004,16 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
+# Include analytics routes
+try:
+    from routes.analytics_routes import router as analytics_router
+    app.include_router(analytics_router, prefix="/api")
+    print("✅ Analytics routes loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading analytics routes: {e}")
+    import traceback
+    traceback.print_exc()
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
