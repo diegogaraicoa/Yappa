@@ -1998,9 +1998,11 @@ app.include_router(api_router)
 try:
     from routes.auth_routes import router as auth_router
     app.include_router(auth_router, prefix="/api")
-    logger.info("New auth routes loaded successfully")
+    print("✅ New auth routes loaded successfully")
 except Exception as e:
-    logger.error(f"Error loading auth routes: {e}")
+    print(f"❌ Error loading auth routes: {e}")
+    import traceback
+    traceback.print_exc()
 
 app.add_middleware(
     CORSMiddleware,
