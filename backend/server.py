@@ -1892,6 +1892,105 @@ async def whatsapp_webhook_verify():
     """Webhook verification for Twilio"""
     return {"status": "ok"}
 
+# ============================================
+# TRAINING MODULE ENDPOINTS
+# ============================================
+
+class TutorialCreate(BaseModel):
+    title: str
+    description: str
+    category: str  # "basic", "intermediate", "advanced"
+    content: str
+    video_url: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    order: Optional[int] = 0
+
+class Tutorial(TutorialCreate):
+    id: str = Field(alias="_id")
+    created_at: datetime
+    
+    class Config:
+        populate_by_name = True
+
+@api_router.get("/training")
+async def get_tutorials(category: Optional[str] = None):
+    """Get all tutorials, optionally filtered by category"""
+    try:
+        query = {}
+        if category:
+            query["category"] = category
+        
+        tutorials = await db.tutorials.find(query).sort("order", 1).to_list(100)
+        
+        return [{
+            "_id": str(tutorial["_id"]),
+            "title": tutorial["title"],
+            "description": tutorial["description"],
+            "category": tutorial["category"],
+            "content": tutorial.get("content", ""),
+            "video_url": tutorial.get("video_url"),
+            "duration_minutes": tutorial.get("duration_minutes", 0),
+            "order": tutorial.get("order", 0),
+            "created_at": tutorial.get("created_at")
+        } for tutorial in tutorials]
+    except Exception as e:
+        logger.error(f"Error getting tutorials: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/training/{tutorial_id}")
+async def get_tutorial(tutorial_id: str):
+    """Get a specific tutorial by ID"""
+    try:
+        tutorial = await db.tutorials.find_one({"_id": ObjectId(tutorial_id)})
+        
+        if not tutorial:
+            raise HTTPException(status_code=404, detail="Tutorial not found")
+        
+        return {
+            "_id": str(tutorial["_id"]),
+            "title": tutorial["title"],
+            "description": tutorial["description"],
+            "category": tutorial["category"],
+            "content": tutorial.get("content", ""),
+            "video_url": tutorial.get("video_url"),
+            "duration_minutes": tutorial.get("duration_minutes", 0),
+            "order": tutorial.get("order", 0),
+            "created_at": tutorial.get("created_at")
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting tutorial {tutorial_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/training")
+async def create_tutorial(tutorial: TutorialCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new tutorial (admin only)"""
+    try:
+        tutorial_dict = tutorial.dict()
+        tutorial_dict["created_at"] = datetime.utcnow()
+        
+        result = await db.tutorials.insert_one(tutorial_dict)
+        
+        return {
+            "_id": str(result.inserted_id),
+            **tutorial_dict
+        }
+    except Exception as e:
+        logger.error(f"Error creating tutorial: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/training/categories/list")
+async def get_categories():
+    """Get list of all tutorial categories"""
+    return [
+        {"id": "basic", "name": "Básico", "description": "Aprende lo fundamental"},
+        {"id": "intermediate", "name": "Intermedio", "description": "Mejora tus habilidades"},
+        {"id": "advanced", "name": "Avanzado", "description": "Conviértete en experto"},
+        {"id": "whatsapp", "name": "WhatsApp AI", "description": "Usa el asistente de IA"},
+        {"id": "reports", "name": "Reportes", "description": "Entiende tus datos"}
+    ]
+
 app.include_router(api_router)
 
 app.add_middleware(
