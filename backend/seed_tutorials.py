@@ -24,118 +24,57 @@ async def seed_tutorials():
             "category": "critical",
             "content": """# 🎯 PASO 1: Configura Tu Tienda
 
-## ⚠️ ¿Por Qué Es OBLIGATORIO?
+## ⚠️ ¿Por Qué Es Obligatorio?
 
-**Sin proveedores y productos configurados, NO podrás:**
-- ❌ Hacer seguimiento real de inventario
-- ❌ Calcular márgenes de ganancia
-- ❌ Ver reportes precisos
-- ❌ Tomar decisiones basadas en datos
-- ❌ Aprovechar las alertas automáticas
+Sin proveedores y productos configurados, no podrás hacer seguimiento de inventario, calcular ganancias, ni recibir alertas.
 
-## 📋 Orden Correcto (MUY IMPORTANTE)
+---
+
+## Orden Correcto
 
 ### Paso 1: Agregar Proveedores PRIMERO
 
-**¿Por qué primero?**
-Porque cada producto debe estar asociado a un proveedor. Si no tienes proveedores, no sabrás:
-- De dónde viene el producto
-- A quién contactar para reordenar
-- Cuál es tu precio de compra real
+Cada producto necesita un proveedor para saber de dónde viene y a quién contactar para reordenar.
 
-**Cómo agregar un proveedor:**
-1. Ve al menú principal
-2. Toca "Proveedores"
-3. Presiona el botón "+" (más)
-4. Llena la información:
-   - **Nombre:** Nombre del proveedor
-   - **Contacto:** Teléfono o WhatsApp
-   - **Dirección:** (Opcional)
-   - **Notas:** Días de entrega, horarios, etc.
-5. Guarda
+**Pasos:**
+1. Menú → Proveedores
+2. Botón "+"
+3. Completa: Nombre, Contacto, Notas
+4. Guarda
 
-💡 **Consejo:** Empieza con tus 3-5 proveedores principales.
+Empieza con tus 3-5 proveedores principales.
 
-### Paso 2: Agregar Productos DESPUÉS
+### Paso 2: Agregar Productos
 
-**Ahora sí, agrega tus productos:**
+Ahora agrega tus productos vinculados a proveedores.
 
-1. Ve al menú principal
-2. Toca "Inventario" o "Productos"
-3. Presiona el botón "+" (más)
-4. Completa TODO:
-   - **Nombre:** Nombre claro del producto
-   - **Proveedor:** ⚠️ SELECCIONA el proveedor (paso 1)
-   - **Precio de venta:** Lo que cobras
-   - **Precio de compra:** Lo que pagas al proveedor
-   - **Stock inicial:** Cantidad actual
-   - **Stock mínimo:** Para alertas (ej: 10)
-   - **Categoría:** Organización
-5. Guarda
+**Pasos:**
+1. Menú → Inventario
+2. Botón "+"
+3. Completa:
+   - Nombre
+   - Proveedor (del paso 1)
+   - Precio de venta y de compra
+   - Stock inicial
+   - Stock mínimo (para alertas)
+4. Guarda
 
 ### Paso 3: Activa las Alertas
 
-**¡MUY IMPORTANTE!**
-Ve a Configuración → Alertas y activa TODAS:
-- ✅ Alertas de stock bajo
-- ✅ Resumen de ventas
-- ✅ Reportes semanales
-- ✅ Insights de IA
+Configura → Alertas → Activa todas:
+- Alertas de stock bajo
+- Resumen de ventas
+- Reportes semanales
+- Insights de IA
 
-(Ver tutorial "Activa las Alertas")
+Ver tutorial "Activa las Alertas" para más detalles.
 
-## ✅ Checklist de Verificación
+---
 
-Marca cada punto al completarlo:
+## Siguiente Paso
 
-### Paso 1: Proveedores
-- [ ] Agregué al menos 1 proveedor
-- [ ] Incluí información de contacto
-- [ ] Agregué notas útiles (días de entrega)
-
-### Paso 2: Productos
-- [ ] Agregué al menos 3 productos
-- [ ] TODOS tienen proveedor asignado
-- [ ] Definí precio de venta Y de compra
-- [ ] Configuré stock mínimo
-- [ ] Ingresé cantidad inicial
-
-### Paso 3: Alertas
-- [ ] Activé todas las alertas
-- [ ] Verifiqué que mi WhatsApp esté registrado
-
-## 🎯 Resultado Esperado
-
-Después de completar estos pasos:
-- ✅ Sabrás exactamente qué tienes en stock
-- ✅ Recibirás alertas cuando productos estén bajos
-- ✅ Podrás calcular ganancias reales
-- ✅ Los reportes serán precisos y útiles
-- ✅ Podrás rastrear todo tu negocio
-
-## 🚨 Errores Comunes
-
-❌ **Error:** Agregar productos sin proveedores
-✅ **Correcto:** Primero proveedores, luego productos
-
-❌ **Error:** No poner precio de compra
-✅ **Correcto:** Siempre incluir precio de compra para calcular ganancia
-
-❌ **Error:** Stock mínimo en 0
-✅ **Correcto:** Definir stock mínimo realista (ej: 10, 15, 20)
-
-❌ **Error:** No activar alertas
-✅ **Correcto:** Activar TODAS las alertas desde el inicio
-
-## 🎓 ¿Listo?
-
-Una vez completada esta configuración inicial:
-1. Regresa al menú de Capacitación
-2. Continúa con "Cómo Registrar una Venta"
-3. Explora las demás funciones
-
-**¡No saltees este paso! Es la base de todo.** 🏗️""",
-            "duration_minutes": 10,
+Una vez completado, continúa con "Cómo Registrar una Venta".""",
+            "duration_minutes": 5,
             "order": 0
         },
         {
