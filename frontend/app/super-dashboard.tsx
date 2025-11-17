@@ -8,10 +8,14 @@ import {
   ActivityIndicator,
   RefreshControl,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../utils/api';
+
+const SUPER_ADMIN_TOKEN_KEY = '@super_admin_token';
 
 type Period = '30d' | '7d' | 'today' | 'this_month' | 'last_month';
 
