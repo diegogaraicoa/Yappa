@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
 """
-FINAL END-TO-END VERIFICATION - WhatsApp Conversational AI
-Focus: Complete sale and expense flows with database verification
-As requested in the review request
+Backend Test Suite for Super Dashboard KPI Endpoints
+Testing all KPI endpoints with comprehensive scenarios
 """
 
-import requests
+import asyncio
+import aiohttp
 import json
-import time
-from datetime import datetime
-import os
-from dotenv import load_dotenv
+from datetime import datetime, timedelta
+from typing import Dict, Any
 
-# Load environment variables
-load_dotenv('/app/backend/.env')
-load_dotenv('/app/frontend/.env')
-
-# Configuration from environment
-BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://streetbiz.preview.emergentagent.com') + "/api"
+# Configuration
+BASE_URL = "https://streetbiz.preview.emergentagent.com/api"
+TEST_USER_EMAIL = "admin@superdashboard.com"
+TEST_USER_PASSWORD = "SuperDash2025!"
+TEST_STORE_NAME = "Super Dashboard Test Store"
+TEST_WHATSAPP = "+593999123456"
 TEST_USER_PHONE = "+593992913093"
 TEST_EMAIL = "maria.gonzalez@test.com"
 TEST_PASSWORD = "MiTienda2025!"
