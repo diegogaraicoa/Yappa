@@ -680,11 +680,16 @@ const styles = StyleSheet.create({
   featureUsageColumn: {
     flex: 1,
   },
+  featureUsageColumnHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   featureUsageColumnTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#666',
-    marginBottom: 12,
   },
   featureItem: {
     flexDirection: 'row',
