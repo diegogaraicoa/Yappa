@@ -340,44 +340,40 @@ export default function SuperDashboardScreen() {
 
     return (
       <View style={styles.hierarchyContainer}>
-        <TouchableOpacity
-          style={styles.hierarchyHeaderButton}
-          onPress={() => router.push('/super-dashboard-all-users')}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.sectionTitle}>🏢 Jerarquía del Sistema</Text>
-          <Ionicons name="chevron-forward" size={20} color="#999" />
-        </TouchableOpacity>
+        <Text style={styles.sectionTitle}>🏢 Jerarquía del Sistema</Text>
 
         <View style={styles.hierarchyRow}>
           <TouchableOpacity
             style={styles.hierarchyCard}
-            onPress={() => router.push('/super-dashboard-all-users?tab=admins')}
+            onPress={() => router.push('/super-dashboard-admins')}
             activeOpacity={0.7}
           >
             <Ionicons name="business-outline" size={32} color="#2196F3" />
             <Text style={styles.hierarchyCardValue}>{hierarchy.total_admins}</Text>
             <Text style={styles.hierarchyCardLabel}>Admins</Text>
+            <Ionicons name="chevron-forward" size={16} color="#999" style={styles.hierarchyCardArrow} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.hierarchyCard}
-            onPress={() => router.push('/super-dashboard-all-users?tab=merchants')}
+            onPress={() => router.push('/super-dashboard-all-merchants')}
             activeOpacity={0.7}
           >
             <Ionicons name="storefront-outline" size={32} color="#4CAF50" />
             <Text style={styles.hierarchyCardValue}>{hierarchy.total_merchants}</Text>
             <Text style={styles.hierarchyCardLabel}>Merchants</Text>
+            <Ionicons name="chevron-forward" size={16} color="#999" style={styles.hierarchyCardArrow} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.hierarchyCard}
-            onPress={() => router.push('/super-dashboard-all-users?tab=clerks')}
+            onPress={() => router.push('/super-dashboard-all-clerks')}
             activeOpacity={0.7}
           >
             <Ionicons name="people-outline" size={32} color="#FF9800" />
             <Text style={styles.hierarchyCardValue}>{hierarchy.total_clerks}</Text>
             <Text style={styles.hierarchyCardLabel}>Clerks</Text>
+            <Ionicons name="chevron-forward" size={16} color="#999" style={styles.hierarchyCardArrow} />
           </TouchableOpacity>
         </View>
 
