@@ -385,7 +385,8 @@ export default function SuperDashboardScreen() {
             kpiData.active_merchants.count,
             'storefront',
             '#4CAF50',
-            'Con actividad en el período'
+            'Con actividad en el período',
+            () => router.push('/super-dashboard-merchants-active')
           )}
 
           {renderKPICard(
@@ -395,7 +396,8 @@ export default function SuperDashboardScreen() {
             '#2196F3',
             changePercentage !== 0
               ? `${isPositiveChange ? '+' : ''}${changePercentage.toFixed(1)}% vs período anterior`
-              : undefined
+              : undefined,
+            () => router.push('/super-dashboard-merchants-new')
           )}
 
           {renderKPICard(
@@ -403,15 +405,8 @@ export default function SuperDashboardScreen() {
             kpiData.active_clerks.count,
             'people',
             '#FF9800',
-            `${kpiData.active_clerks.new_count} nuevos, ${kpiData.active_clerks.existing_count} existentes`
-          )}
-
-          {renderKPICard(
-            'Total Usuarios',
-            kpiData.hierarchy.total_merchants + kpiData.hierarchy.total_clerks,
-            'analytics',
-            '#9C27B0',
-            'Merchants + Clerks'
+            `${kpiData.active_clerks.new_count} nuevos, ${kpiData.active_clerks.existing_count} existentes`,
+            () => router.push('/super-dashboard-clerks-active')
           )}
         </View>
 
