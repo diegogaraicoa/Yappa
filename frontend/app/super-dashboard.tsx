@@ -74,10 +74,50 @@ export default function SuperDashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('30d');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    loadKPIData();
-  }, [selectedPeriod]);
+    checkAuthentication();
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadKPIData();
+    }
+  }, [selectedPeriod, isAuthenticated]);
+
+  const checkAuthentication = async () => {
+    try {
+      const token = await AsyncStorage.getItem(SUPER_ADMIN_TOKEN_KEY);
+      if (!token) {
+        router.replace('/super-admin-login');
+        return;
+      }
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Error checking auth:', error);
+      router.replace('/super-admin-login');
+    }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Estás seguro de que deseas cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.removeItem(SUPER_ADMIN_TOKEN_KEY);
+            await AsyncStorage.removeItem('@super_admin_email');
+            router.replace('/super-admin-login');
+          },
+        },
+      ]
+    );
+  };
 
   const loadKPIData = async () => {
     try {
