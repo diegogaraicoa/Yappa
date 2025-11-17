@@ -654,6 +654,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  churnHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   churnRow: {
     flexDirection: 'row',
     gap: 16,
