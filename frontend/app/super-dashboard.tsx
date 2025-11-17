@@ -485,12 +485,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
-  backButton: {
-    padding: 8,
-  },
   headerTextContainer: {
     flex: 1,
-    marginLeft: 8,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   headerTitle: {
     fontSize: 20,
