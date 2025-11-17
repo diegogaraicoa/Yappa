@@ -17,11 +17,7 @@ TEST_USER_PASSWORD = "SuperDash2025!"
 TEST_STORE_NAME = "Super Dashboard Test Store"
 TEST_WHATSAPP = "+593999123456"
 TEST_USER_PHONE = "+593992913093"
-TEST_EMAIL = "maria.gonzalez@test.com"
-TEST_PASSWORD = "MiTienda2025!"
-TEST_STORE_NAME = "Tienda María"
-
-class WhatsAppAITester:
+class DashboardTester:
     def __init__(self):
         self.session = requests.Session()
         self.auth_token = None
