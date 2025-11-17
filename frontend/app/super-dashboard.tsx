@@ -258,37 +258,44 @@ export default function SuperDashboardScreen() {
     };
 
     return (
-      <TouchableOpacity 
-        style={styles.churnContainer}
-        onPress={() => router.push('/super-dashboard-churn')}
-        activeOpacity={0.7}
-      >
-        <View style={styles.churnHeader}>
-          <Text style={styles.sectionTitle}>📉 Tasa de Churn</Text>
-          <Ionicons name="chevron-forward" size={20} color="#999" />
-        </View>
+      <View style={styles.churnContainer}>
+        <Text style={styles.sectionTitle}>📉 Tasa de Churn</Text>
         <View style={styles.churnRow}>
-          <View style={[styles.churnCard, { borderLeftColor: getChurnColor(merchantChurn.churned_count) }]}>
-            <Text style={styles.churnCardLabel}>Merchants</Text>
+          <TouchableOpacity
+            style={[styles.churnCard, { borderLeftColor: getChurnColor(merchantChurn.churned_count) }]}
+            onPress={() => router.push('/super-dashboard-churn-merchants')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.churnCardHeader}>
+              <Text style={styles.churnCardLabel}>Merchants</Text>
+              <Ionicons name="chevron-forward" size={16} color="#999" />
+            </View>
             <Text style={[styles.churnCardValue, { color: getChurnColor(merchantChurn.churned_count) }]}>
               {merchantChurn.churned_count}
             </Text>
             <Text style={styles.churnCardDetail}>
               {merchantChurn.churn_rate}% churn ({merchantChurn.churned_count} de {merchantChurn.total_previous})
             </Text>
-          </View>
+          </TouchableOpacity>
 
-          <View style={[styles.churnCard, { borderLeftColor: getChurnColor(clerkChurn.churned_count) }]}>
-            <Text style={styles.churnCardLabel}>Clerks</Text>
+          <TouchableOpacity
+            style={[styles.churnCard, { borderLeftColor: getChurnColor(clerkChurn.churned_count) }]}
+            onPress={() => router.push('/super-dashboard-churn-clerks')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.churnCardHeader}>
+              <Text style={styles.churnCardLabel}>Clerks</Text>
+              <Ionicons name="chevron-forward" size={16} color="#999" />
+            </View>
             <Text style={[styles.churnCardValue, { color: getChurnColor(clerkChurn.churned_count) }]}>
               {clerkChurn.churned_count}
             </Text>
             <Text style={styles.churnCardDetail}>
               {clerkChurn.churn_rate}% churn ({clerkChurn.churned_count} de {clerkChurn.total_previous})
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
