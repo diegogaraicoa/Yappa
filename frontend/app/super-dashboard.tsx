@@ -664,6 +664,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  featureUsageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   featureUsageRow: {
     flexDirection: 'row',
     gap: 16,
