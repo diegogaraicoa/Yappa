@@ -732,6 +732,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderLeftWidth: 4,
   },
+  churnCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   churnCardLabel: {
     fontSize: 14,
     fontWeight: '600',
