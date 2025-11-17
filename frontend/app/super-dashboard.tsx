@@ -238,31 +238,38 @@ export default function SuperDashboardScreen() {
     };
 
     return (
-      <TouchableOpacity
-        style={styles.featureUsageContainer}
-        onPress={() => router.push('/super-dashboard-feature-usage')}
-        activeOpacity={0.7}
-      >
-        <View style={styles.featureUsageHeader}>
-          <Text style={styles.sectionTitle}>📊 Uso de Features</Text>
-          <Ionicons name="chevron-forward" size={20} color="#999" />
-        </View>
+      <View style={styles.featureUsageContainer}>
+        <Text style={styles.sectionTitle}>📊 Uso de Features</Text>
         
         <View style={styles.featureUsageRow}>
           {/* Most Used */}
-          <View style={styles.featureUsageColumn}>
-            <Text style={styles.featureUsageColumnTitle}>✅ Más Usadas (Top 5)</Text>
+          <TouchableOpacity
+            style={styles.featureUsageColumn}
+            onPress={() => router.push('/super-dashboard-features-most-used')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.featureUsageColumnHeader}>
+              <Text style={styles.featureUsageColumnTitle}>✅ Más Usadas (Top 5)</Text>
+              <Ionicons name="chevron-forward" size={16} color="#999" />
+            </View>
             {mostUsed.map((item, index) => (
               <View key={index} style={styles.featureItem}>
                 <Text style={styles.featureItemName}>{getSectionName(item.section)}</Text>
                 <Text style={styles.featureItemValue}>{item.visits} visitas</Text>
               </View>
             ))}
-          </View>
+          </TouchableOpacity>
 
           {/* Least Used */}
-          <View style={styles.featureUsageColumn}>
-            <Text style={styles.featureUsageColumnTitle}>⚠️ Menos Usadas (Bottom 5)</Text>
+          <TouchableOpacity
+            style={styles.featureUsageColumn}
+            onPress={() => router.push('/super-dashboard-features-least-used')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.featureUsageColumnHeader}>
+              <Text style={styles.featureUsageColumnTitle}>⚠️ Menos Usadas (Bottom 5)</Text>
+              <Ionicons name="chevron-forward" size={16} color="#999" />
+            </View>
             {leastUsed.length > 0 ? (
               leastUsed.map((item, index) => (
                 <View key={index} style={styles.featureItem}>
@@ -273,9 +280,9 @@ export default function SuperDashboardScreen() {
             ) : (
               <Text style={styles.featureItemEmpty}>Todas las features están siendo usadas</Text>
             )}
-          </View>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
