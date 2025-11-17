@@ -233,6 +233,18 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+  - task: "KPI Dashboard - Backend endpoints"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/services/kpi_service.py, /app/backend/routes/dashboard_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implementado backend completo del Super Dashboard. Archivos creados: 1) /app/backend/services/kpi_service.py - Servicio con toda la lógica de cálculo de KPIs (get_active_merchants, get_new_merchants, get_active_clerks, get_churn_rate, get_hierarchy_breakdown, get_all_kpis), 2) /app/backend/routes/dashboard_routes.py - 6 endpoints REST (GET /api/dashboard/kpis principal, /merchants/active, /merchants/new, /clerks/active, /churn, /hierarchy). Incluye: filtros de período (30d, 7d, today, this_month, last_month, custom range), comparación automática con período anterior, cálculo de churn rate (merchants/clerks sin actividad), feature usage integration, breakdown admin/merchant/clerk. Datos de prueba creados: 3 admins, 10 merchants, 20 clerks, 361 event logs, 2 merchants churned. Backend reiniciado exitosamente, rutas cargadas correctamente. NECESITO TESTING: Validar todos los endpoints con diferentes períodos, verificar cálculos de KPIs, confirmar formato de respuesta JSON correcto."
+
 agent_communication:
   - agent: "main"
     message: "He implementado la UI de alertas en app. Incluye: 1) Pantalla /alerts.tsx que muestra productos con stock bajo en cards con colores según nivel de alerta (crítico=rojo, warning=naranja), 2) Banner en Home que aparece cuando hay alertas y muestra el contador, 3) Pull-to-refresh y navegación. El backend ya tenía el endpoint funcionando. Necesito testing del backend primero para confirmar que el endpoint responde correctamente, luego testing frontend si el usuario lo aprueba."
