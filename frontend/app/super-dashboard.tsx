@@ -771,6 +771,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  hierarchyHeaderButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   hierarchyRow: {
     flexDirection: 'row',
     gap: 12,
