@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Completar e implementar la funcionalidad de IA conversacional por WhatsApp que permite a los usuarios registrar ventas y gastos mediante mensajes de texto y notas de voz. El sistema debe usar Claude para mantener conversaciones naturales y Whisper para transcribir audio."
+user_problem_statement: "Implementar KPI Dashboard (Super Dashboard) - Fase 2. Crear backend y frontend para visualizar métricas críticas del negocio: merchants activos/nuevos, clerks activos, feature usage (top 5 más/menos usados), churn rate, y breakdown de jerarquía admin/merchant/clerk. Debe incluir filtros de fecha (30d, 7d, custom) y visualización clara de KPIs."
 
 backend:
   - task: "Endpoint de alertas de stock bajo"
