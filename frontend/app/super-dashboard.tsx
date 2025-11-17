@@ -808,6 +808,9 @@ const styles = StyleSheet.create({
     color: '#666',
     fontWeight: '600',
   },
+  hierarchyCardArrow: {
+    marginTop: 8,
+  },
   hierarchyAverages: {
     backgroundColor: '#F9F9F9',
     padding: 16,
