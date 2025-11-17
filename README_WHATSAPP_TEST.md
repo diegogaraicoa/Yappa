@@ -91,7 +91,7 @@ python3 check_my_sales.py
 ```
 
 O desde la Admin Console web:
-https://tienda-ai.preview.emergentagent.com/admin
+https://streetbiz.preview.emergentagent.com/admin
 
 ---
 

@@ -17,7 +17,7 @@ load_dotenv('/app/backend/.env')
 load_dotenv('/app/frontend/.env')
 
 # Configuration from environment
-BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://tienda-ai.preview.emergentagent.com') + "/api"
+BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://streetbiz.preview.emergentagent.com') + "/api"
 TEST_USER_PHONE = "+593992913093"
 TEST_EMAIL = "maria.gonzalez@test.com"
 TEST_PASSWORD = "MiTienda2025!"

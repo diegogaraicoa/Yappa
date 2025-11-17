@@ -701,7 +701,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://tienda-ai.preview.emergentagent.com/admin
+**URL:** https://streetbiz.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet

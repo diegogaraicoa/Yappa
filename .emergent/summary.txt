@@ -1,146 +1,100 @@
 <analysis>
-The trajectory details the evolution of a full-stack mobile application for street vendors. The initial phase focused on fixing bugs and adding core features like mandatory WhatsApp number registration and resolving errors in sending AI reports via Twilio. A significant challenge was a persistent Expo Go connectivity issue (404 error), which was diagnosed as the environment running in CI mode (). This was eventually resolved by using the  environment variable, a solution provided by the .
+The trajectory documents the evolution of a full-stack application for street vendors, moving from bug fixes to major feature development. Initially, the AI engineer resolved issues with WhatsApp registration and Twilio report sending, and diagnosed a persistent Expo Go 404 error caused by a  environment.
 
-Following these fixes, development shifted to major feature requests. The Admin Console was initially a basic page but was completely redesigned based on user feedback into a professional, desktop-first dashboard with advanced analytics, bulk CSV uploads, and a customer support widget. The mobile app's UI was adjusted to hide the Admin Console to prevent distorted views.
+Development then shifted to building a professional, desktop-first Admin Console with advanced analytics. The most complex task was implementing a conversational AI for sales/expense registration via WhatsApp, which involved extensive debugging of  for Claude, fixing environment variable misconfigurations, and resolving data parsing issues.
 
-The most recent and current task is the implementation of a complex conversational AI feature. This system allows users to register sales and expenses via WhatsApp messages and voice notes. The development involved creating a new backend service to handle webhook calls from Twilio, process natural language with Claude, and transcribe audio with Whisper. Debugging this feature has been a multi-step process, involving fixing environment variable misconfigurations, installing missing dependencies (), and resolving an invalid x-api-key error by switching from a direct Anthropic SDK implementation to using the  library, which is the work currently in progress.
+After successfully completing the conversational AI, the engineer addressed user feedback on the feature, debugging Twilio rate limits (429 errors) and OpenAI Whisper quota issues. Subsequently, a new Training Module was built, with backend endpoints and frontend screens in both the mobile app and Admin Console. The content and UI for this module were refined based on user feedback.
+
+The final and most significant undertaking was a complete architectural refactor to support a Super Dashboard. This introduced a new data model (Admin -> Merchant -> Clerk) and a two-step authentication flow. The trajectory concludes after the successful implementation and testing of the new database schema and authentication backend, marking the completion of the first phase of this major refactor.
 </analysis>
 
 <product_requirements>
-The project is a comprehensive business management application for small street vendors, primarily in Latin America.
+The project is a comprehensive business management application for small street vendors.
 
 **Core Mobile App:**
--   **Functionality:** Offline-first with cloud sync, sales/expense tracking, inventory management, customer/supplier database, and debt tracking.
--   **User Registration:** Requires email, password, and a mandatory WhatsApp number, which is linked to all alert systems.
--   **AI Features:** Includes an Mis Datos section for generating AI-powered business insights reports, which can be sent to the user's WhatsApp.
+- Functionality: Sales/expense tracking, inventory management, customer/supplier database, and AI-powered business reports.
+- Training Module: An in-app section with tutorials on using the app's features.
 
-**Admin Console (Web/Desktop):**
--   A separate, professional web interface for store owners.
--   **Features:** An executive dashboard with KPIs and comparisons (week/week, month/month), deep-dive sections for products, customers, and suppliers with analytics (e.g., profitability, recurrence), a unified bulk upload center (CSV for products, clients, suppliers), a historical log of all AI-generated reports, and a built-in customer support system (WhatsApp chat, contact form, FAQs).
+**Admin Console (Web):**
+- A professional web dashboard for store owners with analytics, bulk CSV uploads, report history, a support widget, and access to the Training Module.
 
 **Conversational AI (WhatsApp):**
--   Allows users to register sales and expenses by sending text or voice messages to a WhatsApp number.
--   The AI (Claude) engages in a conversation to gather all necessary details (product, price, customer, payment method, etc.) before confirming and recording the transaction.
+- Allows users to register sales and expenses via text or voice messages with an AI assistant (Claude).
 
-**Future/Pending Features:**
--   Super Admin Dashboard for platform-level management (MAU, churn, global analytics).
--   In-app training module.
--   Full password recovery flow.
--   Email notifications via SendGrid.
+**Super Dashboard (In Progress):**
+- A platform-level dashboard for the app owner.
+- Tracks critical KPIs: active merchants, new merchants, active clerks, feature usage, and churn rate.
+- Introduces a new data hierarchy: **Admin** (company) -> **Merchant** (store) -> **Clerk** (employee).
+- Requires a two-step login: Merchant login, followed by Clerk selection and login.
+- Includes an Admin Ops section for KYB (Know Your Business) data management.
+- Features WhatsApp/Twilio usage monitoring and alerts.
+- All data must be exportable to CSV/Excel.
 </product_requirements>
 
 <key_technical_concepts>
-- **Frontend**: Expo, React Native, Expo Router, React Hook Form.
+- **Frontend**: Expo, React Native, Expo Router, .
 - **Backend**: FastAPI, MongoDB (), Pydantic.
-- **Authentication**: JWT tokens managed via React Context.
-- **API Communication**: Axios.
-- **Third-Party Integrations**:
-  - Twilio (WhatsApp messaging).
-  - Claude/Anthropic via  (AI insights & conversational AI).
-  - OpenAI Whisper (Voice note transcription).
-- **Asynchronous Tasks**:  for scheduled alerts and reports.
-- **Data Handling**:  for CSV processing in bulk uploads.
+- **Authentication**: A custom two-step JWT-based system (Merchant login, then Clerk login).
+- **Third-Party Integrations**: Twilio (WhatsApp),  (Claude for AI), OpenAI Whisper (Audio Transcription).
+- **Data Architecture**: A new three-tier model:  ->  -> .
+- **Asynchronous Tasks**:  for alerts.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a standard monorepo structure with a  Expo app and a  FastAPI service.
+The application uses a monorepo structure with a  (Expo) and  (FastAPI). A significant architectural refactor is underway, shifting from a simple user/store model to a multi-tiered Admin/Merchant/Clerk model.
 
 
 
 - ****
-  - **Importance**: The core of the backend, defining all API endpoints.
-  - **Changes**: Heavily modified to support new features. Added numerous endpoints for the Admin Console (, , , ), a system for handling support tickets (), and most recently, the webhook for the conversational AI ().
+  - **Importance**: Defines the new core data structure for the entire application (Admin, Merchant, Clerk, EventLog schemas). This is the foundation for the Super Dashboard feature.
+  - **Changes**: Created from scratch to implement the new three-tier architecture.
+
+- ** & **
+  - **Importance**: Implements the critical new two-step authentication flow (Merchant login, then Clerk login).
+  - **Changes**: Created from scratch.  defines the  and  endpoints, while  contains the business logic for verifying credentials and generating JWTs for each step.
 
 - ****
-  - **Importance**: A new service created to encapsulate all logic for the conversational AI feature. It manages conversation state, interacts with LLMs (Claude for text, Whisper for audio), and formats data to be saved to the database.
-  - **Changes**: Created from scratch. The current implementation is being refactored to use  for LLM calls to fix an authentication error.
+  - **Importance**: The UI for the store owner's dashboard.
+  - **Changes**: A Capacitación (Training) tab and corresponding view () were added, reusing the mobile app's tutorial content and API endpoint. This integrates the training module directly into the web admin experience.
+
+- ** & **
+  - **Importance**: These files create the new Training Module feature in the mobile app.  is the list view, and  is the detail view for an individual tutorial.
+  - **Changes**: Created from scratch. The detail screen was later simplified by removing interactive checklists based on user feedback, now only rendering Markdown content. An incorrect environment variable usage ( vs. ) was fixed to resolve data fetching issues.
 
 - ****
-  - **Importance**: The entire user interface for the web-based Admin Console. It is a large, standalone component designed for desktop viewing.
-  - **Changes**: Initially a simple page, it was completely rewritten into a multi-tabbed, professional dashboard. It now includes a sidebar, detailed analytics views, data tables, modals for viewing reports and uploading files, and a floating customer support widget. It is conditionally rendered only on web platforms.
+  - **Importance**: A primary navigation screen in the mobile app.
+  - **Changes**: A new Capacitación (Training) button was added at the top of the list to provide users with access to the new training module.
 
 - ****
-  - **Importance**: The screen for displaying AI-generated business reports.
-  - **Changes**: Updated to fix UI hanging by providing better loading state feedback.  calls, which don't work on web, were replaced with a custom-built Toast component for success/error messages. A feature to view a history of past reports in a modal was also added.
-
-- ****
-  - **Importance**: The root layout file for the Expo Router. It controls which screens are part of the main navigation stack.
-  - **Changes**: Modified to make  a top-level route, effectively separating it from the mobile app's tab-based navigation. This ensures the Admin Console renders as a full-page experience without the mobile UI elements.
-
-- ****
-  - **Importance**: A navigation hub within the mobile app.
-  - **Changes**: The Employees section was removed as requested. The button to access the Admin Console was added and later removed to prevent users from accessing the desktop-only view on mobile.
-
-- ****
-    - **Importance**: Stores all secret keys and configuration for the backend.
-    - **Changes**: Updated to include  for Whisper. Was the source of a critical bug where the  and  were concatenated on the same line, causing authentication failures. This has since been fixed.
-
-- ****
-  - **Importance**: A new documentation file created to prevent recurring issues after forking the environment.
-  - **Changes**: Created to list critical checks, such as verifying  variables, database names, and API keys, to ensure a smooth transition between development environments.
+  - **Importance**: Handles all logic for the WhatsApp conversational AI.
+  - **Changes**: Updated to disable the voice note feature by returning an informative message, as the OpenAI Whisper account ran out of credits. Also,  was added to fix an issue where the  was not being loaded correctly by the  library.
 </code_architecture>
 
 <pending_tasks>
-- **Super Admin Dashboard**: Build the platform-level dashboard with metrics like MAU, churn rate, and global product/supplier analytics.
-- **Training Module**: Create an in-app section with tutorials and best practices.
-- **Password Recovery**: Complete the implementation of the password recovery flow (e.g., sending the code via SMS/WhatsApp).
-- **Email Notifications**: Debug and re-enable the SendGrid integration to fix the 403 error and allow email alerts.
+- **Super Dashboard Implementation (Phase 2 & 3):**
+  - Build the frontend UI for the Super Dashboard.
+  - Implement all KPI calculations (Active/New Merchants, Clerks, Churn, Feature Usage).
+  - Develop the Admin Ops (KYB) module.
+  - Create the WhatsApp/Twilio monitoring dashboard and email alerts.
+  - Implement universal CSV/Excel export functionality for all data views.
+- **Frontend Auth Refactor**: Update the entire frontend to use the new two-step (Merchant/Clerk) authentication flow.
 </pending_tasks>
 
 <current_work>
-The immediate focus is the implementation of a conversational AI system that allows users to register sales and expenses through WhatsApp text and voice messages.
+The engineer is in the middle of a massive architectural refactor to support a new Super Dashboard feature. The work is divided into clear, user-approved phases.
 
-**Work Done So Far:**
-1.  **Backend Scaffolding:** A new webhook endpoint () was created in  to receive incoming messages from Twilio. A new service file, , was created to house the core logic.
-2.  **Dependencies:** Necessary Python packages (usage: openai [-h] [-v] [-b API_BASE] [-k API_KEY] [-p PROXY [PROXY ...]]
-              [-o ORGANIZATION] [-t {openai,azure}]
-              [--api-version API_VERSION] [--azure-endpoint AZURE_ENDPOINT]
-              [--azure-ad-token AZURE_AD_TOKEN] [-V]
-              {api,tools,migrate,grit} ...
+**Phase 1: New Architecture (COMPLETED)**
+This foundational phase has just been finished.
+- **1A: Database Schema:** A new data model separating , , and  was designed. New Pydantic models were created in  and the corresponding MongoDB collections were initialized using the  script.
+- **1B: Authentication System:** A new two-step authentication backend has been built and successfully tested.
+  - A  logs in first with a username/password ().
+  - Upon success, the API returns a list of associated .
+  - A  then logs in with their email/password () to get a final access token.
+  - This logic is encapsulated in  and exposed via . Test data was seeded and both endpoints were verified to work correctly.
 
-positional arguments:
-  {api,tools,migrate,grit}
-    api                 Direct API calls
-    tools               Client side tools for convenience
-
-options:
-  -h, --help            show this help message and exit
-  -v, --verbose         Set verbosity.
-  -b API_BASE, --api-base API_BASE
-                        What API base url to use.
-  -k API_KEY, --api-key API_KEY
-                        What API key to use.
-  -p PROXY [PROXY ...], --proxy PROXY [PROXY ...]
-                        What proxy to use.
-  -o ORGANIZATION, --organization ORGANIZATION
-                        Which organization to run as (will use your default
-                        organization if not specified)
-  -t {openai,azure}, --api-type {openai,azure}
-                        The backend API to call, must be `openai` or `azure`
-  --api-version API_VERSION
-                        The Azure API version, e.g.
-                        'https://learn.microsoft.com/en-us/azure/ai-
-                        services/openai/reference#rest-api-versioning'
-  --azure-endpoint AZURE_ENDPOINT
-                        The Azure endpoint, e.g.
-                        'https://endpoint.openai.azure.com'
-  --azure-ad-token AZURE_AD_TOKEN
-                        A token from Azure Active Directory,
-                        https://www.microsoft.com/en-
-                        us/security/business/identity-access/microsoft-entra-
-                        id
-  -V, --version         show program's version number and exit for Whisper, ) were installed.
-3.  **Initial Logic:** The service was designed to manage conversation state, identify the user by their WhatsApp number, and use an LLM (Claude) to process messages.
-4.  **Troubleshooting:** The process has been iterative, involving significant debugging:
-    *   An initial  for  was resolved by installing the package.
-    *   A database connection issue was traced to a fresh environment (fork) where the user data was in  instead of the default .
-    *   An authentication error with Claude was caused by a malformed  file where two API keys were on the same line. This was fixed.
-    *   A persistent  error from Claude was identified. The root cause is that the code was attempting to use the  with the direct  SDK, which is incorrect.
-
-**Current State:**
-The last action taken was to install  and begin refactoring  to use the  SDK for making calls to Claude. This is the correct way to use the  and is expected to resolve the final authentication error. The feature is not yet functional.
+The project is at a natural stopping point, having successfully built the entire backend foundation for the new architecture. A  file has been created to track the plan and progress. The user has approved continuing to the next phase.
 </current_work>
 
 <optional_next_step>
-Update  to correctly use the  SDK for authenticating and interacting with the Claude model. Then, test the WhatsApp webhook again to confirm that the invalid x-api-key error is resolved and the conversational flow begins.
+Proceed with **Phase 1C: Feature Tracking System**. This involves implementing the  and integrating logging middleware into the backend to capture user actions, which are essential for the Feature Usage KPI in the Super Dashboard.
 </optional_next_step>
