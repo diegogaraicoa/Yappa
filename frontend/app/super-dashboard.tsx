@@ -211,8 +211,15 @@ export default function SuperDashboardScreen() {
     };
 
     return (
-      <View style={styles.featureUsageContainer}>
-        <Text style={styles.sectionTitle}>📊 Uso de Features</Text>
+      <TouchableOpacity
+        style={styles.featureUsageContainer}
+        onPress={() => router.push('/super-dashboard-feature-usage')}
+        activeOpacity={0.7}
+      >
+        <View style={styles.featureUsageHeader}>
+          <Text style={styles.sectionTitle}>📊 Uso de Features</Text>
+          <Ionicons name="chevron-forward" size={20} color="#999" />
+        </View>
         
         <View style={styles.featureUsageRow}>
           {/* Most Used */}
@@ -241,7 +248,7 @@ export default function SuperDashboardScreen() {
             )}
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
