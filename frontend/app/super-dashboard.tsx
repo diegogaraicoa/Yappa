@@ -364,16 +364,18 @@ export default function SuperDashboardScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerTitle}>Super Dashboard</Text>
           <Text style={styles.headerSubtitle}>KPIs y Métricas del Negocio</Text>
         </View>
-        <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
-          <Ionicons name="refresh" size={24} color="#4CAF50" />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+            <Ionicons name="refresh" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={24} color="#F44336" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
