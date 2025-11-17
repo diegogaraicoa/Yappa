@@ -506,6 +506,9 @@ const styles = StyleSheet.create({
   refreshButton: {
     padding: 8,
   },
+  logoutButton: {
+    padding: 8,
+  },
   scrollView: {
     flex: 1,
   },
