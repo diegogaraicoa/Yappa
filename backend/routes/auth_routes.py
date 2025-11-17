@@ -240,3 +240,59 @@ async def register_clerk(request: ClerkRegisterRequest):
         "message": "Clerk creado exitosamente",
         "clerk_id": str(result.inserted_id)
     }
+
+
+# ============================================
+# SUPER ADMIN LOGIN (para Super Dashboard)
+# ============================================
+
+class AdminLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+@router.post("/admin/login")
+async def admin_login(request: AdminLoginRequest):
+    """
+    Login de Admin para acceder al Super Dashboard.
+    
+    Por ahora usa credenciales hardcodeadas.
+    En producción, debería autenticar contra la tabla de admins.
+    """
+    from main import get_database
+    db = get_database()
+    
+    # OPCIÓN 1: Credenciales hardcodeadas (rápido para MVP)
+    # Cambiar estas credenciales antes de producción
+    ADMIN_EMAIL = "admin@streetbiz.com"
+    ADMIN_PASSWORD = "SuperAdmin2025!"
+    
+    if request.email == ADMIN_EMAIL and request.password == ADMIN_PASSWORD:
+        # Crear token
+        token_data = {
+            "email": request.email,
+            "type": "super_admin"
+        }
+        access_token = create_access_token(token_data)
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "admin": {
+                "email": request.email,
+                "nombre": "Super Admin"
+            }
+        }
+    
+    # OPCIÓN 2: Autenticar contra DB (comentado por ahora)
+    # from services.auth_service import verify_password
+    # admin = await db.admins.find_one({"email": request.email})
+    # if not admin:
+    #     raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+    # if not verify_password(request.password, admin.get("password", "")):
+    #     raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+    
+    raise HTTPException(
+        status_code=401,
+        detail="Credenciales incorrectas"
+    )
