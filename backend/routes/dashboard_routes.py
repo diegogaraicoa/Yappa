@@ -257,3 +257,194 @@ async def get_hierarchy():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/all-admins")
+async def get_all_admins():
+    """
+    Lista completa de todos los admins.
+    """
+    from main import get_database
+    db = get_database()
+    
+    try:
+        admins = await db.admins.find({}).to_list(1000)
+        
+        admins_list = []
+        for admin in admins:
+            # Contar merchants asociados
+            merchants_count = await db.merchants.count_documents({"admin_id": str(admin["_id"])})
+            
+            admins_list.append({
+                "id": str(admin["_id"]),
+                "nombre": admin.get("nombre", "N/A"),
+                "email": admin.get("email", "N/A"),
+                "telefono": admin.get("telefono", "N/A"),
+                "created_at": admin.get("created_at"),
+                "merchants_count": merchants_count
+            })
+        
+        return {
+            "count": len(admins_list),
+            "admins": admins_list
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/all-merchants-list")
+async def get_all_merchants_list():
+    """
+    Lista completa de todos los merchants (activos + inactivos).
+    """
+    from main import get_database
+    db = get_database()
+    
+    try:
+        merchants = await db.merchants.find({}).to_list(1000)
+        
+        merchants_list = []
+        for merchant in merchants:
+            # Contar clerks asociados
+            clerks_count = await db.clerks.count_documents({"merchant_id": str(merchant["_id"])})
+            
+            # Obtener admin info
+            admin = None
+            if merchant.get("admin_id"):
+                admin = await db.admins.find_one({"_id": ObjectId(merchant["admin_id"])})
+            
+            merchants_list.append({
+                "id": str(merchant["_id"]),
+                "nombre": merchant.get("nombre", "N/A"),
+                "username": merchant.get("username", "N/A"),
+                "direccion": merchant.get("direccion", "N/A"),
+                "telefono": merchant.get("telefono", "N/A"),
+                "admin_nombre": admin.get("nombre", "N/A") if admin else "N/A",
+                "created_at": merchant.get("created_at"),
+                "activated_at": merchant.get("activated_at"),
+                "fully_activated_at": merchant.get("fully_activated_at"),
+                "active": merchant.get("active", True),
+                "clerks_count": clerks_count
+            })
+        
+        # Ordenar por fecha de creación descendente
+        merchants_list.sort(key=lambda x: x["created_at"] or datetime.min, reverse=True)
+        
+        return {
+            "count": len(merchants_list),
+            "merchants": merchants_list
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/all-clerks-list")
+async def get_all_clerks_list():
+    """
+    Lista completa de todos los clerks (activos + inactivos).
+    """
+    from main import get_database
+    db = get_database()
+    
+    try:
+        clerks = await db.clerks.find({}).to_list(1000)
+        
+        clerks_list = []
+        for clerk in clerks:
+            # Obtener merchant info
+            merchant = None
+            if clerk.get("merchant_id"):
+                merchant = await db.merchants.find_one({"_id": ObjectId(clerk["merchant_id"])})
+            
+            clerks_list.append({
+                "id": str(clerk["_id"]),
+                "nombre": clerk.get("nombre", "N/A"),
+                "email": clerk.get("email", "N/A"),
+                "whatsapp_number": clerk.get("whatsapp_number", "N/A"),
+                "role": clerk.get("role", "employee"),
+                "merchant_nombre": merchant.get("nombre", "N/A") if merchant else "N/A",
+                "created_at": clerk.get("created_at"),
+                "activated_at": clerk.get("activated_at"),
+                "fully_activated_at": clerk.get("fully_activated_at"),
+                "active": clerk.get("active", True)
+            })
+        
+        # Ordenar por fecha de creación descendente
+        clerks_list.sort(key=lambda x: x["created_at"] or datetime.min, reverse=True)
+        
+        return {
+            "count": len(clerks_list),
+            "clerks": clerks_list
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/feature-usage-detail")
+async def get_feature_usage_detail(
+    period: str = Query(default="30d"),
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """
+    Detalle de feature usage con breakdown por merchant.
+    """
+    from main import get_database
+    from services.event_tracking_service import get_feature_usage_stats
+    db = get_database()
+    
+    try:
+        if start_date and end_date:
+            current_start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            current_end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+        else:
+            current_start, current_end = parse_period(period)
+        
+        # Obtener stats de feature usage
+        feature_stats = await get_feature_usage_stats(db, current_start, current_end)
+        
+        # Para cada feature, obtener breakdown por merchant
+        for feature in feature_stats["most_used"] + feature_stats["least_used"]:
+            section = feature["section"]
+            
+            # Obtener merchants únicos que usaron esta feature
+            merchant_ids = await db.event_logs.distinct(
+                "merchant_id",
+                {
+                    "section": section,
+                    "timestamp": {"$gte": current_start, "$lte": current_end}
+                }
+            )
+            
+            # Obtener detalles de cada merchant
+            merchants_breakdown = []
+            for merchant_id in merchant_ids:
+                merchant = await db.merchants.find_one({"_id": ObjectId(merchant_id)})
+                if not merchant:
+                    continue
+                
+                # Contar visitas de este merchant a esta feature
+                visits = await db.event_logs.count_documents({
+                    "merchant_id": merchant_id,
+                    "section": section,
+                    "timestamp": {"$gte": current_start, "$lte": current_end}
+                })
+                
+                merchants_breakdown.append({
+                    "merchant_id": str(merchant["_id"]),
+                    "merchant_nombre": merchant.get("nombre", "N/A"),
+                    "visits": visits
+                })
+            
+            # Ordenar por visitas descendente
+            merchants_breakdown.sort(key=lambda x: x["visits"], reverse=True)
+            feature["merchants_breakdown"] = merchants_breakdown
+            feature["unique_merchants"] = len(merchants_breakdown)
+        
+        return feature_stats
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
