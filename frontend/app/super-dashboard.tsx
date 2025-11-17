@@ -100,7 +100,29 @@ export default function SuperDashboardScreen() {
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      const confirmed = confirm('¿Estás seguro de que deseas cerrar sesión?');
+      if (confirmed) {
+        performLogout();
+      }
+    } else {
+      Alert.alert(
+        'Cerrar sesión',
+        '¿Estás seguro de que deseas cerrar sesión?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Cerrar sesión',
+            style: 'destructive',
+            onPress: performLogout,
+          },
+        ]
+      );
+    }
+  };
+
+  const performLogout = async () => {
     try {
       await AsyncStorage.removeItem(SUPER_ADMIN_TOKEN_KEY);
       await AsyncStorage.removeItem('@super_admin_email');
@@ -108,7 +130,11 @@ export default function SuperDashboardScreen() {
       router.push('/super-admin-login');
     } catch (error) {
       console.error('Error logging out:', error);
-      Alert.alert('Error', 'No se pudo cerrar sesión');
+      if (Platform.OS === 'web') {
+        alert('No se pudo cerrar sesión');
+      } else {
+        Alert.alert('Error', 'No se pudo cerrar sesión');
+      }
     }
   };
 
