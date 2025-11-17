@@ -228,7 +228,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "IA conversacional WhatsApp - Webhook y procesamiento"
+    - "KPI Dashboard - Backend endpoints"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
