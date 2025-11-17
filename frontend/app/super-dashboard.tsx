@@ -251,37 +251,44 @@ export default function SuperDashboardScreen() {
     const merchantChurn = kpiData.churn.merchants;
     const clerkChurn = kpiData.churn.clerks;
 
-    const getChurnColor = (rate: number): string => {
-      if (rate === 0) return '#4CAF50';
-      if (rate < 10) return '#FF9800';
+    const getChurnColor = (count: number): string => {
+      if (count === 0) return '#4CAF50';
+      if (count < 5) return '#FF9800';
       return '#F44336';
     };
 
     return (
-      <View style={styles.churnContainer}>
-        <Text style={styles.sectionTitle}>📉 Tasa de Churn</Text>
+      <TouchableOpacity 
+        style={styles.churnContainer}
+        onPress={() => router.push('/super-dashboard-churn')}
+        activeOpacity={0.7}
+      >
+        <View style={styles.churnHeader}>
+          <Text style={styles.sectionTitle}>📉 Tasa de Churn</Text>
+          <Ionicons name="chevron-forward" size={20} color="#999" />
+        </View>
         <View style={styles.churnRow}>
-          <View style={[styles.churnCard, { borderLeftColor: getChurnColor(merchantChurn.churn_rate) }]}>
+          <View style={[styles.churnCard, { borderLeftColor: getChurnColor(merchantChurn.churned_count) }]}>
             <Text style={styles.churnCardLabel}>Merchants</Text>
-            <Text style={[styles.churnCardValue, { color: getChurnColor(merchantChurn.churn_rate) }]}>
-              {merchantChurn.churn_rate}%
+            <Text style={[styles.churnCardValue, { color: getChurnColor(merchantChurn.churned_count) }]}>
+              {merchantChurn.churned_count}
             </Text>
             <Text style={styles.churnCardDetail}>
-              {merchantChurn.churned_count} de {merchantChurn.total_previous} churned
+              {merchantChurn.churn_rate}% churn ({merchantChurn.churned_count} de {merchantChurn.total_previous})
             </Text>
           </View>
 
-          <View style={[styles.churnCard, { borderLeftColor: getChurnColor(clerkChurn.churn_rate) }]}>
+          <View style={[styles.churnCard, { borderLeftColor: getChurnColor(clerkChurn.churned_count) }]}>
             <Text style={styles.churnCardLabel}>Clerks</Text>
-            <Text style={[styles.churnCardValue, { color: getChurnColor(clerkChurn.churn_rate) }]}>
-              {clerkChurn.churn_rate}%
+            <Text style={[styles.churnCardValue, { color: getChurnColor(clerkChurn.churned_count) }]}>
+              {clerkChurn.churned_count}
             </Text>
             <Text style={styles.churnCardDetail}>
-              {clerkChurn.churned_count} de {clerkChurn.total_previous} churned
+              {clerkChurn.churn_rate}% churn ({clerkChurn.churned_count} de {clerkChurn.total_previous})
             </Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
