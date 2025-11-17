@@ -2014,6 +2014,16 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
+# Include dashboard routes
+try:
+    from routes.dashboard_routes import router as dashboard_router
+    app.include_router(dashboard_router, prefix="/api")
+    print("✅ Dashboard routes loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading dashboard routes: {e}")
+    import traceback
+    traceback.print_exc()
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
