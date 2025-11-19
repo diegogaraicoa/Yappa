@@ -5,6 +5,7 @@ Dashboard Routes - Endpoints para el Super Dashboard
 from fastapi import APIRouter, Query, HTTPException
 from datetime import datetime, timedelta
 from typing import Optional
+from bson import ObjectId
 import sys
 sys.path.append('/app/backend')
 
