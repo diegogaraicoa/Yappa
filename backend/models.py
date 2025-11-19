@@ -159,11 +159,12 @@ class EventLogCreate(BaseModel):
 
 class KYBData(BaseModel):
     """
-    KYBData almacena información de KYB (Know Your Business) de cada Merchant.
+    KYBData almacena información de KYB (Know Your Business) de cada Admin.
     Ingresada manualmente por el super admin.
+    IMPORTANTE: Vinculado a Admin, no a Merchant.
     """
     id: Optional[str] = Field(alias="_id")
-    merchant_id: str  # Link a Merchant
+    admin_id: str  # Link a Admin (cambiado de merchant_id)
     
     # Información legal del negocio
     nombre_legal: str  # Nombre legal del negocio
@@ -190,7 +191,7 @@ class KYBData(BaseModel):
 
 
 class KYBDataCreate(BaseModel):
-    merchant_id: str
+    admin_id: str  # Cambiado de merchant_id
     nombre_legal: str
     ruc_tax_id: str
     direccion_fiscal: str
