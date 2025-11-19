@@ -2044,6 +2044,16 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
+# Include Admin Ops routes
+try:
+    from routes.admin_ops_routes import router as admin_ops_router
+    app.include_router(admin_ops_router, prefix="/api")
+    print("✅ Admin Ops routes loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading admin ops routes: {e}")
+    import traceback
+    traceback.print_exc()
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
