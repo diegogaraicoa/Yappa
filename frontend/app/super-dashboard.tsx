@@ -841,4 +841,42 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 4,
   },
+  kybModuleCard: {
+    backgroundColor: '#FFF',
+    marginHorizontal: 8,
+    marginVertical: 8,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  kybModuleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  kybModuleIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F3E5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  kybModuleContent: {
+    flex: 1,
+  },
+  kybModuleTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  kybModuleSubtitle: {
+    fontSize: 14,
+    color: '#666',
+  },
 });
