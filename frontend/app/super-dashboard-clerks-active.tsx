@@ -248,16 +248,37 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  statCardActive: {
+    backgroundColor: '#E8F5E9',
+    borderColor: '#4CAF50',
   },
   statValue: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#333',
   },
+  statValueActive: {
+    color: '#4CAF50',
+  },
   statLabel: {
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  statLabelActive: {
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  activeIndicator: {
+    position: 'absolute',
+    bottom: 8,
+    width: 24,
+    height: 3,
+    backgroundColor: '#4CAF50',
+    borderRadius: 2,
   },
   scrollView: {
     flex: 1,
