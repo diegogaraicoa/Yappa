@@ -17,513 +17,797 @@ BACKEND_URL = "https://ops-central-7.preview.emergentagent.com/api"
 class AdminOpsTestSuite:
     def __init__(self):
         self.session = None
-        self.auth_token = None
         self.test_results = []
-        self.merchant_id = None
-        self.kyb_id = None
+        self.created_entities = {
+            'admins': [],
+            'merchants': [],
+            'clerks': [],
+            'kyb': []
+        }
         
     async def setup(self):
-        """Setup test session and authentication"""
+        """Setup test session"""
         self.session = aiohttp.ClientSession()
         
-        # Register a test user to get auth token
-        register_data = {
-            "email": "kyb_tester@test.com",
-            "password": "testpass123",
-            "store_name": "KYB Test Store",
-            "whatsapp_number": "+593999123456"
-        }
-        
-        try:
-            async with self.session.post(f"{API_BASE}/auth/register", json=register_data) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    self.auth_token = data["access_token"]
-                    print("✅ Authentication setup successful")
-                elif resp.status == 400:
-                    # User might already exist, try login
-                    login_data = {
-                        "email": "kyb_tester@test.com",
-                        "password": "testpass123"
-                    }
-                    async with self.session.post(f"{API_BASE}/auth/login", json=login_data) as login_resp:
-                        if login_resp.status == 200:
-                            data = await login_resp.json()
-                            self.auth_token = data["access_token"]
-                            print("✅ Authentication via login successful")
-                        else:
-                            print(f"❌ Login failed: {login_resp.status}")
-                            return False
-                else:
-                    print(f"❌ Registration failed: {resp.status}")
-                    return False
-        except Exception as e:
-            print(f"❌ Auth setup error: {e}")
-            return False
-            
-        return True
-    
-    async def get_headers(self):
-        """Get authorization headers"""
-        return {
-            "Authorization": f"Bearer {self.auth_token}",
-            "Content-Type": "application/json"
-        }
-    
-    async def find_test_merchant(self):
-        """Find an existing merchant to use for testing"""
-        try:
-            # First, let's check if we have merchants in the database
-            # We'll use the database connection directly
-            from main import get_database
-            db = get_database()
-            
-            # Look for merchants with specific usernames mentioned in the request
-            test_usernames = ["tienda_demo", "tienda_norte"]
-            
-            for username in test_usernames:
-                merchant = await db.merchants.find_one({"username": username})
-                if merchant:
-                    self.merchant_id = str(merchant["_id"])
-                    print(f"✅ Found test merchant: {username} (ID: {self.merchant_id})")
-                    return True
-            
-            # If no specific merchants found, get any merchant
-            merchant = await db.merchants.find_one({})
-            if merchant:
-                self.merchant_id = str(merchant["_id"])
-                print(f"✅ Using merchant: {merchant.get('username', 'N/A')} (ID: {self.merchant_id})")
-                return True
-            
-            # If no merchants exist, create one for testing
-            merchant_data = {
-                "username": "test_merchant_kyb",
-                "nombre": "Test Merchant for KYB",
-                "email": "test@merchant.com",
-                "created_at": datetime.utcnow()
-            }
-            result = await db.merchants.insert_one(merchant_data)
-            self.merchant_id = str(result.inserted_id)
-            print(f"✅ Created test merchant (ID: {self.merchant_id})")
-            return True
-            
-        except Exception as e:
-            print(f"❌ Error finding/creating merchant: {e}")
-            return False
-    
-    async def test_create_kyb(self):
-        """Test POST /api/kyb - Create KYB"""
-        print("\n🧪 Testing POST /api/kyb - Create KYB")
-        
-        kyb_data = {
-            "merchant_id": self.merchant_id,
-            "nombre_legal": "Test Business Legal S.A.",
-            "ruc_tax_id": "1234567890001",
-            "direccion_fiscal": "Av. Test 123, Quito, Ecuador",
-            "telefono_contacto": "+593999123456",
-            "email_oficial": "legal@testbusiness.com",
-            "representante_legal": "Juan Test Pérez",
-            "notas": "Datos de prueba para KYB testing"
-        }
-        
-        try:
-            headers = await self.get_headers()
-            async with self.session.post(f"{API_BASE}/kyb", json=kyb_data, headers=headers) as resp:
-                status = resp.status
-                data = await resp.json()
-                
-                if status == 201 or status == 200:
-                    self.kyb_id = data.get("kyb_id")
-                    print(f"✅ KYB created successfully - ID: {self.kyb_id}")
-                    self.test_results.append(("POST /api/kyb - Create", True, f"Created with ID: {self.kyb_id}"))
-                    return True
-                else:
-                    print(f"❌ Create KYB failed: {status} - {data}")
-                    self.test_results.append(("POST /api/kyb - Create", False, f"Status: {status}, Response: {data}"))
-                    return False
-                    
-        except Exception as e:
-            print(f"❌ Create KYB error: {e}")
-            self.test_results.append(("POST /api/kyb - Create", False, f"Exception: {e}"))
-            return False
-    
-    async def test_get_kyb_by_merchant(self):
-        """Test GET /api/kyb/{merchant_id} - Get KYB by merchant"""
-        print(f"\n🧪 Testing GET /api/kyb/{self.merchant_id} - Get KYB by merchant")
-        
-        try:
-            headers = await self.get_headers()
-            async with self.session.get(f"{API_BASE}/kyb/{self.merchant_id}", headers=headers) as resp:
-                status = resp.status
-                data = await resp.json()
-                
-                if status == 200:
-                    kyb = data.get("kyb", {})
-                    merchant = data.get("merchant", {})
-                    
-                    # Verify all required fields are present
-                    required_fields = ["id", "merchant_id", "nombre_legal", "ruc_tax_id", 
-                                     "direccion_fiscal", "telefono_contacto", "email_oficial", 
-                                     "representante_legal", "status"]
-                    
-                    missing_fields = [field for field in required_fields if field not in kyb]
-                    
-                    if not missing_fields:
-                        print(f"✅ KYB retrieved successfully - Status: {kyb.get('status')}")
-                        print(f"   Merchant: {merchant.get('nombre')} ({merchant.get('username')})")
-                        self.test_results.append(("GET /api/kyb/{merchant_id}", True, "All fields present"))
-                        return True
-                    else:
-                        print(f"❌ Missing fields in response: {missing_fields}")
-                        self.test_results.append(("GET /api/kyb/{merchant_id}", False, f"Missing fields: {missing_fields}"))
-                        return False
-                else:
-                    print(f"❌ Get KYB by merchant failed: {status} - {data}")
-                    self.test_results.append(("GET /api/kyb/{merchant_id}", False, f"Status: {status}"))
-                    return False
-                    
-        except Exception as e:
-            print(f"❌ Get KYB by merchant error: {e}")
-            self.test_results.append(("GET /api/kyb/{merchant_id}", False, f"Exception: {e}"))
-            return False
-    
-    async def test_get_all_kyb(self):
-        """Test GET /api/kyb - List all KYB"""
-        print("\n🧪 Testing GET /api/kyb - List all KYB")
-        
-        # Test without filters
-        try:
-            headers = await self.get_headers()
-            async with self.session.get(f"{API_BASE}/kyb", headers=headers) as resp:
-                status = resp.status
-                data = await resp.json()
-                
-                if status == 200:
-                    required_stats = ["total", "pending_count", "approved_count", "rejected_count", "merchants_without_kyb"]
-                    missing_stats = [stat for stat in required_stats if stat not in data]
-                    
-                    if not missing_stats and "kyb_data" in data:
-                        print(f"✅ All KYB retrieved - Total: {data['total']}, Pending: {data['pending_count']}")
-                        self.test_results.append(("GET /api/kyb - All", True, f"Total: {data['total']}"))
-                    else:
-                        print(f"❌ Missing stats in response: {missing_stats}")
-                        self.test_results.append(("GET /api/kyb - All", False, f"Missing stats: {missing_stats}"))
-                        return False
-                else:
-                    print(f"❌ Get all KYB failed: {status} - {data}")
-                    self.test_results.append(("GET /api/kyb - All", False, f"Status: {status}"))
-                    return False
-        except Exception as e:
-            print(f"❌ Get all KYB error: {e}")
-            self.test_results.append(("GET /api/kyb - All", False, f"Exception: {e}"))
-            return False
-        
-        # Test with status filter
-        print("\n🧪 Testing GET /api/kyb?status=pending - Filter by status")
-        try:
-            async with self.session.get(f"{API_BASE}/kyb?status=pending", headers=headers) as resp:
-                status = resp.status
-                data = await resp.json()
-                
-                if status == 200:
-                    # Verify all returned items have pending status
-                    kyb_data = data.get("kyb_data", [])
-                    non_pending = [item for item in kyb_data if item.get("status") != "pending"]
-                    
-                    if not non_pending:
-                        print(f"✅ Filtered KYB retrieved - Pending items: {len(kyb_data)}")
-                        self.test_results.append(("GET /api/kyb?status=pending", True, f"Pending: {len(kyb_data)}"))
-                        return True
-                    else:
-                        print(f"❌ Filter not working - Found non-pending items: {len(non_pending)}")
-                        self.test_results.append(("GET /api/kyb?status=pending", False, "Filter not working"))
-                        return False
-                else:
-                    print(f"❌ Get filtered KYB failed: {status}")
-                    self.test_results.append(("GET /api/kyb?status=pending", False, f"Status: {status}"))
-                    return False
-        except Exception as e:
-            print(f"❌ Get filtered KYB error: {e}")
-            self.test_results.append(("GET /api/kyb?status=pending", False, f"Exception: {e}"))
-            return False
-    
-    async def test_update_kyb_status(self):
-        """Test PATCH /api/kyb/{kyb_id} - Update status"""
-        print(f"\n🧪 Testing PATCH /api/kyb/{self.kyb_id} - Update status")
-        
-        if not self.kyb_id:
-            print("❌ No KYB ID available for update test")
-            self.test_results.append(("PATCH /api/kyb/{kyb_id}", False, "No KYB ID"))
-            return False
-        
-        update_data = {
-            "status": "approved",
-            "notas": "Aprobado después de testing - updated at " + datetime.now().isoformat()
-        }
-        
-        try:
-            headers = await self.get_headers()
-            async with self.session.patch(f"{API_BASE}/kyb/{self.kyb_id}", json=update_data, headers=headers) as resp:
-                status = resp.status
-                data = await resp.json()
-                
-                if status == 200:
-                    print("✅ KYB status updated successfully")
-                    self.test_results.append(("PATCH /api/kyb/{kyb_id}", True, "Status updated to approved"))
-                    
-                    # Verify the update by getting the KYB again
-                    async with self.session.get(f"{API_BASE}/kyb/{self.merchant_id}", headers=headers) as verify_resp:
-                        if verify_resp.status == 200:
-                            verify_data = await verify_resp.json()
-                            kyb = verify_data.get("kyb", {})
-                            if kyb.get("status") == "approved":
-                                print("✅ Status update verified")
-                                return True
-                            else:
-                                print(f"❌ Status not updated correctly: {kyb.get('status')}")
-                                return False
-                else:
-                    print(f"❌ Update KYB failed: {status} - {data}")
-                    self.test_results.append(("PATCH /api/kyb/{kyb_id}", False, f"Status: {status}"))
-                    return False
-                    
-        except Exception as e:
-            print(f"❌ Update KYB error: {e}")
-            self.test_results.append(("PATCH /api/kyb/{kyb_id}", False, f"Exception: {e}"))
-            return False
-    
-    async def test_csv_template_download(self):
-        """Test GET /api/kyb/template/download - CSV template"""
-        print("\n🧪 Testing GET /api/kyb/template/download - CSV template")
-        
-        try:
-            headers = await self.get_headers()
-            async with self.session.get(f"{API_BASE}/kyb/template/download", headers=headers) as resp:
-                status = resp.status
-                content_type = resp.headers.get('content-type', '')
-                
-                if status == 200 and 'text/csv' in content_type:
-                    content = await resp.text()
-                    
-                    # Verify CSV headers
-                    lines = content.strip().split('\n')
-                    if len(lines) >= 2:  # Header + example row
-                        headers_line = lines[0]
-                        expected_headers = [
-                            "merchant_username", "nombre_legal", "ruc_tax_id", 
-                            "direccion_fiscal", "telefono_contacto", "email_oficial",
-                            "representante_legal", "documento_representante_url", "notas"
-                        ]
-                        
-                        # Check if all expected headers are present
-                        headers_present = all(header in headers_line for header in expected_headers)
-                        
-                        if headers_present:
-                            print("✅ CSV template downloaded successfully")
-                            print(f"   Headers: {headers_line}")
-                            self.test_results.append(("GET /api/kyb/template/download", True, "CSV template valid"))
-                            return True
-                        else:
-                            print(f"❌ CSV headers incomplete: {headers_line}")
-                            self.test_results.append(("GET /api/kyb/template/download", False, "Headers incomplete"))
-                            return False
-                    else:
-                        print("❌ CSV content insufficient")
-                        self.test_results.append(("GET /api/kyb/template/download", False, "Content insufficient"))
-                        return False
-                else:
-                    print(f"❌ CSV template download failed: {status}, Content-Type: {content_type}")
-                    self.test_results.append(("GET /api/kyb/template/download", False, f"Status: {status}"))
-                    return False
-                    
-        except Exception as e:
-            print(f"❌ CSV template download error: {e}")
-            self.test_results.append(("GET /api/kyb/template/download", False, f"Exception: {e}"))
-            return False
-    
-    async def test_update_existing_kyb(self):
-        """Test POST /api/kyb - Update existing (same endpoint, different behavior)"""
-        print(f"\n🧪 Testing POST /api/kyb - Update existing KYB")
-        
-        # Try to create/update with same merchant_id
-        updated_kyb_data = {
-            "merchant_id": self.merchant_id,
-            "nombre_legal": "Updated Test Business Legal S.A.",
-            "ruc_tax_id": "1234567890001",  # Same RUC
-            "direccion_fiscal": "Av. Updated Test 456, Quito, Ecuador",  # Updated address
-            "telefono_contacto": "+593999654321",  # Updated phone
-            "email_oficial": "updated@testbusiness.com",  # Updated email
-            "representante_legal": "Juan Updated Pérez",
-            "notas": "Datos actualizados para KYB testing"
-        }
-        
-        try:
-            headers = await self.get_headers()
-            async with self.session.post(f"{API_BASE}/kyb", json=updated_kyb_data, headers=headers) as resp:
-                status = resp.status
-                data = await resp.json()
-                
-                if status == 200:
-                    # Should return update message, not create
-                    if "actualizado" in data.get("message", "").lower():
-                        print("✅ Existing KYB updated successfully (no duplicate created)")
-                        self.test_results.append(("POST /api/kyb - Update existing", True, "Updated existing"))
-                        
-                        # Verify the update
-                        async with self.session.get(f"{API_BASE}/kyb/{self.merchant_id}", headers=headers) as verify_resp:
-                            if verify_resp.status == 200:
-                                verify_data = await verify_resp.json()
-                                kyb = verify_data.get("kyb", {})
-                                if kyb.get("direccion_fiscal") == "Av. Updated Test 456, Quito, Ecuador":
-                                    print("✅ Update verified - address changed")
-                                    return True
-                                else:
-                                    print("❌ Update not reflected in data")
-                                    return False
-                        return True
-                    else:
-                        print(f"❌ Expected update but got: {data.get('message')}")
-                        self.test_results.append(("POST /api/kyb - Update existing", False, "Not updated"))
-                        return False
-                else:
-                    print(f"❌ Update existing KYB failed: {status} - {data}")
-                    self.test_results.append(("POST /api/kyb - Update existing", False, f"Status: {status}"))
-                    return False
-                    
-        except Exception as e:
-            print(f"❌ Update existing KYB error: {e}")
-            self.test_results.append(("POST /api/kyb - Update existing", False, f"Exception: {e}"))
-            return False
-    
-    async def test_delete_kyb(self):
-        """Test DELETE /api/kyb/{kyb_id} - Delete KYB"""
-        print(f"\n🧪 Testing DELETE /api/kyb/{self.kyb_id} - Delete KYB")
-        
-        if not self.kyb_id:
-            print("❌ No KYB ID available for delete test")
-            self.test_results.append(("DELETE /api/kyb/{kyb_id}", False, "No KYB ID"))
-            return False
-        
-        try:
-            headers = await self.get_headers()
-            async with self.session.delete(f"{API_BASE}/kyb/{self.kyb_id}", headers=headers) as resp:
-                status = resp.status
-                data = await resp.json()
-                
-                if status == 200:
-                    print("✅ KYB deleted successfully")
-                    self.test_results.append(("DELETE /api/kyb/{kyb_id}", True, "Deleted successfully"))
-                    
-                    # Verify deletion by trying to get the KYB
-                    async with self.session.get(f"{API_BASE}/kyb/{self.merchant_id}", headers=headers) as verify_resp:
-                        if verify_resp.status == 404:
-                            print("✅ Deletion verified - KYB not found")
-                            return True
-                        else:
-                            print("❌ KYB still exists after deletion")
-                            return False
-                else:
-                    print(f"❌ Delete KYB failed: {status} - {data}")
-                    self.test_results.append(("DELETE /api/kyb/{kyb_id}", False, f"Status: {status}"))
-                    return False
-                    
-        except Exception as e:
-            print(f"❌ Delete KYB error: {e}")
-            self.test_results.append(("DELETE /api/kyb/{kyb_id}", False, f"Exception: {e}"))
-            return False
-    
-    async def test_validation_errors(self):
-        """Test validation scenarios"""
-        print("\n🧪 Testing validation scenarios")
-        
-        # Test with non-existent merchant_id
-        try:
-            headers = await self.get_headers()
-            fake_merchant_id = "507f1f77bcf86cd799439011"  # Valid ObjectId format but non-existent
-            
-            async with self.session.get(f"{API_BASE}/kyb/{fake_merchant_id}", headers=headers) as resp:
-                if resp.status == 404:
-                    print("✅ Validation: Non-existent merchant returns 404")
-                    self.test_results.append(("Validation - Non-existent merchant", True, "404 as expected"))
-                else:
-                    print(f"❌ Validation: Expected 404 for non-existent merchant, got {resp.status}")
-                    self.test_results.append(("Validation - Non-existent merchant", False, f"Got {resp.status}"))
-                    
-        except Exception as e:
-            print(f"❌ Validation test error: {e}")
-            self.test_results.append(("Validation - Non-existent merchant", False, f"Exception: {e}"))
-    
     async def cleanup(self):
         """Cleanup test session"""
         if self.session:
             await self.session.close()
+            
+    async def make_request(self, method: str, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
+        """Make HTTP request to backend"""
+        url = f"{BACKEND_URL}{endpoint}"
+        
+        try:
+            if method.upper() == "GET":
+                async with self.session.get(url) as response:
+                    result = {
+                        'status': response.status,
+                        'data': await response.json() if response.content_type == 'application/json' else await response.text()
+                    }
+            elif method.upper() == "POST":
+                async with self.session.post(url, json=data) as response:
+                    result = {
+                        'status': response.status,
+                        'data': await response.json() if response.content_type == 'application/json' else await response.text()
+                    }
+            elif method.upper() == "PATCH":
+                async with self.session.patch(url, json=data) as response:
+                    result = {
+                        'status': response.status,
+                        'data': await response.json() if response.content_type == 'application/json' else await response.text()
+                    }
+            elif method.upper() == "DELETE":
+                async with self.session.delete(url) as response:
+                    result = {
+                        'status': response.status,
+                        'data': await response.json() if response.content_type == 'application/json' else await response.text()
+                    }
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+                
+            return result
+            
+        except Exception as e:
+            return {
+                'status': 0,
+                'data': f"Request failed: {str(e)}"
+            }
     
-    def print_summary(self):
-        """Print test results summary"""
-        print("\n" + "="*60)
-        print("🧪 KYB MODULE TESTING SUMMARY")
-        print("="*60)
+    def log_test(self, test_name: str, success: bool, details: str = ""):
+        """Log test result"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} - {test_name}")
+        if details:
+            print(f"    Details: {details}")
         
-        passed = sum(1 for _, success, _ in self.test_results if success)
-        total = len(self.test_results)
+        self.test_results.append({
+            'test': test_name,
+            'success': success,
+            'details': details
+        })
+    
+    # ============================================
+    # ADMIN TESTS
+    # ============================================
+    
+    async def test_create_admin(self):
+        """Test 1: Create Admin"""
+        admin_data = {
+            "nombre": "Test Admin Company",
+            "email": "admin@testcompany.com",
+            "telefono": "+593999123456"
+        }
         
-        print(f"Total Tests: {total}")
-        print(f"Passed: {passed}")
-        print(f"Failed: {total - passed}")
-        print(f"Success Rate: {(passed/total*100):.1f}%" if total > 0 else "0%")
+        result = await self.make_request("POST", "/admin-ops/admins", admin_data)
         
-        print("\nDetailed Results:")
-        for test_name, success, details in self.test_results:
-            status = "✅ PASS" if success else "❌ FAIL"
-            print(f"{status} {test_name}: {details}")
+        if result['status'] == 200 and 'admin_id' in result['data']:
+            admin_id = result['data']['admin_id']
+            self.created_entities['admins'].append(admin_id)
+            self.log_test("Create Admin", True, f"Admin created with ID: {admin_id}")
+            return admin_id
+        else:
+            self.log_test("Create Admin", False, f"Status: {result['status']}, Data: {result['data']}")
+            return None
+    
+    async def test_get_all_admins(self):
+        """Test 2: Get All Admins"""
+        result = await self.make_request("GET", "/admin-ops/admins")
         
-        return passed == total
+        if result['status'] == 200 and 'count' in result['data'] and 'admins' in result['data']:
+            count = result['data']['count']
+            admins = result['data']['admins']
+            self.log_test("Get All Admins", True, f"Retrieved {count} admins")
+            return True
+        else:
+            self.log_test("Get All Admins", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_get_admin_by_id(self, admin_id: str):
+        """Test 3: Get Admin by ID"""
+        result = await self.make_request("GET", f"/admin-ops/admins/{admin_id}")
+        
+        if result['status'] == 200 and 'id' in result['data']:
+            self.log_test("Get Admin by ID", True, f"Retrieved admin: {result['data']['nombre']}")
+            return True
+        else:
+            self.log_test("Get Admin by ID", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_update_admin(self, admin_id: str):
+        """Test 4: Update Admin"""
+        update_data = {
+            "nombre": "Updated Test Admin Company",
+            "email": "admin@testcompany.com",  # Same email
+            "telefono": "+593999654321"
+        }
+        
+        result = await self.make_request("PATCH", f"/admin-ops/admins/{admin_id}", update_data)
+        
+        if result['status'] == 200:
+            self.log_test("Update Admin", True, "Admin updated successfully")
+            return True
+        else:
+            self.log_test("Update Admin", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    # ============================================
+    # MERCHANT TESTS
+    # ============================================
+    
+    async def test_create_merchant(self, admin_id: str):
+        """Test 5: Create Merchant"""
+        merchant_data = {
+            "admin_id": admin_id,
+            "username": "test_merchant_store",
+            "password": "merchant123",
+            "nombre": "Tienda de Prueba",
+            "direccion": "Av. Principal 123, Quito",
+            "telefono": "+593999111222"
+        }
+        
+        result = await self.make_request("POST", "/admin-ops/merchants", merchant_data)
+        
+        if result['status'] == 200 and 'merchant_id' in result['data']:
+            merchant_id = result['data']['merchant_id']
+            self.created_entities['merchants'].append(merchant_id)
+            self.log_test("Create Merchant", True, f"Merchant created with ID: {merchant_id}")
+            return merchant_id
+        else:
+            self.log_test("Create Merchant", False, f"Status: {result['status']}, Data: {result['data']}")
+            return None
+    
+    async def test_get_all_merchants(self):
+        """Test 6: Get All Merchants"""
+        result = await self.make_request("GET", "/admin-ops/merchants")
+        
+        if result['status'] == 200 and 'count' in result['data'] and 'merchants' in result['data']:
+            count = result['data']['count']
+            self.log_test("Get All Merchants", True, f"Retrieved {count} merchants")
+            return True
+        else:
+            self.log_test("Get All Merchants", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_get_merchant_by_id(self, merchant_id: str):
+        """Test 7: Get Merchant by ID"""
+        result = await self.make_request("GET", f"/admin-ops/merchants/{merchant_id}")
+        
+        if result['status'] == 200 and 'id' in result['data']:
+            self.log_test("Get Merchant by ID", True, f"Retrieved merchant: {result['data']['nombre']}")
+            return True
+        else:
+            self.log_test("Get Merchant by ID", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_update_merchant(self, merchant_id: str, admin_id: str):
+        """Test 8: Update Merchant"""
+        update_data = {
+            "admin_id": admin_id,
+            "username": "test_merchant_store",  # Same username
+            "password": "newpassword123",
+            "nombre": "Tienda de Prueba Actualizada",
+            "direccion": "Av. Principal 456, Quito",
+            "telefono": "+593999333444"
+        }
+        
+        result = await self.make_request("PATCH", f"/admin-ops/merchants/{merchant_id}", update_data)
+        
+        if result['status'] == 200:
+            self.log_test("Update Merchant", True, "Merchant updated successfully")
+            return True
+        else:
+            self.log_test("Update Merchant", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    # ============================================
+    # CLERK TESTS
+    # ============================================
+    
+    async def test_create_clerk(self, merchant_id: str):
+        """Test 9: Create Clerk"""
+        clerk_data = {
+            "merchant_id": merchant_id,
+            "email": "clerk@teststore.com",
+            "password": "clerk123",
+            "nombre": "Juan Empleado",
+            "whatsapp_number": "+593999555666",
+            "role": "employee"
+        }
+        
+        result = await self.make_request("POST", "/admin-ops/clerks", clerk_data)
+        
+        if result['status'] == 200 and 'clerk_id' in result['data']:
+            clerk_id = result['data']['clerk_id']
+            self.created_entities['clerks'].append(clerk_id)
+            self.log_test("Create Clerk", True, f"Clerk created with ID: {clerk_id}")
+            return clerk_id
+        else:
+            self.log_test("Create Clerk", False, f"Status: {result['status']}, Data: {result['data']}")
+            return None
+    
+    async def test_get_all_clerks(self):
+        """Test 10: Get All Clerks"""
+        result = await self.make_request("GET", "/admin-ops/clerks")
+        
+        if result['status'] == 200 and 'count' in result['data'] and 'clerks' in result['data']:
+            count = result['data']['count']
+            self.log_test("Get All Clerks", True, f"Retrieved {count} clerks")
+            return True
+        else:
+            self.log_test("Get All Clerks", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_get_clerk_by_id(self, clerk_id: str):
+        """Test 11: Get Clerk by ID"""
+        result = await self.make_request("GET", f"/admin-ops/clerks/{clerk_id}")
+        
+        if result['status'] == 200 and 'id' in result['data']:
+            self.log_test("Get Clerk by ID", True, f"Retrieved clerk: {result['data']['nombre']}")
+            return True
+        else:
+            self.log_test("Get Clerk by ID", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_update_clerk(self, clerk_id: str, merchant_id: str):
+        """Test 12: Update Clerk"""
+        update_data = {
+            "merchant_id": merchant_id,
+            "email": "clerk@teststore.com",  # Same email
+            "password": "newclerkpass123",
+            "nombre": "Juan Empleado Actualizado",
+            "whatsapp_number": "+593999777888",
+            "role": "manager"
+        }
+        
+        result = await self.make_request("PATCH", f"/admin-ops/clerks/{clerk_id}", update_data)
+        
+        if result['status'] == 200:
+            self.log_test("Update Clerk", True, "Clerk updated successfully")
+            return True
+        else:
+            self.log_test("Update Clerk", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    # ============================================
+    # KYB TESTS
+    # ============================================
+    
+    async def test_create_kyb(self, admin_id: str):
+        """Test 13: Create KYB"""
+        kyb_data = {
+            "admin_id": admin_id,
+            "nombre_legal": "Test Company S.A.",
+            "ruc_tax_id": "1234567890001",
+            "direccion_fiscal": "Calle Fiscal 123, Quito, Ecuador",
+            "telefono_contacto": "+593999111222",
+            "email_oficial": "legal@testcompany.com",
+            "representante_legal": "Juan Representante",
+            "documento_representante": None,
+            "notas": "KYB de prueba para testing"
+        }
+        
+        result = await self.make_request("POST", "/admin-ops/kyb", kyb_data)
+        
+        if result['status'] == 200 and 'kyb_id' in result['data']:
+            kyb_id = result['data']['kyb_id']
+            self.created_entities['kyb'].append(kyb_id)
+            self.log_test("Create KYB", True, f"KYB created with ID: {kyb_id}")
+            return kyb_id
+        else:
+            self.log_test("Create KYB", False, f"Status: {result['status']}, Data: {result['data']}")
+            return None
+    
+    async def test_get_kyb_by_admin(self, admin_id: str):
+        """Test 14: Get KYB by Admin ID"""
+        result = await self.make_request("GET", f"/admin-ops/kyb/{admin_id}")
+        
+        if result['status'] == 200 and 'kyb' in result['data']:
+            kyb = result['data']['kyb']
+            self.log_test("Get KYB by Admin ID", True, f"Retrieved KYB: {kyb['nombre_legal']}")
+            return True
+        else:
+            self.log_test("Get KYB by Admin ID", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_get_all_kyb(self):
+        """Test 15: Get All KYB"""
+        result = await self.make_request("GET", "/admin-ops/kyb")
+        
+        if result['status'] == 200 and 'total' in result['data'] and 'kyb_data' in result['data']:
+            total = result['data']['total']
+            pending = result['data']['pending_count']
+            approved = result['data']['approved_count']
+            rejected = result['data']['rejected_count']
+            self.log_test("Get All KYB", True, f"Retrieved {total} KYB records (Pending: {pending}, Approved: {approved}, Rejected: {rejected})")
+            return True
+        else:
+            self.log_test("Get All KYB", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_update_kyb(self, kyb_id: str):
+        """Test 16: Update KYB Status"""
+        update_data = {
+            "status": "approved",
+            "notas": "KYB aprobado después de revisión"
+        }
+        
+        result = await self.make_request("PATCH", f"/admin-ops/kyb/{kyb_id}", update_data)
+        
+        if result['status'] == 200:
+            self.log_test("Update KYB", True, "KYB status updated to approved")
+            return True
+        else:
+            self.log_test("Update KYB", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    # ============================================
+    # ERROR VALIDATION TESTS
+    # ============================================
+    
+    async def test_create_merchant_invalid_admin(self):
+        """Test 17: Create Merchant with Invalid Admin ID"""
+        merchant_data = {
+            "admin_id": "000000000000000000000000",  # Invalid ObjectId
+            "username": "invalid_merchant",
+            "password": "test123",
+            "nombre": "Invalid Merchant"
+        }
+        
+        result = await self.make_request("POST", "/admin-ops/merchants", merchant_data)
+        
+        if result['status'] == 404:
+            self.log_test("Create Merchant with Invalid Admin ID", True, "Correctly returned 404 for invalid admin_id")
+            return True
+        else:
+            self.log_test("Create Merchant with Invalid Admin ID", False, f"Expected 404, got {result['status']}")
+            return False
+    
+    async def test_create_clerk_invalid_merchant(self):
+        """Test 18: Create Clerk with Invalid Merchant ID"""
+        clerk_data = {
+            "merchant_id": "000000000000000000000000",  # Invalid ObjectId
+            "email": "invalid@clerk.com",
+            "password": "test123",
+            "nombre": "Invalid Clerk"
+        }
+        
+        result = await self.make_request("POST", "/admin-ops/clerks", clerk_data)
+        
+        if result['status'] == 404:
+            self.log_test("Create Clerk with Invalid Merchant ID", True, "Correctly returned 404 for invalid merchant_id")
+            return True
+        else:
+            self.log_test("Create Clerk with Invalid Merchant ID", False, f"Expected 404, got {result['status']}")
+            return False
+    
+    async def test_create_kyb_invalid_admin(self):
+        """Test 19: Create KYB with Invalid Admin ID"""
+        kyb_data = {
+            "admin_id": "000000000000000000000000",  # Invalid ObjectId
+            "nombre_legal": "Invalid Company",
+            "ruc_tax_id": "0000000000001",
+            "direccion_fiscal": "Invalid Address",
+            "telefono_contacto": "+593999000000",
+            "email_oficial": "invalid@company.com",
+            "representante_legal": "Invalid Rep"
+        }
+        
+        result = await self.make_request("POST", "/admin-ops/kyb", kyb_data)
+        
+        if result['status'] == 404:
+            self.log_test("Create KYB with Invalid Admin ID", True, "Correctly returned 404 for invalid admin_id")
+            return True
+        else:
+            self.log_test("Create KYB with Invalid Admin ID", False, f"Expected 404, got {result['status']}")
+            return False
+    
+    async def test_duplicate_admin_email(self):
+        """Test 20: Create Admin with Duplicate Email"""
+        admin_data = {
+            "nombre": "Duplicate Admin",
+            "email": "admin@testcompany.com",  # Same email as first admin
+            "telefono": "+593999000000"
+        }
+        
+        result = await self.make_request("POST", "/admin-ops/admins", admin_data)
+        
+        if result['status'] == 400:
+            self.log_test("Create Admin with Duplicate Email", True, "Correctly returned 400 for duplicate email")
+            return True
+        else:
+            self.log_test("Create Admin with Duplicate Email", False, f"Expected 400, got {result['status']}")
+            return False
+    
+    async def test_duplicate_merchant_username(self):
+        """Test 21: Create Merchant with Duplicate Username"""
+        if not self.created_entities['admins']:
+            self.log_test("Create Merchant with Duplicate Username", False, "No admin available for test")
+            return False
+            
+        merchant_data = {
+            "admin_id": self.created_entities['admins'][0],
+            "username": "test_merchant_store",  # Same username as first merchant
+            "password": "test123",
+            "nombre": "Duplicate Merchant"
+        }
+        
+        result = await self.make_request("POST", "/admin-ops/merchants", merchant_data)
+        
+        if result['status'] == 400:
+            self.log_test("Create Merchant with Duplicate Username", True, "Correctly returned 400 for duplicate username")
+            return True
+        else:
+            self.log_test("Create Merchant with Duplicate Username", False, f"Expected 400, got {result['status']}")
+            return False
+    
+    async def test_duplicate_clerk_email(self):
+        """Test 22: Create Clerk with Duplicate Email"""
+        if not self.created_entities['merchants']:
+            self.log_test("Create Clerk with Duplicate Email", False, "No merchant available for test")
+            return False
+            
+        clerk_data = {
+            "merchant_id": self.created_entities['merchants'][0],
+            "email": "clerk@teststore.com",  # Same email as first clerk
+            "password": "test123",
+            "nombre": "Duplicate Clerk"
+        }
+        
+        result = await self.make_request("POST", "/admin-ops/clerks", clerk_data)
+        
+        if result['status'] == 400:
+            self.log_test("Create Clerk with Duplicate Email", True, "Correctly returned 400 for duplicate email")
+            return True
+        else:
+            self.log_test("Create Clerk with Duplicate Email", False, f"Expected 400, got {result['status']}")
+            return False
+    
+    # ============================================
+    # DELETION VALIDATION TESTS
+    # ============================================
+    
+    async def test_delete_admin_with_merchants(self):
+        """Test 23: Try to Delete Admin with Associated Merchants"""
+        if not self.created_entities['admins']:
+            self.log_test("Delete Admin with Merchants", False, "No admin available for test")
+            return False
+            
+        admin_id = self.created_entities['admins'][0]
+        result = await self.make_request("DELETE", f"/admin-ops/admins/{admin_id}")
+        
+        if result['status'] == 400:
+            self.log_test("Delete Admin with Merchants", True, "Correctly prevented deletion of admin with merchants")
+            return True
+        else:
+            self.log_test("Delete Admin with Merchants", False, f"Expected 400, got {result['status']}")
+            return False
+    
+    async def test_delete_merchant_with_clerks(self):
+        """Test 24: Try to Delete Merchant with Associated Clerks"""
+        if not self.created_entities['merchants']:
+            self.log_test("Delete Merchant with Clerks", False, "No merchant available for test")
+            return False
+            
+        merchant_id = self.created_entities['merchants'][0]
+        result = await self.make_request("DELETE", f"/admin-ops/merchants/{merchant_id}")
+        
+        if result['status'] == 400:
+            self.log_test("Delete Merchant with Clerks", True, "Correctly prevented deletion of merchant with clerks")
+            return True
+        else:
+            self.log_test("Delete Merchant with Clerks", False, f"Expected 400, got {result['status']}")
+            return False
+    
+    # ============================================
+    # SUCCESSFUL DELETION TESTS
+    # ============================================
+    
+    async def test_delete_clerk(self):
+        """Test 25: Delete Clerk Successfully"""
+        if not self.created_entities['clerks']:
+            self.log_test("Delete Clerk", False, "No clerk available for test")
+            return False
+            
+        clerk_id = self.created_entities['clerks'][0]
+        result = await self.make_request("DELETE", f"/admin-ops/clerks/{clerk_id}")
+        
+        if result['status'] == 200:
+            self.created_entities['clerks'].remove(clerk_id)
+            self.log_test("Delete Clerk", True, "Clerk deleted successfully")
+            return True
+        else:
+            self.log_test("Delete Clerk", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_delete_merchant_without_clerks(self):
+        """Test 26: Delete Merchant Without Clerks"""
+        if not self.created_entities['merchants']:
+            self.log_test("Delete Merchant without Clerks", False, "No merchant available for test")
+            return False
+            
+        merchant_id = self.created_entities['merchants'][0]
+        result = await self.make_request("DELETE", f"/admin-ops/merchants/{merchant_id}")
+        
+        if result['status'] == 200:
+            self.created_entities['merchants'].remove(merchant_id)
+            self.log_test("Delete Merchant without Clerks", True, "Merchant deleted successfully")
+            return True
+        else:
+            self.log_test("Delete Merchant without Clerks", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_delete_kyb(self):
+        """Test 27: Delete KYB"""
+        if not self.created_entities['kyb']:
+            self.log_test("Delete KYB", False, "No KYB available for test")
+            return False
+            
+        kyb_id = self.created_entities['kyb'][0]
+        result = await self.make_request("DELETE", f"/admin-ops/kyb/{kyb_id}")
+        
+        if result['status'] == 200:
+            self.created_entities['kyb'].remove(kyb_id)
+            self.log_test("Delete KYB", True, "KYB deleted successfully")
+            return True
+        else:
+            self.log_test("Delete KYB", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    async def test_delete_admin_without_merchants(self):
+        """Test 28: Delete Admin Without Merchants"""
+        if not self.created_entities['admins']:
+            self.log_test("Delete Admin without Merchants", False, "No admin available for test")
+            return False
+            
+        admin_id = self.created_entities['admins'][0]
+        result = await self.make_request("DELETE", f"/admin-ops/admins/{admin_id}")
+        
+        if result['status'] == 200:
+            self.created_entities['admins'].remove(admin_id)
+            self.log_test("Delete Admin without Merchants", True, "Admin deleted successfully")
+            return True
+        else:
+            self.log_test("Delete Admin without Merchants", False, f"Status: {result['status']}, Data: {result['data']}")
+            return False
+    
+    # ============================================
+    # RESPONSE FORMAT VALIDATION TESTS
+    # ============================================
+    
+    async def test_response_formats(self):
+        """Test 29: Validate Response Formats"""
+        # Test admin list format
+        result = await self.make_request("GET", "/admin-ops/admins")
+        if result['status'] == 200:
+            data = result['data']
+            if 'count' in data and 'admins' in data and isinstance(data['admins'], list):
+                self.log_test("Admin List Response Format", True, "Correct JSON structure with count and admins array")
+            else:
+                self.log_test("Admin List Response Format", False, "Missing count or admins array")
+        else:
+            self.log_test("Admin List Response Format", False, f"Failed to get admin list: {result['status']}")
+        
+        # Test merchant list format
+        result = await self.make_request("GET", "/admin-ops/merchants")
+        if result['status'] == 200:
+            data = result['data']
+            if 'count' in data and 'merchants' in data and isinstance(data['merchants'], list):
+                self.log_test("Merchant List Response Format", True, "Correct JSON structure with count and merchants array")
+            else:
+                self.log_test("Merchant List Response Format", False, "Missing count or merchants array")
+        else:
+            self.log_test("Merchant List Response Format", False, f"Failed to get merchant list: {result['status']}")
+        
+        # Test clerk list format
+        result = await self.make_request("GET", "/admin-ops/clerks")
+        if result['status'] == 200:
+            data = result['data']
+            if 'count' in data and 'clerks' in data and isinstance(data['clerks'], list):
+                self.log_test("Clerk List Response Format", True, "Correct JSON structure with count and clerks array")
+            else:
+                self.log_test("Clerk List Response Format", False, "Missing count or clerks array")
+        else:
+            self.log_test("Clerk List Response Format", False, f"Failed to get clerk list: {result['status']}")
+        
+        # Test KYB list format
+        result = await self.make_request("GET", "/admin-ops/kyb")
+        if result['status'] == 200:
+            data = result['data']
+            required_fields = ['total', 'pending_count', 'approved_count', 'rejected_count', 'admins_without_kyb', 'kyb_data']
+            if all(field in data for field in required_fields):
+                self.log_test("KYB List Response Format", True, "Correct JSON structure with all required stats fields")
+            else:
+                missing = [field for field in required_fields if field not in data]
+                self.log_test("KYB List Response Format", False, f"Missing fields: {missing}")
+        else:
+            self.log_test("KYB List Response Format", False, f"Failed to get KYB list: {result['status']}")
+    
+    async def test_password_hashing(self):
+        """Test 30: Verify Password Hashing"""
+        # Create a test merchant to check password hashing
+        if not self.created_entities['admins']:
+            self.log_test("Password Hashing Test", False, "No admin available for test")
+            return False
+        
+        merchant_data = {
+            "admin_id": self.created_entities['admins'][0],
+            "username": "password_test_merchant",
+            "password": "plaintext123",
+            "nombre": "Password Test Merchant"
+        }
+        
+        result = await self.make_request("POST", "/admin-ops/merchants", merchant_data)
+        
+        if result['status'] == 200:
+            merchant_id = result['data']['merchant_id']
+            
+            # Get the merchant details
+            get_result = await self.make_request("GET", f"/admin-ops/merchants/{merchant_id}")
+            
+            if get_result['status'] == 200:
+                # Password should not be visible in the response (it should be hashed in DB)
+                merchant_data = get_result['data']
+                if 'password' not in merchant_data or merchant_data.get('password') != 'plaintext123':
+                    self.log_test("Password Hashing Test", True, "Password is properly hashed and not visible in response")
+                else:
+                    self.log_test("Password Hashing Test", False, "Password appears to be stored in plain text")
+                
+                # Clean up
+                await self.make_request("DELETE", f"/admin-ops/merchants/{merchant_id}")
+            else:
+                self.log_test("Password Hashing Test", False, "Could not retrieve merchant for password check")
+        else:
+            self.log_test("Password Hashing Test", False, f"Could not create test merchant: {result['status']}")
+    
+    # ============================================
+    # MAIN TEST RUNNER
+    # ============================================
+    
+    async def run_all_tests(self):
+        """Run all tests in sequence"""
+        print("🚀 Starting Admin Ops CRUD Testing Suite")
+        print("=" * 60)
+        
+        await self.setup()
+        
+        try:
+            # HAPPY PATH FLOW
+            print("\n📋 HAPPY PATH FLOW TESTS")
+            print("-" * 30)
+            
+            # 1. Create Admin
+            admin_id = await self.test_create_admin()
+            
+            # 2. Create Merchant
+            merchant_id = None
+            if admin_id:
+                merchant_id = await self.test_create_merchant(admin_id)
+            
+            # 3. Create Clerk
+            clerk_id = None
+            if merchant_id:
+                clerk_id = await self.test_create_clerk(merchant_id)
+            
+            # 4. Create KYB
+            kyb_id = None
+            if admin_id:
+                kyb_id = await self.test_create_kyb(admin_id)
+            
+            # 5-8. List all entities
+            await self.test_get_all_admins()
+            await self.test_get_all_merchants()
+            await self.test_get_all_clerks()
+            await self.test_get_all_kyb()
+            
+            # 9-12. Get specific entities
+            if admin_id:
+                await self.test_get_admin_by_id(admin_id)
+            if merchant_id:
+                await self.test_get_merchant_by_id(merchant_id)
+            if clerk_id:
+                await self.test_get_clerk_by_id(clerk_id)
+            if admin_id:
+                await self.test_get_kyb_by_admin(admin_id)
+            
+            # 13-16. Update entities
+            if admin_id:
+                await self.test_update_admin(admin_id)
+            if merchant_id and admin_id:
+                await self.test_update_merchant(merchant_id, admin_id)
+            if clerk_id and merchant_id:
+                await self.test_update_clerk(clerk_id, merchant_id)
+            if kyb_id:
+                await self.test_update_kyb(kyb_id)
+            
+            # ERROR VALIDATION TESTS
+            print("\n❌ ERROR VALIDATION TESTS")
+            print("-" * 30)
+            
+            await self.test_create_merchant_invalid_admin()
+            await self.test_create_clerk_invalid_merchant()
+            await self.test_create_kyb_invalid_admin()
+            await self.test_duplicate_admin_email()
+            await self.test_duplicate_merchant_username()
+            await self.test_duplicate_clerk_email()
+            
+            # DELETION VALIDATION TESTS
+            print("\n🗑️ DELETION VALIDATION TESTS")
+            print("-" * 30)
+            
+            await self.test_delete_admin_with_merchants()
+            await self.test_delete_merchant_with_clerks()
+            
+            # SUCCESSFUL DELETION TESTS (in correct order)
+            print("\n✅ SUCCESSFUL DELETION TESTS")
+            print("-" * 30)
+            
+            await self.test_delete_clerk()
+            await self.test_delete_merchant_without_clerks()
+            await self.test_delete_kyb()
+            await self.test_delete_admin_without_merchants()
+            
+            # RESPONSE FORMAT TESTS
+            print("\n📊 RESPONSE FORMAT VALIDATION TESTS")
+            print("-" * 30)
+            
+            await self.test_response_formats()
+            await self.test_password_hashing()
+            
+        finally:
+            await self.cleanup()
+        
+        # SUMMARY
+        print("\n" + "=" * 60)
+        print("📊 TEST SUMMARY")
+        print("=" * 60)
+        
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results if result['success'])
+        failed_tests = total_tests - passed_tests
+        
+        print(f"Total Tests: {total_tests}")
+        print(f"✅ Passed: {passed_tests}")
+        print(f"❌ Failed: {failed_tests}")
+        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+        
+        if failed_tests > 0:
+            print("\n❌ FAILED TESTS:")
+            for result in self.test_results:
+                if not result['success']:
+                    print(f"  - {result['test']}: {result['details']}")
+        
+        print("\n🎉 Admin Ops CRUD Testing Complete!")
+        
+        return passed_tests, failed_tests
 
 async def main():
-    """Main testing function"""
-    print("🚀 Starting KYB Module Backend Testing")
-    print(f"Backend URL: {BACKEND_URL}")
+    """Main test runner"""
+    test_suite = AdminOpsTestSuite()
+    passed, failed = await test_suite.run_all_tests()
     
-    tester = KYBTester()
-    
-    try:
-        # Setup
-        if not await tester.setup():
-            print("❌ Setup failed, aborting tests")
-            return False
-        
-        # Find test merchant
-        if not await tester.find_test_merchant():
-            print("❌ Could not find/create test merchant, aborting tests")
-            return False
-        
-        # Run all tests in sequence
-        test_functions = [
-            tester.test_create_kyb,
-            tester.test_get_kyb_by_merchant,
-            tester.test_get_all_kyb,
-            tester.test_update_kyb_status,
-            tester.test_csv_template_download,
-            tester.test_update_existing_kyb,
-            tester.test_validation_errors,
-            tester.test_delete_kyb,  # Delete last
-        ]
-        
-        for test_func in test_functions:
-            await test_func()
-            await asyncio.sleep(0.5)  # Small delay between tests
-        
-        # Print summary
-        all_passed = tester.print_summary()
-        
-        return all_passed
-        
-    except Exception as e:
-        print(f"❌ Testing error: {e}")
-        return False
-    finally:
-        await tester.cleanup()
+    # Exit with appropriate code
+    sys.exit(0 if failed == 0 else 1)
 
 if __name__ == "__main__":
-    success = asyncio.run(main())
-    sys.exit(0 if success else 1)
+    asyncio.run(main())
