@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 """
-Backend Test Suite for Super Dashboard KPI Endpoints
-Testing all KPI endpoints with comprehensive scenarios
+Backend Testing Script for KYB Module Endpoints
+Testing all KYB CRUD operations and functionality
 """
 
 import asyncio
 import aiohttp
 import json
-from datetime import datetime, timedelta
-from typing import Dict, Any
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
+
+# Add backend to path for imports
+sys.path.append('/app/backend')
 
 # Configuration
-BASE_URL = "https://streetbiz.preview.emergentagent.com/api"
-TEST_USER_EMAIL = "admin@superdashboard.com"
-TEST_USER_PASSWORD = "SuperDash2025!"
-TEST_STORE_NAME = "Super Dashboard Test Store"
-TEST_WHATSAPP = "+593999123456"
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://streetbiz.preview.emergentagent.com')
+API_BASE = f"{BACKEND_URL}/api"
 
 class DashboardTester:
     def __init__(self):
