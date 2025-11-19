@@ -257,14 +257,6 @@ export default function AllMerchantsScreenCRUD() {
             Initial ({initialCount})
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterButton, filter === 'inactive' && styles.filterButtonActive]}
-          onPress={() => setFilter('inactive')}
-        >
-          <Text style={[styles.filterButtonText, filter === 'inactive' && styles.filterButtonTextActive]}>
-            Inactivos ({inactiveCount})
-          </Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollView}>
