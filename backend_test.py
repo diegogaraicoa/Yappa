@@ -661,7 +661,7 @@ class AdminOpsTestSuite:
         admin_id = admin_result['data']['admin_id']
         
         merchant_data = {
-            "admin_id": self.created_entities['admins'][0],
+            "admin_id": admin_id,
             "username": "password_test_merchant",
             "password": "plaintext123",
             "nombre": "Password Test Merchant"
