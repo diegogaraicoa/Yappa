@@ -15,23 +15,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api from '../utils/api';
 
-export default function AllMerchantsScreenCRUD() {
+export default function AllClerksScreenCRUD() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [clerks, setClerks] = useState([]);
   const [merchants, setMerchants] = useState([]);
-  const [admins, setAdmins] = useState([]);
-  const [filteredMerchants, setFilteredMerchants] = useState([]);
+  const [filteredClerks, setFilteredClerks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all'); // 'all', 'full', 'initial', 'inactive'
   
   // Modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [currentMerchant, setCurrentMerchant] = useState<any>(null);
+  const [currentClerk, setCurrentClerk] = useState<any>(null);
   
   // Form states
   const [formData, setFormData] = useState({
-    admin_id: '',
+    merchant_id: '',
     username: '',
     password: '',
     nombre: '',
@@ -45,16 +45,16 @@ export default function AllMerchantsScreenCRUD() {
 
   useEffect(() => {
     applyFilters();
-  }, [merchants, searchQuery, filter]);
+  }, [clerks, searchQuery, filter]);
 
   const loadData = async () => {
     try {
-      const [merchantsResponse, adminsResponse] = await Promise.all([
-        api.get('/api/admin-ops/merchants'),
-        api.get('/api/admin-ops/admins')
+      const [clerksResponse, merchantsResponse] = await Promise.all([
+        api.get('/api/merchant-ops/clerks'),
+        api.get('/api/merchant-ops/merchants')
       ]);
+      setClerks(clerksResponse.data.clerks || []);
       setMerchants(merchantsResponse.data.merchants || []);
-      setAdmins(adminsResponse.data.admins || []);
     } catch (error) {
       console.error('Error loading data:', error);
       Alert.alert('Error', 'No se pudieron cargar los datos');
@@ -64,7 +64,7 @@ export default function AllMerchantsScreenCRUD() {
   };
 
   const applyFilters = () => {
-    let filtered = [...merchants];
+    let filtered = [...clerks];
 
     // Filter by status
     if (filter === 'full') {
@@ -81,17 +81,17 @@ export default function AllMerchantsScreenCRUD() {
       filtered = filtered.filter(m => 
         m.nombre.toLowerCase().includes(query) ||
         m.username.toLowerCase().includes(query) ||
-        m.admin_nombre.toLowerCase().includes(query)
+        m.merchant_nombre.toLowerCase().includes(query)
       );
     }
 
-    setFilteredMerchants(filtered);
+    setFilteredClerks(filtered);
   };
 
-  const getActivationBadge = (merchant: any) => {
-    if (merchant.fully_activated_at) {
+  const getActivationBadge = (clerk: any) => {
+    if (clerk.fully_activated_at) {
       return { label: 'Full', color: '#4CAF50' };
-    } else if (merchant.activated_at) {
+    } else if (clerk.activated_at) {
       return { label: 'Initial', color: '#FF9800' };
     }
     return { label: 'Inactivo', color: '#999' };
@@ -105,9 +105,9 @@ export default function AllMerchantsScreenCRUD() {
 
   const openCreateModal = () => {
     setIsEditing(false);
-    setCurrentMerchant(null);
+    setCurrentClerk(null);
     setFormData({
-      admin_id: admins.length > 0 ? admins[0].id : '',
+      merchant_id: merchants.length > 0 ? merchants[0].id : '',
       username: '',
       password: '',
       nombre: '',
@@ -117,16 +117,16 @@ export default function AllMerchantsScreenCRUD() {
     setModalVisible(true);
   };
 
-  const openEditModal = (merchant: any) => {
+  const openEditModal = (clerk: any) => {
     setIsEditing(true);
-    setCurrentMerchant(merchant);
+    setCurrentClerk(clerk);
     setFormData({
-      admin_id: merchant.admin_id || '',
-      username: merchant.username || '',
+      merchant_id: clerk.merchant_id || '',
+      username: clerk.username || '',
       password: '', // No mostramos la contraseña actual
-      nombre: merchant.nombre || '',
-      direccion: merchant.direccion || '',
-      telefono: merchant.telefono || '',
+      nombre: clerk.nombre || '',
+      direccion: clerk.direccion || '',
+      telefono: clerk.telefono || '',
     });
     setModalVisible(true);
   };
@@ -145,20 +145,20 @@ export default function AllMerchantsScreenCRUD() {
       alert('❌ Error: La contraseña es obligatoria');
       return;
     }
-    if (!formData.admin_id) {
-      alert('❌ Error: Debe seleccionar un Admin');
+    if (!formData.merchant_id) {
+      alert('❌ Error: Debe seleccionar un Merchant');
       return;
     }
 
     try {
       if (isEditing) {
         // Actualizar
-        await api.patch(`/api/admin-ops/merchants/${currentMerchant.id}`, formData);
-        alert('✅ Merchant actualizado correctamente');
+        await api.patch(`/api/merchant-ops/clerks/${currentClerk.id}`, formData);
+        alert('✅ Clerk actualizado correctamente');
       } else {
         // Crear
-        await api.post('/api/admin-ops/merchants', formData);
-        alert('✅ Merchant creado correctamente');
+        await api.post('/api/merchant-ops/clerks', formData);
+        alert('✅ Clerk creado correctamente');
       }
       setModalVisible(false);
       loadData();
@@ -168,16 +168,16 @@ export default function AllMerchantsScreenCRUD() {
     }
   };
 
-  const handleDelete = async (merchant: any) => {
+  const handleDelete = async (clerk: any) => {
     const confirmed = window.confirm(
-      `¿Estás seguro de eliminar el merchant "${merchant.nombre}"?\n\nEsto solo es posible si no tiene clerks asociados.`
+      `¿Estás seguro de eliminar el clerk "${clerk.nombre}"?\n\nEsto solo es posible si no tiene clerks asociados.`
     );
     
     if (!confirmed) return;
     
     try {
-      await api.delete(`/api/admin-ops/merchants/${merchant.id}`);
-      alert('✅ Merchant eliminado correctamente');
+      await api.delete(`/api/merchant-ops/clerks/${clerk.id}`);
+      alert('✅ Clerk eliminado correctamente');
       loadData();
     } catch (error: any) {
       const errorMsg = error.response?.data?.detail || 'Error al eliminar';
@@ -185,9 +185,9 @@ export default function AllMerchantsScreenCRUD() {
     }
   };
 
-  const fullCount = merchants.filter(m => m.fully_activated_at).length;
-  const initialCount = merchants.filter(m => m.activated_at && !m.fully_activated_at).length;
-  const inactiveCount = merchants.filter(m => !m.activated_at).length;
+  const fullCount = clerks.filter(m => m.fully_activated_at).length;
+  const initialCount = clerks.filter(m => m.activated_at && !m.fully_activated_at).length;
+  const inactiveCount = clerks.filter(m => !m.activated_at).length;
 
   if (loading) {
     return (
@@ -207,9 +207,9 @@ export default function AllMerchantsScreenCRUD() {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>Todos los Merchants</Text>
+          <Text style={styles.headerTitle}>Todos los Clerks</Text>
           <Text style={styles.headerSubtitle}>
-            {filteredMerchants.length} de {merchants.length} merchants
+            {filteredClerks.length} de {clerks.length} clerks
           </Text>
         </View>
       </View>
@@ -219,7 +219,7 @@ export default function AllMerchantsScreenCRUD() {
         <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Buscar por nombre, username o admin..."
+          placeholder="Buscar por nombre, username o merchant..."
           placeholderTextColor="#999"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -238,7 +238,7 @@ export default function AllMerchantsScreenCRUD() {
           onPress={() => setFilter('all')}
         >
           <Text style={[styles.filterButtonText, filter === 'all' && styles.filterButtonTextActive]}>
-            Todos ({merchants.length})
+            Todos ({clerks.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -268,21 +268,21 @@ export default function AllMerchantsScreenCRUD() {
       </View>
 
       <ScrollView style={styles.scrollView}>
-        {filteredMerchants.length === 0 ? (
+        {filteredClerks.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="search-outline" size={64} color="#CCC" />
-            <Text style={styles.emptyText}>No se encontraron merchants</Text>
+            <Text style={styles.emptyText}>No se encontraron clerks</Text>
           </View>
         ) : (
-          filteredMerchants.map((merchant: any, index: number) => {
-            const badge = getActivationBadge(merchant);
+          filteredClerks.map((clerk: any, index: number) => {
+            const badge = getActivationBadge(clerk);
             return (
               <View key={index} style={styles.card}>
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.cardTitle}>{merchant.nombre}</Text>
-                    <Text style={styles.cardSubtitle}>@{merchant.username}</Text>
-                    <Text style={styles.adminText}>🏢 {merchant.admin_nombre}</Text>
+                    <Text style={styles.cardTitle}>{clerk.nombre}</Text>
+                    <Text style={styles.cardSubtitle}>@{clerk.username}</Text>
+                    <Text style={styles.merchantText}>🏢 {clerk.merchant_nombre}</Text>
                   </View>
                   <View style={[styles.badge, { backgroundColor: badge.color }]}>
                     <Text style={styles.badgeText}>{badge.label}</Text>
@@ -291,24 +291,24 @@ export default function AllMerchantsScreenCRUD() {
                 <View style={styles.cardFooter}>
                   <View style={styles.footerItem}>
                     <Ionicons name="people" size={14} color="#666" />
-                    <Text style={styles.footerText}>{merchant.clerks_count} clerks</Text>
+                    <Text style={styles.footerText}>{clerk.clerks_count} clerks</Text>
                   </View>
                   <Text style={styles.dateText}>
-                    {merchant.activated_at ? `Act: ${formatDate(merchant.activated_at)}` : `Creado: ${formatDate(merchant.created_at)}`}
+                    {clerk.activated_at ? `Act: ${formatDate(clerk.activated_at)}` : `Creado: ${formatDate(clerk.created_at)}`}
                   </Text>
                 </View>
                 {/* Action Buttons */}
                 <View style={styles.actionButtons}>
                   <TouchableOpacity
                     style={[styles.actionButton, styles.editButton]}
-                    onPress={() => openEditModal(merchant)}
+                    onPress={() => openEditModal(clerk)}
                   >
                     <Ionicons name="pencil" size={16} color="#FFF" />
                     <Text style={styles.actionButtonText}>Editar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.actionButton, styles.deleteButton]}
-                    onPress={() => handleDelete(merchant)}
+                    onPress={() => handleDelete(clerk)}
                   >
                     <Ionicons name="trash" size={16} color="#FFF" />
                     <Text style={styles.actionButtonText}>Eliminar</Text>
@@ -337,7 +337,7 @@ export default function AllMerchantsScreenCRUD() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {isEditing ? 'Editar Merchant' : 'Crear Merchant'}
+                {isEditing ? 'Editar Clerk' : 'Crear Clerk'}
               </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={24} color="#333" />
@@ -345,24 +345,24 @@ export default function AllMerchantsScreenCRUD() {
             </View>
 
             <ScrollView style={styles.modalBody}>
-              {/* Admin Selector */}
-              <Text style={styles.label}>Admin *</Text>
+              {/* Merchant Selector */}
+              <Text style={styles.label}>Merchant *</Text>
               <View style={styles.pickerContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {admins.map((admin: any) => (
+                  {merchants.map((merchant: any) => (
                     <TouchableOpacity
-                      key={admin.id}
+                      key={merchant.id}
                       style={[
-                        styles.adminOption,
-                        formData.admin_id === admin.id && styles.adminOptionSelected
+                        styles.merchantOption,
+                        formData.merchant_id === merchant.id && styles.merchantOptionSelected
                       ]}
-                      onPress={() => setFormData({ ...formData, admin_id: admin.id })}
+                      onPress={() => setFormData({ ...formData, merchant_id: merchant.id })}
                     >
                       <Text style={[
-                        styles.adminOptionText,
-                        formData.admin_id === admin.id && styles.adminOptionTextSelected
+                        styles.merchantOptionText,
+                        formData.merchant_id === merchant.id && styles.merchantOptionTextSelected
                       ]}>
-                        {admin.nombre}
+                        {merchant.nombre}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -374,7 +374,7 @@ export default function AllMerchantsScreenCRUD() {
                 style={styles.input}
                 value={formData.nombre}
                 onChangeText={(text) => setFormData({ ...formData, nombre: text })}
-                placeholder="Nombre del merchant"
+                placeholder="Nombre del clerk"
                 placeholderTextColor="#999"
               />
 
@@ -403,7 +403,7 @@ export default function AllMerchantsScreenCRUD() {
                 style={styles.input}
                 value={formData.direccion}
                 onChangeText={(text) => setFormData({ ...formData, direccion: text })}
-                placeholder="Dirección del merchant"
+                placeholder="Dirección del clerk"
                 placeholderTextColor="#999"
               />
 
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 3,
   },
-  adminText: {
+  merchantText: {
     fontSize: 12,
     color: '#999',
     marginTop: 3,
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   pickerContainer: {
     marginBottom: 12,
   },
-  adminOption: {
+  merchantOption: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     backgroundColor: '#F5F5F5',
@@ -707,16 +707,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
-  adminOptionSelected: {
+  merchantOptionSelected: {
     backgroundColor: '#4CAF50',
     borderColor: '#4CAF50',
   },
-  adminOptionText: {
+  merchantOptionText: {
     fontSize: 14,
     color: '#666',
     fontWeight: '500',
   },
-  adminOptionTextSelected: {
+  merchantOptionTextSelected: {
     color: '#FFF',
     fontWeight: '600',
   },
