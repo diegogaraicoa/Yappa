@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implementar KPI Dashboard (Super Dashboard) - Fase 2. Crear backend y frontend para visualizar métricas críticas del negocio: merchants activos/nuevos, clerks activos, feature usage (top 5 más/menos usados), churn rate, y breakdown de jerarquía admin/merchant/clerk. Debe incluir filtros de fecha (30d, 7d, custom) y visualización clara de KPIs."
+user_problem_statement: "Implementar KYB Module (Admin Ops) - Know Your Business. Crear backend CRUD completo para gestionar datos KYB de merchants: nombre legal, RUC/Tax ID, dirección fiscal, teléfono, email, representante legal, documento opcional. Incluir carga masiva CSV, template download, y upload de documentos."
 
 backend:
   - task: "Endpoint de alertas de stock bajo"
