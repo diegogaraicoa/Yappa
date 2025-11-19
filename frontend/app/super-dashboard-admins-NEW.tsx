@@ -15,27 +15,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api from '../utils/api';
 
-export default function AllMerchantsScreenCRUD() {
+export default function AllAdminsScreenCRUD() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [merchants, setMerchants] = useState([]);
   const [admins, setAdmins] = useState([]);
-  const [filteredMerchants, setFilteredMerchants] = useState([]);
+  const [filteredAdmins, setFilteredAdmins] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all'); // 'all', 'full', 'initial', 'inactive'
   
   // Modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [currentMerchant, setCurrentMerchant] = useState<any>(null);
+  const [currentAdmin, setCurrentAdmin] = useState<any>(null);
   
   // Form states
   const [formData, setFormData] = useState({
-    admin_id: '',
-    username: '',
-    password: '',
     nombre: '',
-    direccion: '',
+    email: '',
     telefono: '',
   });
 
