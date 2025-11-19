@@ -2024,6 +2024,16 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
+# Include KYB routes
+try:
+    from routes.kyb_routes import router as kyb_router
+    app.include_router(kyb_router, prefix="/api")
+    print("✅ KYB routes loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading KYB routes: {e}")
+    import traceback
+    traceback.print_exc()
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
