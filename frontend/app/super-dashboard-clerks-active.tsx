@@ -16,6 +16,7 @@ export default function ClerksActiveScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [filter, setFilter] = useState<'all' | 'new' | 'existing'>('all');
 
   useEffect(() => {
     loadData();
