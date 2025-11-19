@@ -168,28 +168,21 @@ export default function AllMerchantsScreenCRUD() {
     }
   };
 
-  const handleDelete = (merchant: any) => {
-    Alert.alert(
-      'Confirmar eliminación',
-      `¿Estás seguro de eliminar el merchant "${merchant.nombre}"?\n\nEsto solo es posible si no tiene clerks asociados.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete(`/api/admin-ops/merchants/${merchant.id}`);
-              Alert.alert('Éxito', 'Merchant eliminado correctamente');
-              loadData();
-            } catch (error: any) {
-              const errorMsg = error.response?.data?.detail || 'Error al eliminar';
-              Alert.alert('Error', errorMsg);
-            }
-          },
-        },
-      ]
+  const handleDelete = async (merchant: any) => {
+    const confirmed = window.confirm(
+      `¿Estás seguro de eliminar el merchant "${merchant.nombre}"?\n\nEsto solo es posible si no tiene clerks asociados.`
     );
+    
+    if (!confirmed) return;
+    
+    try {
+      await api.delete(`/api/admin-ops/merchants/${merchant.id}`);
+      alert('✅ Merchant eliminado correctamente');
+      loadData();
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.detail || 'Error al eliminar';
+      alert('❌ Error: ' + errorMsg);
+    }
   };
 
   const fullCount = merchants.filter(m => m.fully_activated_at).length;
