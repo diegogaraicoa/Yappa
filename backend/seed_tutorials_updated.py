@@ -511,7 +511,7 @@ La deuda se actualizará automáticamente.
 
 Interfaz web profesional para analytics profundos, comparaciones temporales, exportación de datos y gestión masiva.
 
-**URL:** https://streetbiz.preview.emergentagent.com/admin
+**URL:** https://ops-central-7.preview.emergentagent.com/admin
 
 ---
 

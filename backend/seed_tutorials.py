@@ -701,7 +701,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://streetbiz.preview.emergentagent.com/admin
+**URL:** https://ops-central-7.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet

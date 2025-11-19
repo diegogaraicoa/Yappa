@@ -277,7 +277,7 @@ yarn add expo-notifications
 
 ## 📱 URLs de Acceso
 
-- **Frontend:** https://streetbiz.preview.emergentagent.com
+- **Frontend:** https://ops-central-7.preview.emergentagent.com
 - **Backend:** Puerto 8001 (interno)
 - **Database:** MongoDB localhost:27017
 
