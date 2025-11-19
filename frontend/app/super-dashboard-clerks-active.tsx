@@ -7,30 +7,84 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api from '../utils/api';
 
-export default function ClerksActiveScreen() {
+export default function AllClerksScreenCRUD() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
-  const [filter, setFilter] = useState<'all' | 'new' | 'existing'>('all');
+  const [clerks, setClerks] = useState([]);
+  const [merchants, setMerchants] = useState([]);
+  const [filteredClerks, setFilteredClerks] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all', 'full', 'initial', 'inactive'
+  
+  // Modal states
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentClerk, setCurrentClerk] = useState<any>(null);
+  
+  // Form states
+  const [formData, setFormData] = useState({
+    merchant_id: '',
+    email: '',
+    password: '',
+    nombre: '',
+    whatsapp_number: '',
+    role: 'employee',
+  });
 
   useEffect(() => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    applyFilters();
+  }, [clerks, searchQuery, filter]);
+
   const loadData = async () => {
     try {
-      const response = await api.get('/api/dashboard/clerks/active?period=30d');
-      setData(response.data);
+      const [clerksResponse, merchantsResponse] = await Promise.all([
+        api.get('/api/dashboard/clerks/active?period=30d'),  // Solo activos
+        api.get('/api/admin-ops/merchants')
+      ]);
+      setClerks(clerksResponse.data.clerks || []);
+      setMerchants(merchantsResponse.data.merchants || []);
     } catch (error) {
-      console.error('Error loading clerks:', error);
+      console.error('Error loading data:', error);
+      alert('❌ Error: No se pudieron cargar los datos');
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...clerks];
+
+    // Filter by status
+    if (filter === 'full') {
+      filtered = filtered.filter(c => c.fully_activated_at);
+    } else if (filter === 'initial') {
+      filtered = filtered.filter(c => c.activated_at && !c.fully_activated_at);
+    } else if (filter === 'inactive') {
+      filtered = filtered.filter(c => !c.activated_at);
+    }
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(c => 
+        c.nombre.toLowerCase().includes(query) ||
+        c.email.toLowerCase().includes(query) ||
+        c.merchant_nombre.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredClerks(filtered);
   };
 
   const getActivationBadge = (clerk: any) => {
@@ -39,7 +93,7 @@ export default function ClerksActiveScreen() {
     } else if (clerk.activated_at) {
       return { label: 'Initial', color: '#FF9800' };
     }
-    return { label: 'No Activo', color: '#999' };
+    return { label: 'Inactivo', color: '#999' };
   };
 
   const getRoleBadge = (role: string) => {
@@ -47,6 +101,96 @@ export default function ClerksActiveScreen() {
       ? { label: 'Owner', color: '#9C27B0' } 
       : { label: 'Employee', color: '#2196F3' };
   };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+  };
+
+  const openCreateModal = () => {
+    setIsEditing(false);
+    setCurrentClerk(null);
+    setFormData({
+      merchant_id: merchants.length > 0 ? merchants[0].id : '',
+      email: '',
+      password: '',
+      nombre: '',
+      whatsapp_number: '',
+      role: 'employee',
+    });
+    setModalVisible(true);
+  };
+
+  const openEditModal = (clerk: any) => {
+    setIsEditing(true);
+    setCurrentClerk(clerk);
+    setFormData({
+      merchant_id: clerk.merchant_id || '',
+      email: clerk.email || '',
+      password: '',
+      nombre: clerk.nombre || '',
+      whatsapp_number: clerk.whatsapp_number || '',
+      role: clerk.role || 'employee',
+    });
+    setModalVisible(true);
+  };
+
+  const handleSave = async () => {
+    // Validaciones
+    if (!formData.nombre.trim()) {
+      alert('❌ Error: El nombre es obligatorio');
+      return;
+    }
+    if (!formData.email.trim()) {
+      alert('❌ Error: El email es obligatorio');
+      return;
+    }
+    if (!isEditing && !formData.password.trim()) {
+      alert('❌ Error: La contraseña es obligatoria');
+      return;
+    }
+    if (!formData.merchant_id) {
+      alert('❌ Error: Debe seleccionar un Merchant');
+      return;
+    }
+
+    try {
+      if (isEditing) {
+        await api.patch(`/api/admin-ops/clerks/${currentClerk.id}`, formData);
+        alert('✅ Clerk actualizado correctamente');
+      } else {
+        await api.post('/api/admin-ops/clerks', formData);
+        alert('✅ Clerk creado correctamente');
+      }
+      setModalVisible(false);
+      loadData();
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.detail || 'Error al guardar';
+      alert('❌ Error: ' + errorMsg);
+    }
+  };
+
+  const handleDelete = async (clerk: any) => {
+    const confirmed = window.confirm(
+      `¿Estás seguro de eliminar el clerk "${clerk.nombre}"?`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      await api.delete(`/api/admin-ops/clerks/${clerk.id}`);
+      alert('✅ Clerk eliminado correctamente');
+      loadData();
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.detail || 'Error al eliminar';
+      alert('❌ Error: ' + errorMsg);
+    }
+  };
+
+  const fullCount = clerks.filter(c => c.fully_activated_at).length;
+  const initialCount = clerks.filter(c => c.activated_at && !c.fully_activated_at).length;
+  const inactiveCount = clerks.filter(c => !c.activated_at).length;
 
   if (loading) {
     return (
@@ -59,17 +203,6 @@ export default function ClerksActiveScreen() {
     );
   }
 
-  const allClerks = data?.clerks || [];
-  const newCount = data?.new_count || 0;
-  const existingCount = data?.existing_count || 0;
-
-  // Filter clerks based on selection
-  const clerks = filter === 'all' 
-    ? allClerks 
-    : filter === 'new'
-      ? allClerks.filter((c: any) => c.status === 'new')
-      : allClerks.filter((c: any) => c.status === 'existing');
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -79,113 +212,266 @@ export default function ClerksActiveScreen() {
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerTitle}>Clerks Activos</Text>
           <Text style={styles.headerSubtitle}>
-            {filter === 'all' 
-              ? `${data?.count || 0} clerks con actividad` 
-              : filter === 'new'
-                ? `${newCount} clerks nuevos`
-                : `${existingCount} clerks existentes`}
+            {filteredClerks.length} de {clerks.length} clerks activos
           </Text>
         </View>
       </View>
 
-      <View style={styles.statsRow}>
-        <TouchableOpacity 
-          style={[styles.statCard, filter === 'all' && styles.statCardActive]}
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar por nombre, email o merchant..."
+          placeholderTextColor="#999"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={20} color="#999" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Filter Buttons */}
+      <View style={styles.filtersContainer}>
+        <TouchableOpacity
+          style={[styles.filterButton, filter === 'all' && styles.filterButtonActive]}
           onPress={() => setFilter('all')}
-          activeOpacity={0.7}
         >
-          <Text style={[styles.statValue, filter === 'all' && styles.statValueActive]}>
-            {data?.count || 0}
+          <Text style={[styles.filterButtonText, filter === 'all' && styles.filterButtonTextActive]}>
+            Todos ({clerks.length})
           </Text>
-          <Text style={[styles.statLabel, filter === 'all' && styles.statLabelActive]}>
-            Todos
-          </Text>
-          {filter === 'all' && (
-            <View style={styles.activeIndicator} />
-          )}
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.statCard, filter === 'new' && styles.statCardActive]}
-          onPress={() => setFilter('new')}
-          activeOpacity={0.7}
+        <TouchableOpacity
+          style={[styles.filterButton, filter === 'full' && styles.filterButtonActive]}
+          onPress={() => setFilter('full')}
         >
-          <Text style={[styles.statValue, filter === 'new' && styles.statValueActive]}>
-            {newCount}
+          <Text style={[styles.filterButtonText, filter === 'full' && styles.filterButtonTextActive]}>
+            Full ({fullCount})
           </Text>
-          <Text style={[styles.statLabel, filter === 'new' && styles.statLabelActive]}>
-            Nuevos
-          </Text>
-          {filter === 'new' && (
-            <View style={styles.activeIndicator} />
-          )}
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.statCard, filter === 'existing' && styles.statCardActive]}
-          onPress={() => setFilter('existing')}
-          activeOpacity={0.7}
+        <TouchableOpacity
+          style={[styles.filterButton, filter === 'initial' && styles.filterButtonActive]}
+          onPress={() => setFilter('initial')}
         >
-          <Text style={[styles.statValue, filter === 'existing' && styles.statValueActive]}>
-            {existingCount}
+          <Text style={[styles.filterButtonText, filter === 'initial' && styles.filterButtonTextActive]}>
+            Initial ({initialCount})
           </Text>
-          <Text style={[styles.statLabel, filter === 'existing' && styles.statLabelActive]}>
-            Existentes
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterButton, filter === 'inactive' && styles.filterButtonActive]}
+          onPress={() => setFilter('inactive')}
+        >
+          <Text style={[styles.filterButtonText, filter === 'inactive' && styles.filterButtonTextActive]}>
+            Inactivos ({inactiveCount})
           </Text>
-          {filter === 'existing' && (
-            <View style={styles.activeIndicator} />
-          )}
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollView}>
-        {clerks.length === 0 ? (
+        {filteredClerks.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="people-outline" size={64} color="#CCC" />
-            <Text style={styles.emptyText}>No hay clerks activos</Text>
+            <Text style={styles.emptyText}>No se encontraron clerks</Text>
           </View>
         ) : (
-          clerks.map((clerk: any, index: number) => {
+          filteredClerks.map((clerk: any, index: number) => {
             const activationBadge = getActivationBadge(clerk);
             const roleBadge = getRoleBadge(clerk.role);
             return (
               <View key={index} style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <View>
+                  <View style={{ flex: 1 }}>
                     <Text style={styles.cardTitle}>{clerk.nombre}</Text>
                     <Text style={styles.cardSubtitle}>{clerk.email}</Text>
-                    <Text style={styles.merchantName}>{clerk.merchant_nombre}</Text>
+                    <Text style={styles.merchantText}>🏪 {clerk.merchant_nombre}</Text>
                   </View>
-                  <View style={styles.badges}>
+                  <View style={{ alignItems: 'flex-end' }}>
                     <View style={[styles.badge, { backgroundColor: activationBadge.color }]}>
                       <Text style={styles.badgeText}>{activationBadge.label}</Text>
                     </View>
-                    <View style={[styles.badge, { backgroundColor: roleBadge.color }]}>
+                    <View style={[styles.badge, { backgroundColor: roleBadge.color, marginTop: 6 }]}>
                       <Text style={styles.badgeText}>{roleBadge.label}</Text>
                     </View>
                   </View>
                 </View>
                 <View style={styles.cardFooter}>
                   <View style={styles.footerItem}>
-                    <Ionicons name="analytics" size={16} color="#999" />
-                    <Text style={styles.footerText}>{clerk.total_events} eventos</Text>
+                    <Ionicons name="logo-whatsapp" size={14} color="#666" />
+                    <Text style={styles.footerText}>{clerk.whatsapp_number || 'N/A'}</Text>
                   </View>
-                  {clerk.status && (
-                    <View style={[styles.statusBadge, { 
-                      backgroundColor: clerk.status === 'new' ? '#E8F5E9' : '#E3F2FD' 
-                    }]}>
-                      <Text style={[styles.statusText, { 
-                        color: clerk.status === 'new' ? '#4CAF50' : '#2196F3' 
-                      }]}>
-                        {clerk.status === 'new' ? 'Nuevo' : 'Existente'}
-                      </Text>
-                    </View>
-                  )}
+                  <Text style={styles.dateText}>
+                    {clerk.activated_at ? `Act: ${formatDate(clerk.activated_at)}` : `Creado: ${formatDate(clerk.created_at)}`}
+                  </Text>
+                </View>
+                {/* Action Buttons */}
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.editButton]}
+                    onPress={() => openEditModal(clerk)}
+                  >
+                    <Ionicons name="pencil" size={16} color="#FFF" />
+                    <Text style={styles.actionButtonText}>Editar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.deleteButton]}
+                    onPress={() => handleDelete(clerk)}
+                  >
+                    <Ionicons name="trash" size={16} color="#FFF" />
+                    <Text style={styles.actionButtonText}>Eliminar</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             );
           })
         )}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity style={styles.fab} onPress={openCreateModal}>
+        <Ionicons name="add" size={28} color="#FFF" />
+      </TouchableOpacity>
+
+      {/* Modal for Create/Edit */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {isEditing ? 'Editar Clerk' : 'Crear Clerk'}
+              </Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              {/* Merchant Selector */}
+              <Text style={styles.label}>Merchant *</Text>
+              <View style={styles.pickerContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {merchants.map((merchant: any) => (
+                    <TouchableOpacity
+                      key={merchant.id}
+                      style={[
+                        styles.merchantOption,
+                        formData.merchant_id === merchant.id && styles.merchantOptionSelected
+                      ]}
+                      onPress={() => setFormData({ ...formData, merchant_id: merchant.id })}
+                    >
+                      <Text style={[
+                        styles.merchantOptionText,
+                        formData.merchant_id === merchant.id && styles.merchantOptionTextSelected
+                      ]}>
+                        {merchant.nombre}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <Text style={styles.label}>Nombre *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.nombre}
+                onChangeText={(text) => setFormData({ ...formData, nombre: text })}
+                placeholder="Nombre del clerk"
+                placeholderTextColor="#999"
+              />
+
+              <Text style={styles.label}>Email *</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.email}
+                onChangeText={(text) => setFormData({ ...formData, email: text })}
+                placeholder="email@example.com"
+                placeholderTextColor="#999"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <Text style={styles.label}>Contraseña {!isEditing && '*'}</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.password}
+                onChangeText={(text) => setFormData({ ...formData, password: text })}
+                placeholder={isEditing ? "Dejar vacío para mantener actual" : "Contraseña"}
+                placeholderTextColor="#999"
+                secureTextEntry
+              />
+
+              <Text style={styles.label}>WhatsApp</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.whatsapp_number}
+                onChangeText={(text) => setFormData({ ...formData, whatsapp_number: text })}
+                placeholder="+593999123456"
+                placeholderTextColor="#999"
+                keyboardType="phone-pad"
+              />
+
+              <Text style={styles.label}>Rol</Text>
+              <View style={styles.roleContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.roleOption,
+                    formData.role === 'employee' && styles.roleOptionSelected
+                  ]}
+                  onPress={() => setFormData({ ...formData, role: 'employee' })}
+                >
+                  <Text style={[
+                    styles.roleOptionText,
+                    formData.role === 'employee' && styles.roleOptionTextSelected
+                  ]}>
+                    Employee
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.roleOption,
+                    formData.role === 'owner' && styles.roleOptionSelected
+                  ]}
+                  onPress={() => setFormData({ ...formData, role: 'owner' })}
+                >
+                  <Text style={[
+                    styles.roleOptionText,
+                    formData.role === 'owner' && styles.roleOptionTextSelected
+                  ]}>
+                    Owner
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ height: 20 }} />
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleSave}
+              >
+                <Text style={styles.saveButtonText}>
+                  {isEditing ? 'Actualizar' : 'Crear'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -231,54 +517,52 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
-  statsRow: {
+  searchContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    backgroundColor: '#FFF',
+    marginHorizontal: 16,
+    marginTop: 16,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
-  statCardActive: {
-    backgroundColor: '#E8F5E9',
-    borderColor: '#4CAF50',
+  searchIcon: {
+    marginRight: 8,
   },
-  statValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  searchInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 15,
     color: '#333',
   },
-  statValueActive: {
-    color: '#4CAF50',
+  filtersContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    marginTop: 12,
+    gap: 8,
   },
-  statLabel: {
-    fontSize: 14,
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  filterButtonActive: {
+    backgroundColor: '#FF9800',
+    borderColor: '#FF9800',
+  },
+  filterButtonText: {
+    fontSize: 13,
     color: '#666',
-    marginTop: 4,
+    fontWeight: '500',
   },
-  statLabelActive: {
-    color: '#4CAF50',
+  filterButtonTextActive: {
+    color: '#FFF',
     fontWeight: '600',
-  },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: 8,
-    width: 24,
-    height: 3,
-    backgroundColor: '#4CAF50',
-    borderRadius: 2,
   },
   scrollView: {
     flex: 1,
@@ -297,20 +581,20 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFF',
     marginHorizontal: 16,
-    marginTop: 16,
+    marginTop: 12,
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 3,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   cardTitle: {
     fontSize: 16,
@@ -318,22 +602,19 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   cardSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
-    marginTop: 4,
+    marginTop: 3,
   },
-  merchantName: {
+  merchantText: {
     fontSize: 12,
     color: '#999',
-    marginTop: 4,
-  },
-  badges: {
-    gap: 6,
+    marginTop: 3,
   },
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
   },
   badgeText: {
     fontSize: 11,
@@ -344,9 +625,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 12,
+    paddingTop: 10,
+    marginBottom: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: '#F5F5F5',
   },
   footerItem: {
     flexDirection: 'row',
@@ -354,16 +636,176 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
+    color: '#666',
+    marginLeft: 5,
+  },
+  dateText: {
+    fontSize: 11,
     color: '#999',
-    marginLeft: 6,
   },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
   },
-  statusText: {
-    fontSize: 12,
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 6,
+    gap: 6,
+  },
+  editButton: {
+    backgroundColor: '#2196F3',
+  },
+  deleteButton: {
+    backgroundColor: '#F44336',
+  },
+  actionButtonText: {
+    color: '#FFF',
+    fontSize: 13,
     fontWeight: '600',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FF9800',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalBody: {
+    padding: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  input: {
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#333',
+  },
+  pickerContainer: {
+    marginBottom: 12,
+  },
+  merchantOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 20,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  merchantOptionSelected: {
+    backgroundColor: '#FF9800',
+    borderColor: '#FF9800',
+  },
+  merchantOptionText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  merchantOptionTextSelected: {
+    color: '#FFF',
+    fontWeight: '600',
+  },
+  roleContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  roleOption: {
+    flex: 1,
+    paddingVertical: 12,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  roleOptionSelected: {
+    backgroundColor: '#9C27B0',
+    borderColor: '#9C27B0',
+  },
+  roleOptionText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  roleOptionTextSelected: {
+    color: '#FFF',
+    fontWeight: '600',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#F5F5F5',
+  },
+  saveButton: {
+    backgroundColor: '#FF9800',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
   },
 });
