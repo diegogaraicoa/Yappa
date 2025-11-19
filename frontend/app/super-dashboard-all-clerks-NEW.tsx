@@ -32,11 +32,11 @@ export default function AllClerksScreenCRUD() {
   // Form states
   const [formData, setFormData] = useState({
     merchant_id: '',
-    username: '',
+    email: '',
     password: '',
     nombre: '',
-    direccion: '',
-    telefono: '',
+    whatsapp_number: '',
+    role: 'employee',
   });
 
   useEffect(() => {
