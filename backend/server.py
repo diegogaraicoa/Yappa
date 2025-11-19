@@ -2034,6 +2034,16 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
+# Include Monitoring routes
+try:
+    from routes.monitoring_routes import router as monitoring_router
+    app.include_router(monitoring_router, prefix="/api")
+    print("✅ Monitoring routes loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading monitoring routes: {e}")
+    import traceback
+    traceback.print_exc()
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
