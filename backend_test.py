@@ -685,10 +685,13 @@ class AdminOpsTestSuite:
                 
                 # Clean up
                 await self.make_request("DELETE", f"/admin-ops/merchants/{merchant_id}")
+                await self.make_request("DELETE", f"/admin-ops/admins/{admin_id}")
             else:
                 self.log_test("Password Hashing Test", False, "Could not retrieve merchant for password check")
+                await self.make_request("DELETE", f"/admin-ops/admins/{admin_id}")
         else:
             self.log_test("Password Hashing Test", False, f"Could not create test merchant: {result['status']}")
+            await self.make_request("DELETE", f"/admin-ops/admins/{admin_id}")
     
     # ============================================
     # MAIN TEST RUNNER
