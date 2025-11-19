@@ -193,7 +193,9 @@ async def get_active_clerks(
             "role": clerk.get("role", "employee"),
             "merchant_nombre": merchant_nombre,
             "total_events": event_count,
-            "status": clerk_status
+            "status": clerk_status,
+            "activated_at": clerk.get("activated_at"),  # Para verificar filtro
+            "fully_activated_at": clerk.get("fully_activated_at")  # Para verificar filtro
         })
     
     # Ordenar por total_events
