@@ -207,9 +207,9 @@ export default function AllMerchantsScreenCRUD() {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>Todos los Merchants</Text>
+          <Text style={styles.headerTitle}>Merchants Activos</Text>
           <Text style={styles.headerSubtitle}>
-            {filteredMerchants.length} de {merchants.length} merchants
+            {filteredMerchants.length} de {merchants.length} merchants activos
           </Text>
         </View>
       </View>
