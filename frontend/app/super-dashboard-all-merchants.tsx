@@ -134,19 +134,19 @@ export default function AllMerchantsScreenCRUD() {
   const handleSave = async () => {
     // Validaciones
     if (!formData.nombre.trim()) {
-      Alert.alert('Error', 'El nombre es obligatorio');
+      alert('❌ Error: El nombre es obligatorio');
       return;
     }
     if (!formData.username.trim()) {
-      Alert.alert('Error', 'El username es obligatorio');
+      alert('❌ Error: El username es obligatorio');
       return;
     }
     if (!isEditing && !formData.password.trim()) {
-      Alert.alert('Error', 'La contraseña es obligatoria');
+      alert('❌ Error: La contraseña es obligatoria');
       return;
     }
     if (!formData.admin_id) {
-      Alert.alert('Error', 'Debe seleccionar un Admin');
+      alert('❌ Error: Debe seleccionar un Admin');
       return;
     }
 
@@ -154,17 +154,17 @@ export default function AllMerchantsScreenCRUD() {
       if (isEditing) {
         // Actualizar
         await api.patch(`/api/admin-ops/merchants/${currentMerchant.id}`, formData);
-        Alert.alert('Éxito', 'Merchant actualizado correctamente');
+        alert('✅ Merchant actualizado correctamente');
       } else {
         // Crear
         await api.post('/api/admin-ops/merchants', formData);
-        Alert.alert('Éxito', 'Merchant creado correctamente');
+        alert('✅ Merchant creado correctamente');
       }
       setModalVisible(false);
       loadData();
     } catch (error: any) {
       const errorMsg = error.response?.data?.detail || 'Error al guardar';
-      Alert.alert('Error', errorMsg);
+      alert('❌ Error: ' + errorMsg);
     }
   };
 
