@@ -37,6 +37,11 @@ async def get_active_merchants(
         if not merchant:
             continue
         
+        # IMPORTANTE: Solo incluir merchants ACTIVOS (con activated_at)
+        # Los inactivos solo se muestran en jerarquía
+        if not merchant.get("activated_at"):
+            continue
+        
         # Contar eventos del merchant en el período
         event_count = await db.event_logs.count_documents({
             "merchant_id": merchant_id,
