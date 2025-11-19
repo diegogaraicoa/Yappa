@@ -59,7 +59,9 @@ async def get_active_merchants(
             "nombre": merchant.get("nombre", "N/A"),
             "username": merchant.get("username", "N/A"),
             "last_activity": last_event["timestamp"] if last_event else None,
-            "total_events": event_count
+            "total_events": event_count,
+            "activated_at": merchant.get("activated_at"),  # Para verificar filtro
+            "fully_activated_at": merchant.get("fully_activated_at")  # Para verificar filtro
         })
     
     # Ordenar por última actividad
