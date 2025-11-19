@@ -645,10 +645,20 @@ class AdminOpsTestSuite:
     
     async def test_password_hashing(self):
         """Test 30: Verify Password Hashing"""
-        # Create a test merchant to check password hashing
-        if not self.created_entities['admins']:
-            self.log_test("Password Hashing Test", False, "No admin available for test")
+        # Create a test admin first for this test
+        admin_data = {
+            "nombre": "Password Test Admin",
+            "email": "password_test@admin.com",
+            "telefono": "+593999000001"
+        }
+        
+        admin_result = await self.make_request("POST", "/admin-ops/admins", admin_data)
+        
+        if admin_result['status'] != 200:
+            self.log_test("Password Hashing Test", False, "Could not create test admin")
             return False
+        
+        admin_id = admin_result['data']['admin_id']
         
         merchant_data = {
             "admin_id": self.created_entities['admins'][0],
