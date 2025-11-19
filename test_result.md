@@ -220,15 +220,27 @@ frontend:
         agent: "main"
         comment: "Modificada pantalla de autenticación para incluir campo de WhatsApp en registro. Agregado estado whatsappNumber, validación de formato (mínimo 10 dígitos), mensaje de ayuda explicando para qué se usa el WhatsApp, y auto-formateo para agregar + si no lo tiene. Incluye icono de WhatsApp en verde. AuthContext.tsx actualizado para enviar whatsapp_number al backend. Necesita testing del flujo completo de registro."
 
+  - task: "Admin Ops CRUD - Refactor KYB to Admin"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/models.py, /app/backend/routes/admin_ops_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "FASE 1 COMPLETADA - Refactorización backend completa. Cambios: 1) Modelo KYBData modificado: merchant_id → admin_id (vinculado a Admin), 2) Creado /app/backend/routes/admin_ops_routes.py con endpoints CRUD completos para: ADMINS (POST/GET/PATCH/DELETE con validación de merchants asociados), MERCHANTS (POST/GET/PATCH/DELETE con validación admin_id y clerks), CLERKS (POST/GET/PATCH/DELETE con validación merchant_id), KYB (POST/GET/PATCH/DELETE vinculado a admin_id). 3) Rutas registradas en server.py exitosamente. Validaciones implementadas: Admin debe existir para crear Merchant, Merchant debe existir para crear Clerk, no se puede eliminar Admin con Merchants asociados, no se puede eliminar Merchant con Clerks asociados. Backend reiniciado correctamente, rutas cargadas: ✅ Admin Ops routes loaded successfully. NECESITO TESTING COMPLETO: Validar todos los endpoints CRUD (crear, listar, obtener, actualizar, eliminar) para Admins, Merchants, Clerks y KYB. Verificar validaciones de jerarquía, duplicados, y formato de respuesta JSON."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   run_ui: false
 
 test_plan:
   current_focus:
-    - "KPI Dashboard - Backend endpoints"
+    - "Admin Ops CRUD - Refactor KYB to Admin"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
