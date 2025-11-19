@@ -59,9 +59,16 @@ export default function ClerksActiveScreen() {
     );
   }
 
-  const clerks = data?.clerks || [];
+  const allClerks = data?.clerks || [];
   const newCount = data?.new_count || 0;
   const existingCount = data?.existing_count || 0;
+
+  // Filter clerks based on selection
+  const clerks = filter === 'all' 
+    ? allClerks 
+    : filter === 'new'
+      ? allClerks.filter((c: any) => c.status === 'new')
+      : allClerks.filter((c: any) => c.status === 'existing');
 
   return (
     <SafeAreaView style={styles.container}>
@@ -71,19 +78,62 @@ export default function ClerksActiveScreen() {
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerTitle}>Clerks Activos</Text>
-          <Text style={styles.headerSubtitle}>{data?.count || 0} clerks con actividad</Text>
+          <Text style={styles.headerSubtitle}>
+            {filter === 'all' 
+              ? `${data?.count || 0} clerks con actividad` 
+              : filter === 'new'
+                ? `${newCount} clerks nuevos`
+                : `${existingCount} clerks existentes`}
+          </Text>
         </View>
       </View>
 
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{newCount}</Text>
-          <Text style={styles.statLabel}>Nuevos</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{existingCount}</Text>
-          <Text style={styles.statLabel}>Existentes</Text>
-        </View>
+        <TouchableOpacity 
+          style={[styles.statCard, filter === 'all' && styles.statCardActive]}
+          onPress={() => setFilter('all')}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.statValue, filter === 'all' && styles.statValueActive]}>
+            {data?.count || 0}
+          </Text>
+          <Text style={[styles.statLabel, filter === 'all' && styles.statLabelActive]}>
+            Todos
+          </Text>
+          {filter === 'all' && (
+            <View style={styles.activeIndicator} />
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.statCard, filter === 'new' && styles.statCardActive]}
+          onPress={() => setFilter('new')}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.statValue, filter === 'new' && styles.statValueActive]}>
+            {newCount}
+          </Text>
+          <Text style={[styles.statLabel, filter === 'new' && styles.statLabelActive]}>
+            Nuevos
+          </Text>
+          {filter === 'new' && (
+            <View style={styles.activeIndicator} />
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.statCard, filter === 'existing' && styles.statCardActive]}
+          onPress={() => setFilter('existing')}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.statValue, filter === 'existing' && styles.statValueActive]}>
+            {existingCount}
+          </Text>
+          <Text style={[styles.statLabel, filter === 'existing' && styles.statLabelActive]}>
+            Existentes
+          </Text>
+          {filter === 'existing' && (
+            <View style={styles.activeIndicator} />
+          )}
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scrollView}>
