@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implementar KYB Module (Admin Ops) - Know Your Business. Crear backend CRUD completo para gestionar datos KYB de merchants: nombre legal, RUC/Tax ID, dirección fiscal, teléfono, email, representante legal, documento opcional. Incluir carga masiva CSV, template download, y upload de documentos."
+user_problem_statement: "REFACTORIZACIÓN ARQUITECTÓNICA MAYOR - Fase 1: Backend. Reestructurar Admin/Merchant/Clerk hierarchy. KYB ahora vinculado a Admin (no Merchant). Crear endpoints CRUD completos para Admin Ops: gestión completa de Admins, Merchants, Clerks y KYB con validaciones de jerarquía."
 
 backend:
   - task: "Endpoint de alertas de stock bajo"
