@@ -1,25 +1,20 @@
 #!/usr/bin/env python3
 """
-Backend Testing Script for KYB Module Endpoints
-Testing all KYB CRUD operations and functionality
+Backend Testing Suite for Admin Ops CRUD - Refactor KYB to Admin
+Testing all 22 endpoints with comprehensive scenarios including happy path and error cases.
 """
 
 import asyncio
 import aiohttp
 import json
-import os
 import sys
 from datetime import datetime
-from pathlib import Path
+from typing import Dict, Any, Optional
 
-# Add backend to path for imports
-sys.path.append('/app/backend')
+# Backend URL from environment
+BACKEND_URL = "https://ops-central-7.preview.emergentagent.com/api"
 
-# Configuration
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ops-central-7.preview.emergentagent.com')
-API_BASE = f"{BACKEND_URL}/api"
-
-class KYBTester:
+class AdminOpsTestSuite:
     def __init__(self):
         self.session = None
         self.auth_token = None
