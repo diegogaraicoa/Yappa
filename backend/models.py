@@ -159,31 +159,25 @@ class EventLogCreate(BaseModel):
 
 class KYBData(BaseModel):
     """
-    KYBData almacena información de KYB de cada Admin.
+    KYBData almacena información de KYB (Know Your Business) de cada Merchant.
     Ingresada manualmente por el super admin.
     """
     id: Optional[str] = Field(alias="_id")
-    admin_id: str  # Link a Admin
+    merchant_id: str  # Link a Merchant
     
-    # Información del dueño
-    nombre_dueno: Optional[str] = None
-    cedula: Optional[str] = None
+    # Información legal del negocio
+    nombre_legal: str  # Nombre legal del negocio
+    ruc_tax_id: str  # RUC / Tax ID
+    direccion_fiscal: str  # Dirección fiscal completa
+    telefono_contacto: str  # Teléfono de contacto
+    email_oficial: str  # Email oficial
     
-    # Información de la compañía
-    nombre_compania: Optional[str] = None
-    direccion: Optional[str] = None
-    telefono: Optional[str] = None
-    email: Optional[str] = None
+    # Representante legal
+    representante_legal: str  # Nombre del representante legal
+    documento_representante: Optional[str] = None  # Link al documento (opcional)
     
-    # Información bancaria
-    cuenta_bancaria: Optional[str] = None
-    banco: Optional[str] = None
-    
-    # Métricas
-    productos_top: Optional[List[str]] = []
-    revenue_mensual_promedio: Optional[float] = None
-    
-    # Notas
+    # Metadata
+    status: str = "pending"  # pending, approved, rejected
     notas: Optional[str] = None
     
     # Timestamps
@@ -196,31 +190,26 @@ class KYBData(BaseModel):
 
 
 class KYBDataCreate(BaseModel):
-    admin_id: str
-    nombre_dueno: Optional[str] = None
-    cedula: Optional[str] = None
-    nombre_compania: Optional[str] = None
-    direccion: Optional[str] = None
-    telefono: Optional[str] = None
-    email: Optional[str] = None
-    cuenta_bancaria: Optional[str] = None
-    banco: Optional[str] = None
-    productos_top: Optional[List[str]] = []
-    revenue_mensual_promedio: Optional[float] = None
+    merchant_id: str
+    nombre_legal: str
+    ruc_tax_id: str
+    direccion_fiscal: str
+    telefono_contacto: str
+    email_oficial: str
+    representante_legal: str
+    documento_representante: Optional[str] = None
     notas: Optional[str] = None
 
 
 class KYBDataUpdate(BaseModel):
-    nombre_dueno: Optional[str] = None
-    cedula: Optional[str] = None
-    nombre_compania: Optional[str] = None
-    direccion: Optional[str] = None
-    telefono: Optional[str] = None
-    email: Optional[str] = None
-    cuenta_bancaria: Optional[str] = None
-    banco: Optional[str] = None
-    productos_top: Optional[List[str]] = None
-    revenue_mensual_promedio: Optional[float] = None
+    nombre_legal: Optional[str] = None
+    ruc_tax_id: Optional[str] = None
+    direccion_fiscal: Optional[str] = None
+    telefono_contacto: Optional[str] = None
+    email_oficial: Optional[str] = None
+    representante_legal: Optional[str] = None
+    documento_representante: Optional[str] = None
+    status: Optional[str] = None
     notas: Optional[str] = None
 
 
