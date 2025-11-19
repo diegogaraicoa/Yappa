@@ -210,9 +210,9 @@ export default function AllClerksScreenCRUD() {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>Todos los Clerks</Text>
+          <Text style={styles.headerTitle}>Clerks Activos</Text>
           <Text style={styles.headerSubtitle}>
-            {filteredClerks.length} de {clerks.length} clerks
+            {filteredClerks.length} de {clerks.length} clerks activos
           </Text>
         </View>
       </View>
