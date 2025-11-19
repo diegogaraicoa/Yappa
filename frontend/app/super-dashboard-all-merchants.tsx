@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   SafeAreaView,
   TextInput,
+  Modal,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
