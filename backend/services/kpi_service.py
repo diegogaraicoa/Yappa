@@ -157,6 +157,11 @@ async def get_active_clerks(
         if not clerk:
             continue
         
+        # IMPORTANTE: Solo incluir clerks ACTIVOS (con activated_at)
+        # Los inactivos solo se muestran en jerarquía
+        if not clerk.get("activated_at"):
+            continue
+        
         # Contar eventos
         event_count = await db.event_logs.count_documents({
             "clerk_id": clerk_id,
