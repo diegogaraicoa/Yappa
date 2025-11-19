@@ -50,14 +50,14 @@ export default function AllMerchantsScreenCRUD() {
   const loadData = async () => {
     try {
       const [merchantsResponse, adminsResponse] = await Promise.all([
-        api.get('/api/admin-ops/merchants'),
+        api.get('/api/dashboard/merchants/active?period=30d'),  // Solo activos
         api.get('/api/admin-ops/admins')
       ]);
       setMerchants(merchantsResponse.data.merchants || []);
       setAdmins(adminsResponse.data.admins || []);
     } catch (error) {
       console.error('Error loading data:', error);
-      Alert.alert('Error', 'No se pudieron cargar los datos');
+      alert('❌ Error: No se pudieron cargar los datos');
     } finally {
       setLoading(false);
     }
