@@ -533,6 +533,52 @@ export default function AdminOpsScreen() {
                     placeholderTextColor="#999"
                     keyboardType="phone-pad"
                   />
+
+                  {isEditing && (
+                    <>
+                      <Text style={styles.label}>Estado de Acceso</Text>
+                      <View style={styles.activeToggleContainer}>
+                        <TouchableOpacity
+                          style={[
+                            styles.toggleOption,
+                            isActive && styles.toggleOptionActive
+                          ]}
+                          onPress={() => setIsActive(true)}
+                        >
+                          <Ionicons 
+                            name="checkmark-circle" 
+                            size={20} 
+                            color={isActive ? '#FFF' : '#4CAF50'} 
+                          />
+                          <Text style={[
+                            styles.toggleText,
+                            isActive && styles.toggleTextActive
+                          ]}>
+                            Activo - Tiene acceso al app
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.toggleOption,
+                            !isActive && styles.toggleOptionInactive
+                          ]}
+                          onPress={() => setIsActive(false)}
+                        >
+                          <Ionicons 
+                            name="close-circle" 
+                            size={20} 
+                            color={!isActive ? '#FFF' : '#F44336'} 
+                          />
+                          <Text style={[
+                            styles.toggleText,
+                            !isActive && styles.toggleTextInactive
+                          ]}>
+                            Inactivo - Sin acceso al app
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )}
                 </>
               )}
 
