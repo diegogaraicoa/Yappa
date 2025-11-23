@@ -433,6 +433,13 @@ export default function SuperDashboardScreen() {
           <Text style={styles.headerSubtitle}>KPIs y Métricas del Negocio</Text>
         </View>
         <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.adminOpsButton} 
+            onPress={() => router.push('/super-dashboard-admin-ops')}
+          >
+            <Ionicons name="settings" size={20} color="#FFF" />
+            <Text style={styles.adminOpsButtonText}>Admin Ops</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
             <Ionicons name="refresh" size={24} color="#4CAF50" />
           </TouchableOpacity>
