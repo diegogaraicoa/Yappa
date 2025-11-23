@@ -137,6 +137,7 @@ export default function AdminOpsScreen() {
   const handleSave = async () => {
     try {
       let endpoint = '';
+      const dataToSend = { ...formData, active: isActive };
       
       if (modalType === 'admin') {
         if (!formData.nombre?.trim() || !formData.email?.trim()) {
@@ -165,10 +166,10 @@ export default function AdminOpsScreen() {
       }
       
       if (isEditing) {
-        await api.patch(endpoint, formData);
+        await api.patch(endpoint, dataToSend);
         alert('✅ Actualizado correctamente');
       } else {
-        await api.post(endpoint, formData);
+        await api.post(endpoint, dataToSend);
         alert('✅ Creado correctamente');
       }
       
