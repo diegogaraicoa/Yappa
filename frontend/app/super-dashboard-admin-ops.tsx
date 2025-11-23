@@ -103,6 +103,7 @@ export default function AdminOpsScreen() {
     setModalType(type);
     setIsEditing(true);
     setCurrentItem(item);
+    setIsActive(item.active !== false); // Default to true if not specified
     
     if (type === 'admin') {
       setFormData({
