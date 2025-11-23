@@ -490,20 +490,20 @@ export default function SuperDashboardScreen() {
         {/* Hierarchy */}
         {renderHierarchy()}
 
-        {/* Admin Ops - KYB */}
+        {/* Admin Ops */}
         <TouchableOpacity
           style={styles.kybModuleCard}
-          onPress={() => router.push('/super-dashboard-kyb')}
+          onPress={() => router.push('/super-dashboard-admin-ops')}
           activeOpacity={0.7}
         >
           <View style={styles.kybModuleHeader}>
             <View style={styles.kybModuleIcon}>
-              <Ionicons name="document-text" size={32} color="#9C27B0" />
+              <Ionicons name="settings" size={32} color="#FFF" />
             </View>
             <View style={styles.kybModuleContent}>
-              <Text style={styles.kybModuleTitle}>📋 Admin Ops - KYB</Text>
+              <Text style={styles.kybModuleTitle}>⚙️ Admin Ops</Text>
               <Text style={styles.kybModuleSubtitle}>
-                Gestión de Know Your Business
+                Gestión completa de Admins, Merchants, Clerks y KYB
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#999" />
