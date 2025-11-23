@@ -839,4 +839,13 @@ const styles = StyleSheet.create({
   saveButton: { backgroundColor: '#2196F3' },
   cancelButtonText: { fontSize: 16, fontWeight: '600', color: '#666' },
   saveButtonText: { fontSize: 16, fontWeight: '600', color: '#FFF' },
+  
+  // Toggle styles
+  activeToggleContainer: { flexDirection: 'column', gap: 8, marginTop: 8 },
+  toggleOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: '#E0E0E0', backgroundColor: '#F5F5F5', gap: 10 },
+  toggleOptionActive: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
+  toggleOptionInactive: { backgroundColor: '#F44336', borderColor: '#F44336' },
+  toggleText: { fontSize: 14, color: '#666', fontWeight: '500', flex: 1 },
+  toggleTextActive: { color: '#FFF', fontWeight: '600' },
+  toggleTextInactive: { color: '#FFF', fontWeight: '600' },
 });
