@@ -497,26 +497,6 @@ export default function SuperDashboardScreen() {
         {/* Hierarchy */}
         {renderHierarchy()}
 
-        {/* Admin Ops */}
-        <TouchableOpacity
-          style={styles.kybModuleCard}
-          onPress={() => router.push('/super-dashboard-admin-ops')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.kybModuleHeader}>
-            <View style={styles.kybModuleIcon}>
-              <Ionicons name="settings" size={32} color="#FFF" />
-            </View>
-            <View style={styles.kybModuleContent}>
-              <Text style={styles.kybModuleTitle}>⚙️ Admin Ops</Text>
-              <Text style={styles.kybModuleSubtitle}>
-                Gestión completa de Admins, Merchants, Clerks y KYB
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#999" />
-          </View>
-        </TouchableOpacity>
-
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
