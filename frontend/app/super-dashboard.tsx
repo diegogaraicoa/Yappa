@@ -589,6 +589,20 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
+  adminOpsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2196F3',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  adminOpsButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   refreshButton: {
     padding: 8,
   },
