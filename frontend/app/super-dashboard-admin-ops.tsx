@@ -34,6 +34,7 @@ export default function AdminOpsScreen() {
   
   // Form states
   const [formData, setFormData] = useState<any>({});
+  const [isActive, setIsActive] = useState(true);
   
   // Search states
   const [searchAdmin, setSearchAdmin] = useState('');
