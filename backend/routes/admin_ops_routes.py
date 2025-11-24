@@ -82,6 +82,7 @@ async def get_all_admins():
                 "nombre": admin.get("nombre", "N/A"),
                 "email": admin.get("email", "N/A"),
                 "telefono": admin.get("telefono", "N/A"),
+                "active": admin.get("active", True),  # Default True para registros antiguos
                 "created_at": admin.get("created_at"),
                 "merchants_count": merchants_count,
                 "clerks_count": clerks_count,
