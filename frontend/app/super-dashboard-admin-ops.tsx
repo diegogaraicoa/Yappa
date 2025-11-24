@@ -376,7 +376,16 @@ export default function AdminOpsScreen() {
               </View>
 
               {filteredMerchants.map((merchant: any, index: number) => (
-                <View key={index} style={styles.itemCard}>
+                <View key={index} style={[
+                  styles.itemCard,
+                  merchant.active === false && styles.itemCardInactive
+                ]}>
+                  {merchant.active === false && (
+                    <View style={styles.inactiveBanner}>
+                      <Ionicons name="ban" size={16} color="#FFF" />
+                      <Text style={styles.inactiveBannerText}>DESACTIVADO - Sin acceso</Text>
+                    </View>
+                  )}
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemTitle}>{merchant.nombre}</Text>
                     <Text style={styles.itemSubtitle}>@{merchant.username}</Text>
