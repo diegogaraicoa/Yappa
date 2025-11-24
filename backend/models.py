@@ -21,6 +21,7 @@ class Admin(BaseModel):
     nombre: str
     email: str
     telefono: Optional[str] = None
+    active: bool = True  # Control de acceso al sistema
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     class Config:
