@@ -463,7 +463,16 @@ export default function AdminOpsScreen() {
               </View>
 
               {filteredClerks.map((clerk: any, index: number) => (
-                <View key={index} style={styles.itemCard}>
+                <View key={index} style={[
+                  styles.itemCard,
+                  clerk.active === false && styles.itemCardInactive
+                ]}>
+                  {clerk.active === false && (
+                    <View style={styles.inactiveBanner}>
+                      <Ionicons name="ban" size={16} color="#FFF" />
+                      <Text style={styles.inactiveBannerText}>DESACTIVADO - Sin acceso</Text>
+                    </View>
+                  )}
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemTitle}>{clerk.nombre}</Text>
                     <Text style={styles.itemSubtitle}>{clerk.email}</Text>
