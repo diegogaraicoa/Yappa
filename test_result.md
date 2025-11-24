@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "REFACTORIZACIÓN ARQUITECTÓNICA MAYOR - Fase 1: Backend. Reestructurar Admin/Merchant/Clerk hierarchy. KYB ahora vinculado a Admin (no Merchant). Crear endpoints CRUD completos para Admin Ops: gestión completa de Admins, Merchants, Clerks y KYB con validaciones de jerarquía."
+user_problem_statement: "REDISEÑO UI/UX COMPLETO DE YAPPA - Transformar toda la aplicación con estética fintech moderna inspirada en Nubank, Square POS y RappiPay. Crear Design System completo (colores, tipografía, componentes) y aplicar a 7 pantallas prioritarias del Super Dashboard. CRÍTICO: No modificar funcionalidades ni backend existente."
 
 backend:
   - task: "Endpoint de alertas de stock bajo"
