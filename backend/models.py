@@ -72,6 +72,7 @@ class MerchantCreate(BaseModel):
     nombre: str
     direccion: Optional[str] = None
     telefono: Optional[str] = None
+    active: Optional[bool] = True
 
 
 # ============================================
