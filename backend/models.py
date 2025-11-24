@@ -118,6 +118,7 @@ class ClerkCreate(BaseModel):
     password: str
     nombre: str
     whatsapp_number: Optional[str] = None
+    active: Optional[bool] = True
     role: str = "employee"
 
 
