@@ -473,7 +473,7 @@ export default function AdminOpsScreen() {
                       <Text style={styles.inactiveBannerText}>DESACTIVADO - Sin acceso</Text>
                     </View>
                   )}
-                  <View style={styles.itemInfo}>
+                  <View style={[styles.itemInfo, clerk.active === false && { paddingTop: 28 }]}>
                     <Text style={styles.itemTitle}>{clerk.nombre}</Text>
                     <Text style={styles.itemSubtitle}>{clerk.email}</Text>
                     <View style={styles.itemStats}>
