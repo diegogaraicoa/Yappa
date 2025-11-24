@@ -945,7 +945,7 @@ const styles = StyleSheet.create({
     fontWeight: '700', 
     letterSpacing: 0.5,
   },
-  itemInfo: { flex: 1 },
+  itemInfo: { flex: 1, paddingTop: 0 },
   itemTitle: { fontSize: 15, fontWeight: 'bold', color: '#333' },
   itemSubtitle: { fontSize: 13, color: '#666', marginTop: 2 },
   itemStats: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 6, gap: 8 },
