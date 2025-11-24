@@ -701,7 +701,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://ops-central-7.preview.emergentagent.com/admin
+**URL:** https://super-admin-1.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet

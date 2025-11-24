@@ -91,7 +91,7 @@ python3 check_my_sales.py
 ```
 
 O desde la Admin Console web:
-https://ops-central-7.preview.emergentagent.com/admin
+https://super-admin-1.preview.emergentagent.com/admin
 
 ---
 
