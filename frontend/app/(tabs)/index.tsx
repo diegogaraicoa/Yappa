@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  RefreshControl,
 } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
@@ -20,20 +21,22 @@ export default function HomeScreen() {
   const router = useRouter();
   const [alertCount, setAlertCount] = useState(0);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchAlertCount = async () => {
     try {
-      console.log('Fetching alerts from /api/alerts/low-stock...');
       const response = await api.get('/api/alerts/low-stock');
-      console.log('Alerts response:', response.data);
       setAlertCount(response.data.length);
-      console.log('Alert count set to:', response.data.length);
     } catch (error: any) {
       console.error('Error fetching alerts:', error);
-      console.error('Error details:', error.response?.data);
-      console.error('Error status:', error.response?.status);
       setAlertCount(0);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAlertCount();
+    setRefreshing(false);
   };
 
   useFocusEffect(
@@ -55,98 +58,126 @@ export default function HomeScreen() {
   const menuItems = [
     {
       id: 'sale',
-      title: '+ Venta',
-      icon: 'add-circle',
-      color: '#4CAF50',
+      title: 'Venta',
+      subtitle: 'Registrar venta',
+      icon: 'arrow-up-circle',
+      iconColor: '#4CAF50',
+      bgColor: '#E8F5E9',
       action: () => router.push('/sale'),
     },
     {
       id: 'expense',
-      title: '- Gastos',
-      icon: 'remove-circle',
-      color: '#f44336',
+      title: 'Gastos',
+      subtitle: 'Registrar gasto',
+      icon: 'arrow-down-circle',
+      iconColor: '#F44336',
+      bgColor: '#FFEBEE',
       action: () => router.push('/expense'),
     },
     {
       id: 'debts',
       title: 'Deudas',
-      icon: 'document-text',
-      color: '#FF9800',
+      subtitle: 'Por cobrar/pagar',
+      icon: 'document-text-outline',
+      iconColor: '#FF9800',
+      bgColor: '#FFF3E0',
       action: () => router.push('/debts'),
     },
     {
       id: 'inventory',
       title: 'Inventario',
-      icon: 'cube',
-      color: '#2196F3',
+      subtitle: 'Ver productos',
+      icon: 'cube-outline',
+      iconColor: '#2196F3',
+      bgColor: '#E3F2FD',
       action: () => router.push('/(tabs)/inventory'),
     },
   ];
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      {/* Header minimalista */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Ionicons name="storefront" size={24} color="#fff" />
-          <Text style={styles.storeName}>{user?.store_name}</Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.appName}>YAPPA</Text>
+            <Text style={styles.storeName}>{user?.store_name}</Text>
+          </View>
+          <TouchableOpacity 
+            onPress={handleLogout} 
+            style={styles.logoutButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="log-out-outline" size={24} color="#212121" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity 
-          onPress={() => {
-            console.log('Logout button pressed');
-            handleLogout();
-          }} 
-          style={styles.logoutButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="log-out-outline" size={24} color="#fff" />
-        </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.welcomeText}>Bienvenido</Text>
-        <Text style={styles.emailText}>{user?.email}</Text>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#4CAF50"
+            colors={['#4CAF50']}
+          />
+        }
+      >
+        {/* Welcome Section */}
+        <View style={styles.welcomeSection}>
+          <Text style={styles.greeting}>Hola 👋</Text>
+          <Text style={styles.subtitle}>¿Qué deseas hacer hoy?</Text>
+        </View>
 
+        {/* Alert Banner - Minimalista */}
         {alertCount > 0 && (
           <TouchableOpacity 
             style={styles.alertBanner}
             onPress={() => router.push('/alerts')}
+            activeOpacity={0.7}
           >
-            <View style={styles.alertBannerLeft}>
-              <Ionicons name="warning" size={24} color="#FF9800" />
-              <View style={styles.alertBannerText}>
-                <Text style={styles.alertBannerTitle}>¡Alertas de Stock!</Text>
-                <Text style={styles.alertBannerSubtitle}>
-                  {alertCount} producto{alertCount !== 1 ? 's' : ''} con stock bajo
-                </Text>
-              </View>
+            <View style={styles.alertIconContainer}>
+              <Ionicons name="alert-circle" size={24} color="#FF9800" />
             </View>
-            <View style={styles.alertBadgeHome}>
-              <Text style={styles.alertBadgeTextHome}>{alertCount}</Text>
+            <View style={styles.alertContent}>
+              <Text style={styles.alertTitle}>Stock bajo</Text>
+              <Text style={styles.alertSubtitle}>
+                {alertCount} producto{alertCount !== 1 ? 's' : ''} requiere{alertCount !== 1 ? 'n' : ''} atención
+              </Text>
             </View>
+            <Ionicons name="chevron-forward" size={20} color="#FF9800" />
           </TouchableOpacity>
         )}
 
-        <View style={styles.grid}>
+        {/* Action Cards - Grandes y legibles */}
+        <View style={styles.actionsSection}>
           {menuItems.map((item) => (
             <TouchableOpacity
               key={item.id}
-              style={[styles.menuCard, { borderColor: item.color }]}
+              style={styles.actionCard}
               onPress={item.action}
+              activeOpacity={0.7}
             >
-              <Ionicons name={item.icon as any} size={48} color={item.color} />
-              <Text style={[styles.menuTitle, { color: item.color }]}>{item.title}</Text>
+              <View style={[styles.iconContainer, { backgroundColor: item.bgColor }]}>
+                <Ionicons name={item.icon as any} size={32} color={item.iconColor} />
+              </View>
+              <View style={styles.actionTextContainer}>
+                <Text style={styles.actionTitle}>{item.title}</Text>
+                <Text style={styles.actionSubtitle}>{item.subtitle}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
             </TouchableOpacity>
           ))}
         </View>
 
-        <View style={styles.infoCard}>
-          <Ionicons name="information-circle" size={24} color="#2196F3" />
-          <Text style={styles.infoText}>
-            Selecciona una opci\u00f3n para comenzar a gestionar tu tienda
-          </Text>
-        </View>
-      </View>
+        {/* Bottom spacing */}
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
 
+      {/* Logout Modal - Minimalista */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -155,12 +186,14 @@ export default function HomeScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Ionicons name="log-out-outline" size={32} color="#f44336" />
-              <Text style={styles.modalTitle}>Cerrar Sesión</Text>
+            <View style={styles.modalIconContainer}>
+              <View style={styles.modalIconCircle}>
+                <Ionicons name="log-out-outline" size={32} color="#F44336" />
+              </View>
             </View>
+            <Text style={styles.modalTitle}>Cerrar sesión</Text>
             <Text style={styles.modalMessage}>
-              ¿Estás seguro de que quieres cerrar sesión?
+              ¿Confirmas que deseas cerrar sesión?
             </Text>
             <View style={styles.modalButtons}>
               <Pressable
@@ -173,13 +206,13 @@ export default function HomeScreen() {
                 style={[styles.modalButton, styles.confirmButton]}
                 onPress={confirmLogout}
               >
-                <Text style={styles.confirmButtonText}>Salir</Text>
+                <Text style={styles.confirmButtonText}>Cerrar sesión</Text>
               </Pressable>
             </View>
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 }
 
