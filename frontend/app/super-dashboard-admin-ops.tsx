@@ -386,7 +386,7 @@ export default function AdminOpsScreen() {
                       <Text style={styles.inactiveBannerText}>DESACTIVADO - Sin acceso</Text>
                     </View>
                   )}
-                  <View style={styles.itemInfo}>
+                  <View style={[styles.itemInfo, merchant.active === false && { paddingTop: 28 }]}>
                     <Text style={styles.itemTitle}>{merchant.nombre}</Text>
                     <Text style={styles.itemSubtitle}>@{merchant.username}</Text>
                     <View style={styles.itemStats}>
