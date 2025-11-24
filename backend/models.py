@@ -33,6 +33,7 @@ class AdminCreate(BaseModel):
     nombre: str
     email: str
     telefono: Optional[str] = None
+    active: Optional[bool] = True
 
 
 # ============================================
