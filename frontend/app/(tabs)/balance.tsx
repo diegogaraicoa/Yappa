@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 
 export default function BalanceScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [balance, setBalance] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [sales, setSales] = useState<any[]>([]);
