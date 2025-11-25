@@ -133,10 +133,58 @@ export default function BalanceScreen() {
           </View>
         </View>
 
-        {/* Balance Principal - Destacado */}
+        {/* Filtros de Fecha */}
+        <View style={styles.dateSection}>
+          <Text style={styles.sectionLabel}>PERIODO</Text>
+          <View style={styles.dateButtons}>
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => {
+                setSelectingDate('start');
+                setShowDateModal(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="calendar-outline" size={18} color="#757575" />
+              <Text style={styles.dateButtonText}>
+                {startDate ? format(new Date(startDate), 'dd/MM/yy') : 'Inicio'}
+              </Text>
+            </TouchableOpacity>
+            
+            <View style={styles.dateSeparator}>
+              <Ionicons name="remove" size={16} color="#BDBDBD" />
+            </View>
+
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => {
+                setSelectingDate('end');
+                setShowDateModal(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="calendar-outline" size={18} color="#757575" />
+              <Text style={styles.dateButtonText}>
+                {endDate ? format(new Date(endDate), 'dd/MM/yy') : 'Fin'}
+              </Text>
+            </TouchableOpacity>
+
+            {(startDate || endDate) && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={clearDates}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close-circle" size={20} color="#F44336" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Balance Principal */}
         <View style={styles.mainBalanceCard}>
           <View style={styles.mainBalanceHeader}>
-            <Text style={styles.mainBalanceLabel}>Balance Total</Text>
+            <Text style={styles.mainBalanceLabel}>BALANCE</Text>
             {balance.balance >= 0 ? (
               <View style={styles.positiveIndicator}>
                 <Ionicons name="trending-up" size={20} color="#4CAF50" />
@@ -169,153 +217,108 @@ export default function BalanceScreen() {
           </View>
         </View>
 
-      {/* Date Filters */}
-      <View style={styles.dateFilters}>
-        <Text style={styles.dateFiltersTitle}>Filtrar por Fecha</Text>
-        <View style={styles.dateButtons}>
-          <TouchableOpacity
-            style={styles.dateButton}
-            onPress={() => {
-              setSelectingDate('start');
-              setShowDateModal(true);
-            }}
-          >
-            <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
-            <Text style={styles.dateButtonText}>
-              {startDate ? format(new Date(startDate), 'dd/MM/yyyy') : 'Fecha Inicio'}
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.dateButton}
-            onPress={() => {
-              setSelectingDate('end');
-              setShowDateModal(true);
-            }}
-          >
-            <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
-            <Text style={styles.dateButtonText}>
-              {endDate ? format(new Date(endDate), 'dd/MM/yyyy') : 'Fecha Fin'}
-            </Text>
-          </TouchableOpacity>
+        {/* Resúmenes */}
+        <Text style={styles.sectionLabel}>DETALLES</Text>
 
-          {(startDate || endDate) && (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={clearDates}
-            >
-              <Ionicons name="close-circle" size={24} color="#f44336" />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Quick Actions */}
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#4CAF50' }]}
-          onPress={() => router.push('/sale')}
-        >
-          <Ionicons name="add-circle" size={24} color="#fff" />
-          <Text style={styles.actionButtonText}>Nueva Venta</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#f44336' }]}
-          onPress={() => router.push('/expense')}
-        >
-          <Ionicons name="remove-circle" size={24} color="#fff" />
-          <Text style={styles.actionButtonText}>Nuevo Gasto</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Resumen Ingresos */}
-      <View style={styles.detailCard}>
-        <Text style={styles.detailTitle}>Resumen de Ingresos</Text>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Número de ventas</Text>
-          <Text style={styles.detailValue}>
-            {balance.resumen_ingresos.numero_ventas}
-          </Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Pagos en efectivo</Text>
-          <Text style={styles.detailValue}>
-            ${balance.resumen_ingresos.pagos_efectivo.toFixed(2)}
-          </Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Otros pagos</Text>
-          <Text style={styles.detailValue}>
-            ${balance.resumen_ingresos.otros_pagos.toFixed(2)}
-          </Text>
-        </View>
-      </View>
-
-      {/* Resumen Egresos */}
-      <View style={styles.detailCard}>
-        <Text style={styles.detailTitle}>Resumen de Egresos</Text>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Número de gastos</Text>
-          <Text style={styles.detailValue}>
-            {balance.resumen_egresos.numero_gastos}
-          </Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Gastos en efectivo</Text>
-          <Text style={styles.detailValue}>
-            ${balance.resumen_egresos.gastos_efectivo.toFixed(2)}
-          </Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Otros gastos</Text>
-          <Text style={styles.detailValue}>
-            ${balance.resumen_egresos.otros_gastos.toFixed(2)}
-          </Text>
-        </View>
-      </View>
-
-      {/* Últimas Ventas */}
-      {sales.length > 0 && (
-        <View style={styles.listCard}>
-          <Text style={styles.listTitle}>Últimas Ventas</Text>
-          {sales.map((sale) => (
-            <View key={sale._id} style={styles.listItem}>
-              <View style={styles.listItemInfo}>
-                <Text style={styles.listItemTitle}>
-                  {sale.customer_name || 'Venta general'}
-                </Text>
-                <Text style={styles.listItemDate}>
-                  {format(new Date(sale.date), 'dd/MM/yyyy')}
-                </Text>
-              </View>
-              <Text style={[styles.listItemAmount, { color: '#4CAF50' }]}>
-                +${sale.total.toFixed(2)}
-              </Text>
+        {/* Resumen Ingresos */}
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryHeader}>
+            <View style={styles.summaryIconContainer} style={{ backgroundColor: '#E8F5E9' }}>
+              <Ionicons name="arrow-up" size={20} color="#4CAF50" />
             </View>
-          ))}
+            <Text style={styles.summaryTitle}>Ingresos</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryRowLabel}>Número de ventas</Text>
+            <Text style={styles.summaryRowValue}>{balance.resumen_ingresos.numero_ventas}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryRowLabel}>Efectivo</Text>
+            <Text style={styles.summaryRowValue}>${balance.resumen_ingresos.pagos_efectivo.toFixed(2)}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryRowLabel}>Otros pagos</Text>
+            <Text style={styles.summaryRowValue}>${balance.resumen_ingresos.otros_pagos.toFixed(2)}</Text>
+          </View>
         </View>
-      )}
 
-      {/* Últimos Gastos */}
-      {expenses.length > 0 && (
-        <View style={styles.listCard}>
-          <Text style={styles.listTitle}>Últimos Gastos</Text>
-          {expenses.map((expense) => (
-            <View key={expense._id} style={styles.listItem}>
-              <View style={styles.listItemInfo}>
-                <Text style={styles.listItemTitle}>{expense.category}</Text>
-                <Text style={styles.listItemDate}>
-                  {format(new Date(expense.date), 'dd/MM/yyyy')}
-                </Text>
-              </View>
-              <Text style={[styles.listItemAmount, { color: '#f44336' }]}>
-                -${expense.amount.toFixed(2)}
-              </Text>
+        {/* Resumen Egresos */}
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryHeader}>
+            <View style={[styles.summaryIconContainer, { backgroundColor: '#FFEBEE' }]}>
+              <Ionicons name="arrow-down" size={20} color="#F44336" />
             </View>
-          ))}
+            <Text style={styles.summaryTitle}>Egresos</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryRowLabel}>Número de gastos</Text>
+            <Text style={styles.summaryRowValue}>{balance.resumen_egresos.numero_gastos}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryRowLabel}>Efectivo</Text>
+            <Text style={styles.summaryRowValue}>${balance.resumen_egresos.gastos_efectivo.toFixed(2)}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryRowLabel}>Otros gastos</Text>
+            <Text style={styles.summaryRowValue}>${balance.resumen_egresos.otros_gastos.toFixed(2)}</Text>
+          </View>
         </View>
-      )}
+
+        {/* Transacciones Recientes */}
+        {(sales.length > 0 || expenses.length > 0) && (
+          <>
+            <Text style={styles.sectionLabel}>RECIENTES</Text>
+
+            {/* Últimas Ventas */}
+            {sales.length > 0 && (
+              <View style={styles.transactionsList}>
+                {sales.map((sale) => (
+                  <View key={sale._id} style={styles.transactionItem}>
+                    <View style={[styles.transactionIcon, { backgroundColor: '#E8F5E9' }]}>
+                      <Ionicons name="arrow-up" size={16} color="#4CAF50" />
+                    </View>
+                    <View style={styles.transactionInfo}>
+                      <Text style={styles.transactionTitle}>
+                        {sale.customer_name || 'Venta'}
+                      </Text>
+                      <Text style={styles.transactionDate}>
+                        {format(new Date(sale.date), 'dd MMM yyyy')}
+                      </Text>
+                    </View>
+                    <Text style={[styles.transactionAmount, { color: '#4CAF50' }]}>
+                      +${sale.total.toFixed(2)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Últimos Gastos */}
+            {expenses.length > 0 && (
+              <View style={styles.transactionsList}>
+                {expenses.map((expense) => (
+                  <View key={expense._id} style={styles.transactionItem}>
+                    <View style={[styles.transactionIcon, { backgroundColor: '#FFEBEE' }]}>
+                      <Ionicons name="arrow-down" size={16} color="#F44336" />
+                    </View>
+                    <View style={styles.transactionInfo}>
+                      <Text style={styles.transactionTitle}>{expense.category}</Text>
+                      <Text style={styles.transactionDate}>
+                        {format(new Date(expense.date), 'dd MMM yyyy')}
+                      </Text>
+                    </View>
+                    <Text style={[styles.transactionAmount, { color: '#F44336' }]}>
+                      -${expense.amount.toFixed(2)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </>
+        )}
+
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
 
       {/* Date Picker Modal */}
       <Modal visible={showDateModal} animationType="slide" transparent>
@@ -323,10 +326,13 @@ export default function BalanceScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Seleccionar {selectingDate === 'start' ? 'Fecha Inicio' : 'Fecha Fin'}
+                {selectingDate === 'start' ? 'Fecha inicio' : 'Fecha fin'}
               </Text>
-              <TouchableOpacity onPress={() => setShowDateModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+              <TouchableOpacity 
+                onPress={() => setShowDateModal(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={24} color="#212121" />
               </TouchableOpacity>
             </View>
             <Calendar
@@ -339,171 +345,78 @@ export default function BalanceScreen() {
                 selectedDayBackgroundColor: '#4CAF50',
                 todayTextColor: '#4CAF50',
                 arrowColor: '#4CAF50',
+                textDayFontSize: 16,
+                textMonthFontSize: 18,
+                textDayHeaderFontSize: 14,
               }}
             />
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Container
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FFFFFF',
+  },
+  scrollContent: {
+    paddingTop: 20,
+    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  summaryContainer: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 12,
-  },
-  summaryCard: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  summaryLabel: {
+  loadingText: {
+    marginTop: 16,
     fontSize: 14,
-    color: '#666',
-    marginTop: 8,
+    color: '#757575',
   },
-  summaryAmount: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 4,
+
+  // Header
+  header: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
   },
-  balanceCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  balanceLabel: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 8,
-  },
-  balanceAmount: {
-    fontSize: 36,
-    fontWeight: 'bold',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  detailCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12,
-  },
-  detailTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  detailValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  listCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12,
-  },
-  listTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  listItemInfo: {
-    flex: 1,
-  },
-  listItemTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  listItemDate: {
+  appName: {
     fontSize: 12,
-    color: '#666',
-  },
-  listItemAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  dateFilters: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12,
-  },
-  dateFiltersTitle: {
-    fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#4CAF50',
+    letterSpacing: 1,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  screenTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#212121',
+    letterSpacing: -0.5,
+  },
+
+  // Section Label
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9E9E9E',
+    letterSpacing: 1,
+    paddingHorizontal: 20,
     marginBottom: 12,
+    marginTop: 8,
+    textTransform: 'uppercase',
+  },
+
+  // Date Section
+  dateSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
   },
   dateButtons: {
     flexDirection: 'row',
-    gap: 8,
     alignItems: 'center',
   },
   dateButton: {
@@ -511,30 +424,201 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E8F5E9',
-    borderRadius: 8,
-    padding: 12,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     gap: 8,
   },
   dateButtonText: {
     fontSize: 14,
-    color: '#4CAF50',
     fontWeight: '500',
+    color: '#212121',
+  },
+  dateSeparator: {
+    marginHorizontal: 8,
   },
   clearButton: {
+    marginLeft: 8,
     padding: 8,
   },
+
+  // Main Balance Card
+  mainBalanceCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    marginBottom: 24,
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  mainBalanceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  mainBalanceLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9E9E9E',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  positiveIndicator: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  negativeIndicator: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFEBEE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mainBalanceAmount: {
+    fontSize: 40,
+    fontWeight: '800',
+    letterSpacing: -1,
+    marginBottom: 20,
+  },
+  mainBalanceDetails: {
+    gap: 12,
+  },
+  mainBalanceDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  detailLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#757575',
+    flex: 1,
+  },
+  detailValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
+  },
+
+  // Summary Card
+  summaryCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    marginBottom: 12,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+  },
+  summaryIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  summaryRowLabel: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#757575',
+  },
+  summaryRowValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#212121',
+  },
+
+  // Transactions
+  transactionsList: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  transactionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
+  },
+  transactionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  transactionInfo: {
+    flex: 1,
+  },
+  transactionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 4,
+  },
+  transactionDate: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#9E9E9E',
+  },
+  transactionAmount: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: '80%',
-    padding: 20,
+    padding: 24,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -544,7 +628,12 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#212121',
+  },
+
+  // Bottom Spacing
+  bottomSpacing: {
+    height: 20,
   },
 });
