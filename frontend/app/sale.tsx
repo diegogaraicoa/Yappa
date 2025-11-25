@@ -491,6 +491,22 @@ export default function SaleScreen() {
                 <Ionicons name="close" size={24} color="#212121" />
               </TouchableOpacity>
             </View>
+
+            {/* Create New Customer Button */}
+            <View style={styles.createNewContainer}>
+              <TouchableOpacity
+                style={styles.createNewButton}
+                onPress={() => {
+                  setShowCustomerModal(false);
+                  setShowNewCustomerModal(true);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add-circle" size={20} color="#4CAF50" />
+                <Text style={styles.createNewText}>Crear Nuevo Cliente</Text>
+              </TouchableOpacity>
+            </View>
+
             <ScrollView>
               {customers.map((customer) => (
                 <TouchableOpacity
@@ -519,9 +535,112 @@ export default function SaleScreen() {
                   )}
                 </TouchableOpacity>
               ))}
+
+              {customers.length === 0 && (
+                <View style={styles.emptyCustomers}>
+                  <Text style={styles.emptyCustomersText}>
+                    No hay clientes. Crea uno nuevo.
+                  </Text>
+                </View>
+              )}
             </ScrollView>
           </View>
         </View>
+      </Modal>
+
+      {/* New Customer Modal */}
+      <Modal visible={showNewCustomerModal} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Nuevo Cliente</Text>
+              <TouchableOpacity onPress={() => {
+                setShowNewCustomerModal(false);
+                setNewCustomer({ name: '', lastname: '', phone: '', email: '' });
+              }}>
+                <Ionicons name="close" size={24} color="#212121" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ paddingHorizontal: 24 }} showsVerticalScrollIndicator={false}>
+              {/* Name */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nombre *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Juan"
+                  placeholderTextColor="#BDBDBD"
+                  value={newCustomer.name}
+                  onChangeText={(text) => setNewCustomer({ ...newCustomer, name: text })}
+                />
+              </View>
+
+              {/* Lastname */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Apellido *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Pérez"
+                  placeholderTextColor="#BDBDBD"
+                  value={newCustomer.lastname}
+                  onChangeText={(text) => setNewCustomer({ ...newCustomer, lastname: text })}
+                />
+              </View>
+
+              {/* Phone */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Teléfono *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="+593 99 123 4567"
+                  placeholderTextColor="#BDBDBD"
+                  value={newCustomer.phone}
+                  onChangeText={(text) => setNewCustomer({ ...newCustomer, phone: text })}
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              {/* Email */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="ejemplo@correo.com"
+                  placeholderTextColor="#BDBDBD"
+                  value={newCustomer.email}
+                  onChangeText={(text) => setNewCustomer({ ...newCustomer, email: text })}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={{ height: 20 }} />
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowNewCustomerModal(false);
+                  setNewCustomer({ name: '', lastname: '', phone: '', email: '' });
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleCreateCustomer}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveText}>Crear Cliente</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </KeyboardAvoidingView>
   );
