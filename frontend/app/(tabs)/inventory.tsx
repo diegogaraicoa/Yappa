@@ -13,12 +13,15 @@ import {
   Platform,
   Image,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../contexts/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../utils/api';
 
 export default function InventoryScreen() {
+  const { user } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,6 +37,7 @@ export default function InventoryScreen() {
     category_id: '',
     min_stock_alert: '10',
     alert_enabled: true,
+    image: '',
   });
   const [newCategoryName, setNewCategoryName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,7 +50,7 @@ export default function InventoryScreen() {
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería para agregar fotos');
+      Alert.alert('Permiso necesario', 'Necesitamos acceso a tu galería');
     }
   };
 
@@ -165,6 +169,7 @@ export default function InventoryScreen() {
       category_id: '',
       min_stock_alert: '10',
       alert_enabled: true,
+      image: '',
     });
   };
 
@@ -185,11 +190,9 @@ export default function InventoryScreen() {
       };
 
       if (editingProduct) {
-        // Actualizar producto existente
         await api.put(`/api/products/${editingProduct._id}`, productData);
         Alert.alert('Éxito', 'Producto actualizado correctamente');
       } else {
-        // Crear nuevo producto
         await api.post('/api/products', productData);
         Alert.alert('Éxito', 'Producto creado correctamente');
       }
@@ -232,19 +235,11 @@ export default function InventoryScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('Deleting product:', productId);
-              const response = await api.delete(`/api/products/${productId}`);
-              console.log('Delete response:', response.status);
-              
-              // Immediately update local state
+              await api.delete(`/api/products/${productId}`);
               setProducts(prev => prev.filter(p => p._id !== productId));
-              
               Alert.alert('Éxito', 'Producto eliminado');
-              // Also reload from server to ensure sync
               await loadProducts();
             } catch (error: any) {
-              console.error('Delete error:', error);
-              console.error('Delete error response:', error.response?.data);
               Alert.alert('Error', error.response?.data?.detail || 'No se pudo eliminar el producto');
             }
           },
@@ -262,123 +257,191 @@ export default function InventoryScreen() {
     0
   );
 
+  const lowStockProducts = products.filter(
+    (p) => p.alert_enabled && p.quantity <= (p.min_stock_alert || 10)
+  );
+
   return (
     <View style={styles.container}>
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{products.length}</Text>
-          <Text style={styles.statLabel}>Productos</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>${totalInventoryValue.toFixed(2)}</Text>
-          <Text style={styles.statLabel}>Valor Total</Text>
-        </View>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar productos..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => setShowProductModal(true)}
-        >
-          <Ionicons name="add-circle" size={20} color="#fff" />
-          <Text style={styles.actionButtonText}>Nuevo Producto</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
-          onPress={() => setShowCategoryModal(true)}
-        >
-          <Ionicons name="list" size={20} color="#fff" />
-          <Text style={styles.actionButtonText}>Nueva Categoría</Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView
-        style={styles.list}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={loadData} />
+          <RefreshControl 
+            refreshing={loading} 
+            onRefresh={loadData}
+            tintColor="#4CAF50"
+            colors={['#4CAF50']}
+          />
         }
+        showsVerticalScrollIndicator={false}
       >
+        {/* Header YAPPA */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.appName}>YAPPA</Text>
+            <Text style={styles.screenTitle}>Inventario</Text>
+          </View>
+        </View>
+
+        {/* Stats KPIs */}
+        <View style={styles.statsSection}>
+          <View style={styles.statCard}>
+            <View style={styles.statIconContainer} style={{ backgroundColor: '#E3F2FD' }}>
+              <Ionicons name="cube" size={20} color="#2196F3" />
+            </View>
+            <View style={styles.statInfo}>
+              <Text style={styles.statValue}>{products.length}</Text>
+              <Text style={styles.statLabel}>Productos</Text>
+            </View>
+          </View>
+          
+          <View style={styles.statCard}>
+            <View style={[styles.statIconContainer, { backgroundColor: '#E8F5E9' }]}>
+              <Ionicons name="cash" size={20} color="#4CAF50" />
+            </View>
+            <View style={styles.statInfo}>
+              <Text style={styles.statValue}>${totalInventoryValue.toFixed(0)}</Text>
+              <Text style={styles.statLabel}>Valor Total</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Low Stock Alert */}
+        {lowStockProducts.length > 0 && (
+          <View style={styles.alertBanner}>
+            <View style={styles.alertIconContainer}>
+              <Ionicons name="warning" size={20} color="#FF9800" />
+            </View>
+            <Text style={styles.alertText}>
+              {lowStockProducts.length} producto{lowStockProducts.length !== 1 ? 's' : ''} con stock bajo
+            </Text>
+          </View>
+        )}
+
+        {/* Search */}
+        <View style={styles.searchSection}>
+          <View style={styles.searchContainer}>
+            <Ionicons name="search-outline" size={20} color="#9E9E9E" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar productos..."
+              placeholderTextColor="#BDBDBD"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color="#9E9E9E" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionsSection}>
+          <TouchableOpacity
+            style={styles.primaryActionButton}
+            onPress={() => setShowProductModal(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="add" size={20} color="#FFFFFF" />
+            <Text style={styles.primaryActionButtonText}>Nuevo Producto</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.secondaryActionButton}
+            onPress={() => setShowCategoryModal(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="list-outline" size={20} color="#2196F3" />
+            <Text style={styles.secondaryActionButtonText}>Nueva Categoría</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Products List */}
+        <Text style={styles.sectionLabel}>PRODUCTOS</Text>
+
         {filteredProducts.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="cube-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>
-              {searchQuery ? 'No se encontraron productos' : 'No hay productos aún'}
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="cube-outline" size={48} color="#E0E0E0" />
+            </View>
+            <Text style={styles.emptyTitle}>
+              {searchQuery ? 'No se encontraron productos' : 'Sin productos'}
             </Text>
-            <Text style={styles.emptySubtext}>
-              {!searchQuery && 'Crea tu primer producto'}
+            <Text style={styles.emptySubtitle}>
+              {!searchQuery && 'Crea tu primer producto para comenzar'}
             </Text>
           </View>
         ) : (
-          filteredProducts.map((product) => (
-            <View key={product._id} style={styles.productCard}>
-              <View style={styles.productHeader}>
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName}>{product.name}</Text>
-                  {product.description && (
-                    <Text style={styles.productDescription}>
-                      {product.description}
-                    </Text>
+          <View style={styles.productsList}>
+            {filteredProducts.map((product) => {
+              const isLowStock = product.alert_enabled && product.quantity <= (product.min_stock_alert || 10);
+              
+              return (
+                <View key={product._id} style={styles.productCard}>
+                  {product.image && (
+                    <Image source={{ uri: product.image }} style={styles.productImage} />
                   )}
+                  <View style={styles.productContent}>
+                    <View style={styles.productHeader}>
+                      <View style={styles.productTitleSection}>
+                        <Text style={styles.productName}>{product.name}</Text>
+                        {isLowStock && (
+                          <View style={styles.lowStockBadge}>
+                            <Text style={styles.lowStockText}>Stock bajo</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.productActions}>
+                        <TouchableOpacity 
+                          onPress={() => openEditModal(product)}
+                          style={styles.actionButton}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <Ionicons name="create-outline" size={20} color="#757575" />
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          onPress={() => deleteProduct(product._id)}
+                          style={styles.actionButton}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <Ionicons name="trash-outline" size={20} color="#F44336" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    
+                    {product.description && (
+                      <Text style={styles.productDescription}>{product.description}</Text>
+                    )}
+                    
+                    <View style={styles.productDetails}>
+                      <View style={styles.productDetailItem}>
+                        <Text style={styles.productDetailLabel}>Stock</Text>
+                        <Text style={[styles.productDetailValue, isLowStock && { color: '#FF9800' }]}>
+                          {product.quantity}
+                        </Text>
+                      </View>
+                      <View style={styles.productDetailItem}>
+                        <Text style={styles.productDetailLabel}>Precio</Text>
+                        <Text style={styles.productDetailValue}>${product.price.toFixed(2)}</Text>
+                      </View>
+                      <View style={styles.productDetailItem}>
+                        <Text style={styles.productDetailLabel}>Costo</Text>
+                        <Text style={styles.productDetailValue}>${product.cost.toFixed(2)}</Text>
+                      </View>
+                    </View>
+                  </View>
                 </View>
-                <View style={styles.productActions}>
-                  <TouchableOpacity 
-                    onPress={() => {
-                      console.log('Edit button pressed for product:', product._id);
-                      openEditModal(product);
-                    }}
-                    style={styles.actionIcon}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="create-outline" size={24} color="#2196F3" />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    onPress={() => {
-                      console.log('Delete button pressed for product:', product._id);
-                      deleteProduct(product._id);
-                    }}
-                    style={styles.actionIcon}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="trash-outline" size={24} color="#f44336" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <View style={styles.productDetails}>
-                <View style={styles.productDetail}>
-                  <Text style={styles.productDetailLabel}>Stock</Text>
-                  <Text style={styles.productDetailValue}>
-                    {product.quantity}
-                  </Text>
-                </View>
-                <View style={styles.productDetail}>
-                  <Text style={styles.productDetailLabel}>Precio</Text>
-                  <Text style={styles.productDetailValue}>
-                    ${product.price.toFixed(2)}
-                  </Text>
-                </View>
-                <View style={styles.productDetail}>
-                  <Text style={styles.productDetailLabel}>Costo</Text>
-                  <Text style={styles.productDetailValue}>
-                    ${product.cost.toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          ))
+              );
+            })}
+          </View>
         )}
+
+        <View style={styles.bottomSpacing} />
       </ScrollView>
 
-      {/* Create Product Modal */}
+      {/* Product Modal */}
       <Modal visible={showProductModal} animationType="slide" transparent>
         <KeyboardAvoidingView
           style={styles.modalContainer}
@@ -389,156 +452,202 @@ export default function InventoryScreen() {
               <Text style={styles.modalTitle}>
                 {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
               </Text>
-              <TouchableOpacity onPress={closeProductModal}>
-                <Ionicons name="close" size={24} color="#333" />
+              <TouchableOpacity 
+                onPress={closeProductModal}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={24} color="#212121" />
               </TouchableOpacity>
             </View>
-            <ScrollView>
-              <Text style={styles.inputLabel}>Foto del Producto</Text>
+
+            <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+              {/* Image */}
               <TouchableOpacity style={styles.imagePickerButton} onPress={showImagePicker}>
                 {newProduct.image ? (
-                  <Image source={{ uri: newProduct.image }} style={styles.productImage} />
+                  <Image source={{ uri: newProduct.image }} style={styles.productImagePreview} />
                 ) : (
-                  <View style={styles.imagePlaceholder}>
-                    <Ionicons name="camera" size={40} color="#999" />
-                    <Text style={styles.imagePlaceholderText}>
-                      Tomar foto o seleccionar
-                    </Text>
-                  </View>
+                  <>
+                    <Ionicons name="camera-outline" size={32} color="#9E9E9E" />
+                    <Text style={styles.imagePickerText}>Agregar foto</Text>
+                  </>
                 )}
               </TouchableOpacity>
 
-              <Text style={styles.inputLabel}>Nombre *</Text>
-              <TextInput
-                style={styles.input}
-                value={newProduct.name}
-                onChangeText={(text) => setNewProduct({ ...newProduct, name: text })}
-                placeholder="Nombre del producto"
-              />
-
-              <Text style={styles.inputLabel}>Cantidad</Text>
-              <TextInput
-                style={styles.input}
-                value={newProduct.quantity}
-                onChangeText={(text) => setNewProduct({ ...newProduct, quantity: text })}
-                placeholder="0"
-                keyboardType="numeric"
-              />
-
-              <Text style={styles.inputLabel}>Precio de Venta *</Text>
-              <TextInput
-                style={styles.input}
-                value={newProduct.price}
-                onChangeText={(text) => setNewProduct({ ...newProduct, price: text })}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-              />
-
-              <Text style={styles.inputLabel}>Costo</Text>
-              <TextInput
-                style={styles.input}
-                value={newProduct.cost}
-                onChangeText={(text) => setNewProduct({ ...newProduct, cost: text })}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-              />
-
-              <Text style={styles.inputLabel}>Descripción</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={newProduct.description}
-                onChangeText={(text) =>
-                  setNewProduct({ ...newProduct, description: text })
-                }
-                placeholder="Descripción del producto"
-                multiline
-                numberOfLines={3}
-              />
-
-              <View style={styles.alertsSection}>
-                <View style={styles.alertsSectionHeader}>
-                  <Ionicons name="notifications" size={24} color="#FF9800" />
-                  <Text style={styles.alertsSectionTitle}>Configuración de Alertas</Text>
-                </View>
-                <Text style={styles.alertsSectionSubtitle}>
-                  Recibe notificaciones cuando el stock esté bajo
-                </Text>
-
-                <View style={styles.switchContainer}>
-                  <Text style={styles.switchLabel}>Activar alertas</Text>
-                  <Switch
-                    value={newProduct.alert_enabled}
-                    onValueChange={(value) =>
-                      setNewProduct({ ...newProduct, alert_enabled: value })
-                    }
-                    trackColor={{ false: '#ccc', true: '#4CAF50' }}
-                    thumbColor={newProduct.alert_enabled ? '#fff' : '#f4f3f4'}
-                  />
-                </View>
-
-                {newProduct.alert_enabled && (
-                  <View>
-                    <Text style={styles.inputLabel}>Stock mínimo para alerta</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={newProduct.min_stock_alert}
-                      onChangeText={(text) =>
-                        setNewProduct({ ...newProduct, min_stock_alert: text })
-                      }
-                      placeholder="10"
-                      keyboardType="numeric"
-                    />
-                    <View style={styles.alertLevelsInfo}>
-                      <View style={styles.alertLevelItem}>
-                        <View style={[styles.alertDot, { backgroundColor: '#FF9800' }]} />
-                        <Text style={styles.alertLevelText}>
-                          Advertencia: stock {'<='} mínimo
-                        </Text>
-                      </View>
-                      <View style={styles.alertLevelItem}>
-                        <View style={[styles.alertDot, { backgroundColor: '#f44336' }]} />
-                        <Text style={styles.alertLevelText}>Crítico: stock = 0</Text>
-                      </View>
-                    </View>
-                  </View>
-                )}
+              {/* Name */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nombre *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ej: Coca Cola 500ml"
+                  placeholderTextColor="#BDBDBD"
+                  value={newProduct.name}
+                  onChangeText={(text) => setNewProduct({ ...newProduct, name: text })}
+                />
               </View>
 
+              {/* Description */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Descripción</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Descripción opcional"
+                  placeholderTextColor="#BDBDBD"
+                  value={newProduct.description}
+                  onChangeText={(text) => setNewProduct({ ...newProduct, description: text })}
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+
+              {/* Category */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Categoría</Text>
+                <View style={styles.pickerContainer}>
+                  <Text style={styles.pickerValue}>
+                    {categories.find(c => c._id === newProduct.category_id)?.name || 'Seleccionar'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color="#9E9E9E" />
+                </View>
+              </View>
+
+              {/* Price & Cost */}
+              <View style={styles.row}>
+                <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                  <Text style={styles.inputLabel}>Precio *</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="0.00"
+                    placeholderTextColor="#BDBDBD"
+                    value={newProduct.price}
+                    onChangeText={(text) => setNewProduct({ ...newProduct, price: text })}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+                <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                  <Text style={styles.inputLabel}>Costo</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="0.00"
+                    placeholderTextColor="#BDBDBD"
+                    value={newProduct.cost}
+                    onChangeText={(text) => setNewProduct({ ...newProduct, cost: text })}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+              </View>
+
+              {/* Quantity */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Cantidad</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="0"
+                  placeholderTextColor="#BDBDBD"
+                  value={newProduct.quantity}
+                  onChangeText={(text) => setNewProduct({ ...newProduct, quantity: text })}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              {/* Alert Settings */}
+              <View style={styles.inputGroup}>
+                <View style={styles.switchRow}>
+                  <Text style={styles.inputLabel}>Alerta de stock bajo</Text>
+                  <Switch
+                    value={newProduct.alert_enabled}
+                    onValueChange={(value) => setNewProduct({ ...newProduct, alert_enabled: value })}
+                    trackColor={{ false: '#E0E0E0', true: '#A5D6A7' }}
+                    thumbColor={newProduct.alert_enabled ? '#4CAF50' : '#F5F5F5'}
+                  />
+                </View>
+              </View>
+
+              {newProduct.alert_enabled && (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Stock mínimo</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="10"
+                    placeholderTextColor="#BDBDBD"
+                    value={newProduct.min_stock_alert}
+                    onChangeText={(text) => setNewProduct({ ...newProduct, min_stock_alert: text })}
+                    keyboardType="numeric"
+                  />
+                </View>
+              )}
+            </ScrollView>
+
+            {/* Modal Actions */}
+            <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleCreateProduct}
+                style={styles.modalCancelButton}
+                onPress={closeProductModal}
+                activeOpacity={0.8}
               >
-                <Text style={styles.submitButtonText}>
-                  {editingProduct ? 'Actualizar Producto' : 'Crear Producto'}
+                <Text style={styles.modalCancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleCreateProduct}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveButtonText}>
+                  {editingProduct ? 'Actualizar' : 'Crear'}
                 </Text>
               </TouchableOpacity>
-            </ScrollView>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Create Category Modal */}
+      {/* Category Modal */}
       <Modal visible={showCategoryModal} animationType="slide" transparent>
         <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { maxHeight: '40%' }]}>
+          <View style={[styles.modalContent, { maxHeight: 300 }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Nueva Categoría</Text>
-              <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+              <TouchableOpacity 
+                onPress={() => {
+                  setShowCategoryModal(false);
+                  setNewCategoryName('');
+                }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={24} color="#212121" />
               </TouchableOpacity>
             </View>
-            <TextInput
-              style={styles.input}
-              value={newCategoryName}
-              onChangeText={setNewCategoryName}
-              placeholder="Nombre de la categoría"
-            />
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleCreateCategory}
-            >
-              <Text style={styles.submitButtonText}>Crear Categoría</Text>
-            </TouchableOpacity>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Nombre de la categoría</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ej: Bebidas"
+                placeholderTextColor="#BDBDBD"
+                value={newCategoryName}
+                onChangeText={setNewCategoryName}
+                autoFocus
+              />
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowCategoryModal(false);
+                  setNewCategoryName('');
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleCreateCategory}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveButtonText}>Crear</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -547,279 +656,432 @@ export default function InventoryScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Container
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FFFFFF',
   },
-  statsContainer: {
+  scrollContent: {
+    paddingTop: 20,
+    paddingBottom: 100,
+  },
+
+  // Header
+  header: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  appName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4CAF50',
+    letterSpacing: 1,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  screenTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#212121',
+    letterSpacing: -0.5,
+  },
+
+  // Stats Section
+  statsSection: {
     flexDirection: 'row',
-    padding: 16,
+    paddingHorizontal: 20,
     gap: 12,
+    marginBottom: 16,
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
+  },
+  statIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  statInfo: {
+    flex: 1,
   },
   statValue: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2196F3',
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 2,
   },
   statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#757575',
+  },
+
+  // Alert Banner
+  alertBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0',
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFB74D',
+  },
+  alertIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  alertText: {
+    flex: 1,
     fontSize: 14,
-    color: '#666',
-    marginTop: 4,
+    fontWeight: '500',
+    color: '#E65100',
+  },
+
+  // Search Section
+  searchSection: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    paddingHorizontal: 16,
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  searchIcon: {
-    marginRight: 12,
+    paddingHorizontal: 16,
+    height: 48,
+    gap: 12,
   },
   searchInput: {
     flex: 1,
-    height: 48,
     fontSize: 16,
+    fontWeight: '400',
+    color: '#212121',
   },
-  actionsContainer: {
+
+  // Actions Section
+  actionsSection: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    paddingHorizontal: 20,
     gap: 12,
+    marginBottom: 24,
   },
-  actionButton: {
+  primaryActionButton: {
     flex: 1,
-    backgroundColor: '#4CAF50',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
+    backgroundColor: '#4CAF50',
     borderRadius: 12,
+    paddingVertical: 14,
     gap: 8,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  actionButtonText: {
-    color: '#fff',
+  primaryActionButtonText: {
     fontSize: 14,
     fontWeight: '600',
+    color: '#FFFFFF',
   },
-  list: {
+  secondaryActionButton: {
     flex: 1,
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    paddingVertical: 14,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: '#2196F3',
+  },
+  secondaryActionButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2196F3',
+  },
+
+  // Section Label
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9E9E9E',
+    letterSpacing: 1,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+  },
+
+  // Products List
+  productsList: {
+    paddingHorizontal: 20,
   },
   productCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
+    overflow: 'hidden',
+  },
+  productImage: {
+    width: '100%',
+    height: 160,
+    backgroundColor: '#F5F5F5',
+  },
+  productContent: {
+    padding: 16,
   },
   productHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  productInfo: {
+  productTitleSection: {
     flex: 1,
-  },
-  productActions: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  actionIcon: {
-    padding: 8,
-    marginLeft: 8,
+    gap: 8,
   },
   productName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    color: '#212121',
+  },
+  lowStockBadge: {
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  lowStockText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FF9800',
+  },
+  productActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionButton: {
+    padding: 4,
   },
   productDescription: {
     fontSize: 14,
-    color: '#666',
+    fontWeight: '400',
+    color: '#757575',
+    marginBottom: 12,
+    lineHeight: 20,
   },
   productDetails: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    justifyContent: 'space-between',
     paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
   },
-  productDetail: {
+  productDetailItem: {
     alignItems: 'center',
   },
   productDetailLabel: {
     fontSize: 12,
-    color: '#666',
+    fontWeight: '500',
+    color: '#9E9E9E',
     marginBottom: 4,
   },
   productDetailValue: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '700',
+    color: '#212121',
   },
+
+  // Empty State
   emptyState: {
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 64,
+    paddingVertical: 60,
+    paddingHorizontal: 40,
   },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 16,
+  emptyIconContainer: {
+    marginBottom: 16,
   },
-  emptySubtext: {
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
     fontSize: 14,
-    color: '#999',
-    marginTop: 8,
+    fontWeight: '400',
+    color: '#9E9E9E',
+    textAlign: 'center',
   },
+
+  // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: '90%',
-    padding: 20,
+    paddingTop: 24,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    paddingHorizontal: 24,
+    marginBottom: 24,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#212121',
+  },
+  modalScroll: {
+    paddingHorizontal: 24,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#616161',
+  },
+  modalSaveButton: {
+    flex: 1,
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  modalSaveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Image Picker
+  imagePickerButton: {
+    height: 200,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    borderStyle: 'dashed',
+  },
+  imagePickerText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#9E9E9E',
+    marginTop: 8,
+  },
+  productImagePreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+  },
+
+  // Input Group
+  inputGroup: {
+    marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#212121',
     marginBottom: 8,
-    marginTop: 12,
   },
   input: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
+    fontWeight: '400',
+    color: '#212121',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#F5F5F5',
   },
   textArea: {
-    height: 100,
+    height: 80,
     textAlignVertical: 'top',
   },
-  submitButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  imagePickerButton: {
-    marginBottom: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  productImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-  },
-  imagePlaceholder: {
-    width: '100%',
-    height: 200,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  imagePlaceholderText: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
-  },
-  alertsSection: {
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#FFE0B2',
-  },
-  alertsSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  alertsSectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#E65100',
-    marginLeft: 8,
-  },
-  alertsSectionSubtitle: {
-    fontSize: 13,
-    color: '#F57C00',
-    marginBottom: 16,
-  },
-  switchContainer: {
+  pickerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
   },
-  switchLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
+  pickerValue: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#212121',
   },
-  alertLevelsInfo: {
-    marginTop: 12,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
-  },
-  alertLevelItem: {
+  row: {
     flexDirection: 'row',
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 4,
   },
-  alertDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  alertLevelText: {
-    fontSize: 13,
-    color: '#666',
+
+  // Bottom Spacing
+  bottomSpacing: {
+    height: 20,
   },
 });
