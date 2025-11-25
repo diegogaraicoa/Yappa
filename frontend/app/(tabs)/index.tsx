@@ -131,6 +131,19 @@ export default function HomeScreen() {
       >
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
+          <View style={styles.welcomeHeader}>
+            <View>
+              <Text style={styles.appName}>YAPPA</Text>
+              <Text style={styles.storeName}>{user?.store_name}</Text>
+            </View>
+            <TouchableOpacity 
+              onPress={handleLogout} 
+              style={styles.logoutButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="log-out-outline" size={22} color="#757575" />
+            </TouchableOpacity>
+          </View>
           <Text style={styles.greeting}>Hola 👋</Text>
           <Text style={styles.subtitle}>Balance de tu negocio</Text>
         </View>
