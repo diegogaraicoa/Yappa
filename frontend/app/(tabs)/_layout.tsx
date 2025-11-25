@@ -8,19 +8,15 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#4CAF50',
         tabBarInactiveTintColor: '#9E9E9E',
         tabBarStyle: {
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
           backgroundColor: '#FFFFFF',
-          borderBottomWidth: 1,
-          borderBottomColor: '#F5F5F5',
-          height: 60,
-          paddingTop: 40, // Safe area for status bar
-          paddingBottom: 8,
-          elevation: 2,
+          borderTopWidth: 1,
+          borderTopColor: '#F5F5F5',
+          height: 65,
+          paddingBottom: 10,
+          paddingTop: 8,
+          elevation: 4,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
+          shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.05,
           shadowRadius: 4,
         },
@@ -32,7 +28,7 @@ export default function TabLayout() {
         tabBarIconStyle: {
           marginTop: 0,
         },
-        headerShown: false, // Quitar el header verde
+        headerShown: false, // Quitar el header verde grande
       }}
     >
       <Tabs.Screen
