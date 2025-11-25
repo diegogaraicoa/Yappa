@@ -356,25 +356,23 @@ export default function SaleScreen() {
           </View>
         </View>
 
-        {/* Customer (if not paid) */}
-        {!paid && (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>CLIENTE *</Text>
-            <TouchableOpacity
-              style={styles.selectButton}
-              onPress={() => setShowCustomerModal(true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="person-outline" size={20} color="#757575" />
-              <Text style={styles.selectButtonText}>
-                {selectedCustomer 
-                  ? `${selectedCustomer.name} ${selectedCustomer.lastname}`
-                  : 'Seleccionar cliente'}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#9E9E9E" />
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* Customer (always visible, optional) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>CLIENTE {!paid && '(Recomendado)'}</Text>
+          <TouchableOpacity
+            style={styles.selectButton}
+            onPress={() => setShowCustomerModal(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="person-outline" size={20} color="#757575" />
+            <Text style={styles.selectButtonText}>
+              {selectedCustomer 
+                ? `${selectedCustomer.name} ${selectedCustomer.lastname}`
+                : 'Seleccionar cliente (opcional)'}
+            </Text>
+            <Ionicons name="chevron-down" size={20} color="#9E9E9E" />
+          </TouchableOpacity>
+        </View>
 
         {/* Notes */}
         <View style={styles.section}>
