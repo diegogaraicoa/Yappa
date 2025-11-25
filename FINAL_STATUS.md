@@ -277,7 +277,7 @@ yarn add expo-notifications
 
 ## 📱 URLs de Acceso
 
-- **Frontend:** https://super-admin-1.preview.emergentagent.com
+- **Frontend:** https://minimal-commerce-app.preview.emergentagent.com
 - **Backend:** Puerto 8001 (interno)
 - **Database:** MongoDB localhost:27017
 

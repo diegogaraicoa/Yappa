@@ -9,7 +9,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://super-admin-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://minimal-commerce-app.preview.emergentagent.com/api"
 TEST_USER_PHONE = "+593992913093"
 
 def debug_conversation_flow():

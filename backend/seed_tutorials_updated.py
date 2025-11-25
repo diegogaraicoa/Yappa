@@ -511,7 +511,7 @@ La deuda se actualizará automáticamente.
 
 Interfaz web profesional para analytics profundos, comparaciones temporales, exportación de datos y gestión masiva.
 
-**URL:** https://super-admin-1.preview.emergentagent.com/admin
+**URL:** https://minimal-commerce-app.preview.emergentagent.com/admin
 
 ---
 

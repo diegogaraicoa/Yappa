@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv('/app/frontend/.env')
 
 # Configuration
-BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://super-admin-1.preview.emergentagent.com') + "/api"
+BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://minimal-commerce-app.preview.emergentagent.com') + "/api"
 TEST_EMAIL = "maria.gonzalez@test.com"
 TEST_PASSWORD = "MiTienda2025!"
 

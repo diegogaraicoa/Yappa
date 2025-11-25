@@ -701,7 +701,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://super-admin-1.preview.emergentagent.com/admin
+**URL:** https://minimal-commerce-app.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet
