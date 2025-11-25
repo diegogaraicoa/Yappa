@@ -494,12 +494,16 @@ export default function InventoryScreen() {
               {/* Category */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Categoría</Text>
-                <View style={styles.pickerContainer}>
+                <TouchableOpacity 
+                  style={styles.pickerContainer}
+                  onPress={() => setShowCategoryPicker(true)}
+                  activeOpacity={0.7}
+                >
                   <Text style={styles.pickerValue}>
                     {categories.find(c => c._id === newProduct.category_id)?.name || 'Seleccionar'}
                   </Text>
                   <Ionicons name="chevron-down" size={20} color="#9E9E9E" />
-                </View>
+                </TouchableOpacity>
               </View>
 
               {/* Price & Cost */}
