@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   welcomeSection: {
     paddingHorizontal: 20,
     paddingTop: 32,
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
   greeting: {
     fontSize: 32,
@@ -351,6 +351,101 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#757575',
     lineHeight: 24,
+  },
+
+  // Balance Section - Lo más importante
+  balanceSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  balanceCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  balanceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  balanceLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#757575',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  balanceAmountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  balanceAmount: {
+    fontSize: 40,
+    fontWeight: '800',
+    letterSpacing: -1,
+  },
+  positiveIndicator: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  negativeIndicator: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFEBEE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  balanceDetails: {
+    gap: 12,
+  },
+  balanceDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  balanceDetailDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  balanceDetailLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#757575',
+    flex: 1,
+  },
+  balanceDetailValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
+  },
+
+  // Actions Label
+  actionsLabel: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  actionsLabelText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#757575',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 
   // Alert Banner - Minimalista
