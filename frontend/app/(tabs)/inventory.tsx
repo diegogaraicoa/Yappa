@@ -1156,4 +1156,41 @@ const styles = StyleSheet.create({
   bottomSpacing: {
     height: 20,
   },
+
+  // Category Picker Modal
+  categoryOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
+  },
+  categoryOptionSelected: {
+    backgroundColor: '#E8F5E9',
+    borderColor: '#4CAF50',
+  },
+  categoryOptionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#212121',
+  },
+  categoryOptionTextSelected: {
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  emptyCategories: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyCategoriesText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#9E9E9E',
+    textAlign: 'center',
+  },
 });
