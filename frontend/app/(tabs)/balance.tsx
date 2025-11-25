@@ -104,49 +104,70 @@ export default function BalanceScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <Text>Cargando...</Text>
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <Text style={styles.loadingText}>Cargando balance...</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={onRefresh} />
-      }
-    >
-      {/* Summary Cards */}
-      <View style={styles.summaryContainer}>
-        <View style={[styles.summaryCard, { backgroundColor: '#E8F5E9' }]}>
-          <Ionicons name="arrow-up-circle" size={32} color="#4CAF50" />
-          <Text style={styles.summaryLabel}>Ingresos</Text>
-          <Text style={[styles.summaryAmount, { color: '#4CAF50' }]}>
-            ${balance.ingresos.toFixed(2)}
-          </Text>
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl 
+            refreshing={loading} 
+            onRefresh={onRefresh}
+            tintColor="#4CAF50"
+            colors={['#4CAF50']}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header YAPPA */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.appName}>YAPPA</Text>
+            <Text style={styles.screenTitle}>Balance</Text>
+          </View>
         </View>
 
-        <View style={[styles.summaryCard, { backgroundColor: '#FFEBEE' }]}>
-          <Ionicons name="arrow-down-circle" size={32} color="#f44336" />
-          <Text style={styles.summaryLabel}>Egresos</Text>
-          <Text style={[styles.summaryAmount, { color: '#f44336' }]}>
-            ${balance.egresos.toFixed(2)}
+        {/* Balance Principal - Destacado */}
+        <View style={styles.mainBalanceCard}>
+          <View style={styles.mainBalanceHeader}>
+            <Text style={styles.mainBalanceLabel}>Balance Total</Text>
+            {balance.balance >= 0 ? (
+              <View style={styles.positiveIndicator}>
+                <Ionicons name="trending-up" size={20} color="#4CAF50" />
+              </View>
+            ) : (
+              <View style={styles.negativeIndicator}>
+                <Ionicons name="trending-down" size={20} color="#F44336" />
+              </View>
+            )}
+          </View>
+          <Text
+            style={[
+              styles.mainBalanceAmount,
+              { color: balance.balance >= 0 ? '#4CAF50' : '#F44336' },
+            ]}
+          >
+            ${balance.balance.toFixed(2)}
           </Text>
+          <View style={styles.mainBalanceDetails}>
+            <View style={styles.mainBalanceDetailItem}>
+              <View style={[styles.detailDot, { backgroundColor: '#4CAF50' }]} />
+              <Text style={styles.detailLabel}>Ingresos</Text>
+              <Text style={styles.detailValue}>${balance.ingresos.toFixed(2)}</Text>
+            </View>
+            <View style={styles.mainBalanceDetailItem}>
+              <View style={[styles.detailDot, { backgroundColor: '#F44336' }]} />
+              <Text style={styles.detailLabel}>Egresos</Text>
+              <Text style={styles.detailValue}>${balance.egresos.toFixed(2)}</Text>
+            </View>
+          </View>
         </View>
-      </View>
-
-      <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Balance Total</Text>
-        <Text
-          style={[
-            styles.balanceAmount,
-            { color: balance.balance >= 0 ? '#4CAF50' : '#f44336' },
-          ]}
-        >
-          ${balance.balance.toFixed(2)}
-        </Text>
-      </View>
 
       {/* Date Filters */}
       <View style={styles.dateFilters}>
