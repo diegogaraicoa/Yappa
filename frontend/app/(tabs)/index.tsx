@@ -22,6 +22,11 @@ export default function HomeScreen() {
   const [alertCount, setAlertCount] = useState(0);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [balanceData, setBalanceData] = useState({
+    income: 0,
+    expenses: 0,
+    balance: 0,
+  });
 
   const fetchAlertCount = async () => {
     try {
@@ -33,15 +38,31 @@ export default function HomeScreen() {
     }
   };
 
+  const fetchBalanceData = async () => {
+    try {
+      const response = await api.get('/api/balance/summary');
+      const data = response.data;
+      setBalanceData({
+        income: data.total_income || 0,
+        expenses: data.total_expenses || 0,
+        balance: data.balance || 0,
+      });
+    } catch (error: any) {
+      console.error('Error fetching balance:', error);
+      setBalanceData({ income: 0, expenses: 0, balance: 0 });
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchAlertCount();
+    await Promise.all([fetchAlertCount(), fetchBalanceData()]);
     setRefreshing(false);
   };
 
   useFocusEffect(
     React.useCallback(() => {
       fetchAlertCount();
+      fetchBalanceData();
     }, [])
   );
 
