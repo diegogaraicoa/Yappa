@@ -149,7 +149,57 @@ export default function HomeScreen() {
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
           <Text style={styles.greeting}>Hola 👋</Text>
-          <Text style={styles.subtitle}>¿Qué deseas hacer hoy?</Text>
+          <Text style={styles.subtitle}>Balance de tu negocio</Text>
+        </View>
+
+        {/* Balance Section - Lo más importante */}
+        <View style={styles.balanceSection}>
+          <TouchableOpacity 
+            style={styles.balanceCard}
+            onPress={() => router.push('/(tabs)/balance')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.balanceHeader}>
+              <Text style={styles.balanceLabel}>Balance del mes</Text>
+              <Ionicons name="chevron-forward" size={20} color="#757575" />
+            </View>
+            
+            <View style={styles.balanceAmountContainer}>
+              <Text style={[
+                styles.balanceAmount,
+                { color: balanceData.balance >= 0 ? '#4CAF50' : '#F44336' }
+              ]}>
+                {formatCurrency(balanceData.balance)}
+              </Text>
+              {balanceData.balance >= 0 ? (
+                <View style={styles.positiveIndicator}>
+                  <Ionicons name="trending-up" size={24} color="#4CAF50" />
+                </View>
+              ) : (
+                <View style={styles.negativeIndicator}>
+                  <Ionicons name="trending-down" size={24} color="#F44336" />
+                </View>
+              )}
+            </View>
+
+            <View style={styles.balanceDetails}>
+              <View style={styles.balanceDetailItem}>
+                <View style={styles.balanceDetailDot} style={{ backgroundColor: '#4CAF50' }} />
+                <Text style={styles.balanceDetailLabel}>Ingresos</Text>
+                <Text style={styles.balanceDetailValue}>{formatCurrency(balanceData.income)}</Text>
+              </View>
+              <View style={styles.balanceDetailItem}>
+                <View style={styles.balanceDetailDot} style={{ backgroundColor: '#F44336' }} />
+                <Text style={styles.balanceDetailLabel}>Gastos</Text>
+                <Text style={styles.balanceDetailValue}>{formatCurrency(balanceData.expenses)}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Actions Label */}
+        <View style={styles.actionsLabel}>
+          <Text style={styles.actionsLabelText}>Acciones rápidas</Text>
         </View>
 
         {/* Alert Banner - Minimalista */}
