@@ -647,6 +647,82 @@ export default function InventoryScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Category Picker Modal */}
+      <Modal visible={showCategoryPicker} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { maxHeight: 500 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Seleccionar Categoría</Text>
+              <TouchableOpacity 
+                onPress={() => setShowCategoryPicker(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={24} color="#212121" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ paddingHorizontal: 24 }}>
+              {/* Option: Sin categoría */}
+              <TouchableOpacity
+                style={[
+                  styles.categoryOption,
+                  !newProduct.category_id && styles.categoryOptionSelected
+                ]}
+                onPress={() => {
+                  setNewProduct({ ...newProduct, category_id: '' });
+                  setShowCategoryPicker(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.categoryOptionText,
+                  !newProduct.category_id && styles.categoryOptionTextSelected
+                ]}>
+                  Sin categoría
+                </Text>
+                {!newProduct.category_id && (
+                  <Ionicons name="checkmark" size={24} color="#4CAF50" />
+                )}
+              </TouchableOpacity>
+
+              {/* Categories list */}
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category._id}
+                  style={[
+                    styles.categoryOption,
+                    newProduct.category_id === category._id && styles.categoryOptionSelected
+                  ]}
+                  onPress={() => {
+                    setNewProduct({ ...newProduct, category_id: category._id });
+                    setShowCategoryPicker(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.categoryOptionText,
+                    newProduct.category_id === category._id && styles.categoryOptionTextSelected
+                  ]}>
+                    {category.name}
+                  </Text>
+                  {newProduct.category_id === category._id && (
+                    <Ionicons name="checkmark" size={24} color="#4CAF50" />
+                  )}
+                </TouchableOpacity>
+              ))}
+
+              {categories.length === 0 && (
+                <View style={styles.emptyCategories}>
+                  <Text style={styles.emptyCategoriesText}>
+                    No hay categorías. Crea una nueva primero.
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
