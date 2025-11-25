@@ -459,6 +459,22 @@ export default function SaleScreen() {
                 <Ionicons name="close" size={24} color="#212121" />
               </TouchableOpacity>
             </View>
+
+            {/* Create New Product Button */}
+            <View style={styles.createNewContainer}>
+              <TouchableOpacity
+                style={styles.createNewButton}
+                onPress={() => {
+                  setShowProductModal(false);
+                  setShowNewProductModal(true);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add-circle" size={20} color="#4CAF50" />
+                <Text style={styles.createNewText}>Crear Producto Rápido</Text>
+              </TouchableOpacity>
+            </View>
+
             <ScrollView>
               {products.filter(p => !selectedProducts.find(sp => sp._id === p._id)).map((product) => (
                 <TouchableOpacity
@@ -476,9 +492,113 @@ export default function SaleScreen() {
                   </View>
                 </TouchableOpacity>
               ))}
+
+              {products.filter(p => !selectedProducts.find(sp => sp._id === p._id)).length === 0 && (
+                <View style={styles.emptyCustomers}>
+                  <Text style={styles.emptyCustomersText}>
+                    Todos los productos ya fueron agregados
+                  </Text>
+                </View>
+              )}
             </ScrollView>
           </View>
         </View>
+      </Modal>
+
+      {/* New Product Quick Modal */}
+      <Modal visible={showNewProductModal} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Producto Rápido</Text>
+              <TouchableOpacity onPress={() => {
+                setShowNewProductModal(false);
+                setNewProductQuick({ name: '', price: '', cost: '', quantity: '1' });
+              }}>
+                <Ionicons name="close" size={24} color="#212121" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ paddingHorizontal: 24 }} showsVerticalScrollIndicator={false}>
+              {/* Name */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nombre *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Producto temporal"
+                  placeholderTextColor="#BDBDBD"
+                  value={newProductQuick.name}
+                  onChangeText={(text) => setNewProductQuick({ ...newProductQuick, name: text })}
+                />
+              </View>
+
+              {/* Price & Cost */}
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Precio *</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="0.00"
+                    placeholderTextColor="#BDBDBD"
+                    value={newProductQuick.price}
+                    onChangeText={(text) => setNewProductQuick({ ...newProductQuick, price: text })}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Costo</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="0.00"
+                    placeholderTextColor="#BDBDBD"
+                    value={newProductQuick.cost}
+                    onChangeText={(text) => setNewProductQuick({ ...newProductQuick, cost: text })}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+              </View>
+
+              {/* Quantity */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Stock Inicial</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="1"
+                  placeholderTextColor="#BDBDBD"
+                  value={newProductQuick.quantity}
+                  onChangeText={(text) => setNewProductQuick({ ...newProductQuick, quantity: text })}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={{ height: 20 }} />
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowNewProductModal(false);
+                  setNewProductQuick({ name: '', price: '', cost: '', quantity: '1' });
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleCreateProductQuick}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveText}>Crear y Agregar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Payment Method Modal */}
