@@ -21,6 +21,7 @@ export default function AuthScreen() {
   const [storeName, setStoreName] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn, signUp } = useAuth();
   const router = useRouter();
 
