@@ -294,8 +294,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 108, // Space for top tabs (60px) + extra spacing
-    paddingBottom: 40,
+    paddingTop: 20, // Espacio normal
+    paddingBottom: 100, // Espacio para los tabs en el bottom
   },
 
   // Welcome Section
