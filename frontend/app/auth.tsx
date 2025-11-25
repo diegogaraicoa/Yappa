@@ -220,91 +220,136 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Container
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FFFFFF',
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 40,
   },
+
+  // Header minimalista
   header: {
-    alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 48,
+  },
+  appName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4CAF50',
+    letterSpacing: 2,
+    marginBottom: 24,
+    textTransform: 'uppercase',
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 16,
+    fontSize: 40,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 12,
+    letterSpacing: -1,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 8,
+    fontWeight: '400',
+    color: '#757575',
+    lineHeight: 24,
   },
+
+  // Form
   form: {
     width: '100%',
+  },
+  inputGroup: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    marginBottom: 16,
     paddingHorizontal: 16,
+    height: 56,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#F5F5F5',
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
-    height: 56,
     fontSize: 16,
-    color: '#333',
+    fontWeight: '400',
+    color: '#212121',
   },
   helperText: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: -8,
-    marginBottom: 16,
-    marginLeft: 4,
-    lineHeight: 18,
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#9E9E9E',
+    marginTop: 8,
+    lineHeight: 16,
   },
+
+  // Botón principal
   button: {
     backgroundColor: '#4CAF50',
     borderRadius: 12,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 16,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  switchButton: {
-    marginTop: 24,
-    alignItems: 'center',
-  },
-  switchText: {
-    color: '#4CAF50',
+    color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
+
+  // Forgot password
   forgotButton: {
     marginTop: 16,
     alignItems: 'center',
+    paddingVertical: 8,
   },
   forgotText: {
-    color: '#666',
+    color: '#757575',
     fontSize: 14,
-    textDecorationLine: 'underline',
+    fontWeight: '500',
+  },
+
+  // Switch Login/Register
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 32,
+    gap: 6,
+  },
+  switchQuestion: {
+    color: '#757575',
+    fontSize: 14,
+    fontWeight: '400',
+  },
+  switchLink: {
+    color: '#4CAF50',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
