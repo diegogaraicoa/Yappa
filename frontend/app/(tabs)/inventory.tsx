@@ -1201,6 +1201,35 @@ const styles = StyleSheet.create({
     height: 20,
   },
 
+  // Delete Modal
+  deleteModalIcon: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  deleteIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FFEBEE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  deleteModalMessage: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#757575',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+
   // Category Picker Modal
   categoryOption: {
     flexDirection: 'row',
