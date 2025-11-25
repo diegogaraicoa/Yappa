@@ -148,6 +148,25 @@ export default function SaleScreen() {
     setTotal(newTotal.toFixed(2));
   };
 
+  const handleCreateCustomer = async () => {
+    if (!newCustomer.name || !newCustomer.lastname || !newCustomer.phone) {
+      Alert.alert('Error', 'Ingresa nombre, apellido y teléfono');
+      return;
+    }
+
+    try {
+      const response = await api.post('/api/customers', newCustomer);
+      Alert.alert('Éxito', 'Cliente creado correctamente');
+      setSelectedCustomer(response.data);
+      setShowNewCustomerModal(false);
+      setShowCustomerModal(false);
+      setNewCustomer({ name: '', lastname: '', phone: '', email: '' });
+      await loadCustomers();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Error al crear cliente');
+    }
+  };
+
   // Initial Selection Screen
   if (withInventory === null) {
     return (
