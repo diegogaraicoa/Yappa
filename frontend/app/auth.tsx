@@ -76,90 +76,120 @@ export default function AuthScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
+        {/* Header minimalista */}
         <View style={styles.header}>
-          <Ionicons name="storefront" size={60} color="#4CAF50" />
-          <Text style={styles.title}>BarrioShop</Text>
+          <Text style={styles.appName}>YAPPA</Text>
+          <Text style={styles.title}>
+            {isLogin ? 'Bienvenido' : 'Crear cuenta'}
+          </Text>
           <Text style={styles.subtitle}>
-            {isLogin ? 'Inicia sesión para continuar' : 'Registra tu tienda'}
+            {isLogin 
+              ? 'Ingresa a tu cuenta para continuar' 
+              : 'Registra tu negocio en minutos'}
           </Text>
         </View>
 
+        {/* Formulario */}
         <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Correo electrónico"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+          {/* Email Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Correo electrónico</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={20} color="#9E9E9E" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="ejemplo@correo.com"
+                placeholderTextColor="#BDBDBD"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Contraseña"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-            />
+          {/* Password Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Contraseña</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={20} color="#9E9E9E" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="••••••••"
+                placeholderTextColor="#BDBDBD"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity 
+                onPress={() => setShowPassword(!showPassword)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons 
+                  name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                  size={20} 
+                  color="#9E9E9E" 
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
+          {/* Registro: Campos adicionales */}
           {!isLogin && (
             <>
-              <View style={styles.inputContainer}>
-                <Ionicons name="storefront-outline" size={20} color="#666" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Nombre de tu tienda"
-                  value={storeName}
-                  onChangeText={setStoreName}
-                  autoCapitalize="words"
-                />
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Nombre de tu negocio</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="storefront-outline" size={20} color="#9E9E9E" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Mi Tienda"
+                    placeholderTextColor="#BDBDBD"
+                    value={storeName}
+                    onChangeText={setStoreName}
+                    autoCapitalize="words"
+                  />
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
-                <Ionicons name="logo-whatsapp" size={20} color="#25D366" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="WhatsApp (ej: +593992913093)"
-                  value={whatsappNumber}
-                  onChangeText={setWhatsappNumber}
-                  keyboardType="phone-pad"
-                  autoCapitalize="none"
-                />
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>WhatsApp</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="logo-whatsapp" size={20} color="#25D366" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="+593 99 123 4567"
+                    placeholderTextColor="#BDBDBD"
+                    value={whatsappNumber}
+                    onChangeText={setWhatsappNumber}
+                    keyboardType="phone-pad"
+                    autoCapitalize="none"
+                  />
+                </View>
+                <Text style={styles.helperText}>
+                  Recibirás alertas de stock y reportes por WhatsApp
+                </Text>
               </View>
-              <Text style={styles.helperText}>
-                📱 Tu número de WhatsApp es necesario para enviarte alertas de stock bajo y reportes de ventas.
-              </Text>
             </>
           )}
 
+          {/* Botón principal */}
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSubmit}
             disabled={loading}
+            activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>
-              {loading ? 'Cargando...' : isLogin ? 'Iniciar Sesión' : 'Registrarse'}
+              {loading ? 'Cargando...' : isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.switchButton}
-            onPress={() => setIsLogin(!isLogin)}
-          >
-            <Text style={styles.switchText}>
-              {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}
-            </Text>
-          </TouchableOpacity>
-
+          {/* Forgot password (solo login) */}
           {isLogin && (
             <TouchableOpacity
               style={styles.forgotButton}
@@ -168,6 +198,21 @@ export default function AuthScreen() {
               <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
           )}
+
+          {/* Switch Login/Register */}
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchQuestion}>
+              {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setIsLogin(!isLogin)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={styles.switchLink}>
+                {isLogin ? 'Regístrate' : 'Inicia sesión'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
