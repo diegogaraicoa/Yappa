@@ -656,6 +656,42 @@ export default function InventoryScreen() {
         </View>
       </Modal>
 
+      {/* Delete Confirmation Modal */}
+      <Modal visible={showDeleteConfirm} animationType="fade" transparent>
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { maxHeight: 250 }]}>
+            <View style={styles.deleteModalIcon}>
+              <View style={styles.deleteIconCircle}>
+                <Ionicons name="trash-outline" size={32} color="#F44336" />
+              </View>
+            </View>
+            <Text style={styles.deleteModalTitle}>Eliminar Producto</Text>
+            <Text style={styles.deleteModalMessage}>
+              ¿Estás seguro de que quieres eliminar este producto? Esta acción no se puede deshacer.
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowDeleteConfirm(false);
+                  setProductToDelete(null);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalSaveButton, { backgroundColor: '#F44336' }]}
+                onPress={confirmDelete}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveButtonText}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Category Picker Modal */}
       <Modal visible={showCategoryPicker} animationType="slide" transparent>
         <View style={styles.modalContainer}>
