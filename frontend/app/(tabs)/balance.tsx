@@ -8,9 +8,11 @@ import {
   RefreshControl,
   Alert,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../contexts/AuthContext';
 import { Calendar } from 'react-native-calendars';
 import api from '../../utils/api';
 import { format } from 'date-fns';
