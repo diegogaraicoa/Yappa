@@ -116,23 +116,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header minimalista */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.appName}>YAPPA</Text>
-            <Text style={styles.storeName}>{user?.store_name}</Text>
-          </View>
-          <TouchableOpacity 
-            onPress={handleLogout} 
-            style={styles.logoutButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="log-out-outline" size={24} color="#212121" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
