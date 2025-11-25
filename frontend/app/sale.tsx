@@ -38,6 +38,13 @@ export default function SaleScreen() {
   const [products, setProducts] = useState<any[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
   const [showProductModal, setShowProductModal] = useState(false);
+  const [showNewProductModal, setShowNewProductModal] = useState(false);
+  const [newProductQuick, setNewProductQuick] = useState({
+    name: '',
+    price: '',
+    cost: '',
+    quantity: '1',
+  });
 
   const paymentMethods = ['Efectivo', 'Transferencia', 'DeUna', 'Tarjeta'];
 
