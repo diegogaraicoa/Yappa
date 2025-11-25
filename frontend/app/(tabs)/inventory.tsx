@@ -227,18 +227,24 @@ export default function InventoryScreen() {
     }
   };
 
-  const deleteProduct = async (productId: string) => {
-    const confirmed = window.confirm('¿Estás seguro de que quieres eliminar este producto?');
+  const deleteProduct = (productId: string) => {
+    setProductToDelete(productId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
     
-    if (confirmed) {
-      try {
-        await api.delete(`/api/products/${productId}`);
-        setProducts(prev => prev.filter(p => p._id !== productId));
-        Alert.alert('Éxito', 'Producto eliminado');
-        await loadProducts();
-      } catch (error: any) {
-        Alert.alert('Error', error.response?.data?.detail || 'No se pudo eliminar el producto');
-      }
+    try {
+      await api.delete(`/api/products/${productToDelete}`);
+      setProducts(prev => prev.filter(p => p._id !== productToDelete));
+      Alert.alert('Éxito', 'Producto eliminado');
+      await loadProducts();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'No se pudo eliminar el producto');
+    } finally {
+      setShowDeleteConfirm(false);
+      setProductToDelete(null);
     }
   };
 
