@@ -40,7 +40,7 @@ export default function HomeScreen() {
 
   const fetchBalanceData = async () => {
     try {
-      const response = await api.get('/api/balance/summary');
+      const response = await api.get('/api/balance');
       const data = response.data;
       setBalanceData({
         income: data.total_income || 0,
