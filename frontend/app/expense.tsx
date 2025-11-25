@@ -10,6 +10,7 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,24 +25,26 @@ export default function ExpenseScreen() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showNewSupplierModal, setShowNewSupplierModal] = useState(false);
+  const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
+  const [newSupplier, setNewSupplier] = useState({
+    name: '',
+    contact: '',
+    phone: '',
+    email: '',
+  });
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const paymentMethods = ['Efectivo', 'Transferencia', 'DeUna', 'Tarjeta'];
-  const expenseCategories = [
-    'Arriendo',
-    'Nómina',
-    'Compra de productos',
-    'Gastos administrativos',
-    'Reparaciones',
-    'Servicios básicos',
-    'Transporte',
-    'Otros',
-  ];
 
   useEffect(() => {
     loadSuppliers();
+    loadCategories();
   }, []);
 
   const loadSuppliers = async () => {
@@ -50,6 +53,17 @@ export default function ExpenseScreen() {
       setSuppliers(response.data);
     } catch (error) {
       console.log('Error loading suppliers:', error);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const response = await api.get('/api/categories', {
+        params: { type: 'expense' },
+      });
+      setCategories(response.data);
+    } catch (error) {
+      console.log('Error loading categories:', error);
     }
   };
 
@@ -64,9 +78,10 @@ export default function ExpenseScreen() {
       return;
     }
 
+    // Proveedor es opcional con confirmación
     if (!paid && !selectedSupplier) {
-      Alert.alert('Error', 'Selecciona un proveedor para gastos por pagar');
-      return;
+      const confirmed = window.confirm('No has seleccionado un proveedor. ¿Continuar sin proveedor?');
+      if (!confirmed) return;
     }
 
     setLoading(true);
@@ -84,21 +99,59 @@ export default function ExpenseScreen() {
         expenseData.supplier_name = selectedSupplier.name;
       }
 
-      const response = await api.post('/api/expenses', expenseData);
-      console.log('Expense saved successfully:', response.data);
+      await api.post('/api/expenses', expenseData);
       
-      // Clear loading and navigate back BEFORE showing alert
       setLoading(false);
-      router.back();
-      
-      // Show success message after navigation
-      setTimeout(() => {
-        Alert.alert('✅ Gasto Guardado', 'El gasto se registró correctamente');
-      }, 100);
+      Alert.alert(
+        'Éxito', 
+        'Gasto registrado correctamente',
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
     } catch (error: any) {
       console.error('Error saving expense:', error);
       setLoading(false);
       Alert.alert('Error', error.response?.data?.detail || 'Error al registrar el gasto');
+    }
+  };
+
+  const handleCreateSupplier = async () => {
+    if (!newSupplier.name || !newSupplier.phone) {
+      Alert.alert('Error', 'Ingresa al menos nombre y teléfono');
+      return;
+    }
+
+    try {
+      const response = await api.post('/api/suppliers', newSupplier);
+      Alert.alert('Éxito', 'Proveedor creado correctamente');
+      setSelectedSupplier(response.data);
+      setShowNewSupplierModal(false);
+      setShowSupplierModal(false);
+      setNewSupplier({ name: '', contact: '', phone: '', email: '' });
+      await loadSuppliers();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Error al crear proveedor');
+    }
+  };
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName) {
+      Alert.alert('Error', 'Ingresa el nombre de la categoría');
+      return;
+    }
+
+    try {
+      const response = await api.post('/api/categories', {
+        name: newCategoryName,
+        type: 'expense',
+      });
+      Alert.alert('Éxito', 'Categoría creada correctamente');
+      setCategory(response.data.name);
+      setShowNewCategoryModal(false);
+      setShowCategoryModal(false);
+      setNewCategoryName('');
+      await loadCategories();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Error al crear categoría');
     }
   };
 
@@ -107,122 +160,304 @@ export default function ExpenseScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+        <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="close" size={24} color="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nuevo Gasto</Text>
+        <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.scrollContent}>
+      <ScrollView 
+        style={styles.form}
+        contentContainerStyle={styles.formContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Amount */}
         <View style={styles.section}>
-          <Text style={styles.label}>Monto (USD)</Text>
-          <TextInput
-            style={styles.input}
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="decimal-pad"
-            placeholder="0.00"
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Categoría</Text>
-          <TouchableOpacity
-            style={styles.selectButton}
-            onPress={() => setShowCategoryModal(true)}
-          >
-            <Text style={styles.selectButtonText}>
-              {category || 'Seleccionar categoría'}
-            </Text>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Método de Pago</Text>
-          <View style={styles.paymentMethods}>
-            {paymentMethods.map((method) => (
-              <TouchableOpacity
-                key={method}
-                style={[
-                  styles.paymentMethod,
-                  paymentMethod === method && styles.paymentMethodActive,
-                ]}
-                onPress={() => setPaymentMethod(method)}
-              >
-                <Text
-                  style={[
-                    styles.paymentMethodText,
-                    paymentMethod === method && styles.paymentMethodTextActive,
-                  ]}
-                >
-                  {method}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Estado</Text>
-            <View style={styles.switchButtons}>
-              <TouchableOpacity
-                style={[styles.switchButton, paid && styles.switchButtonActive]}
-                onPress={() => setPaid(true)}
-              >
-                <Text style={[styles.switchButtonText, paid && styles.switchButtonTextActive]}>
-                  Pagado
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.switchButton, !paid && styles.switchButtonActive]}
-                onPress={() => setPaid(false)}
-              >
-                <Text style={[styles.switchButtonText, !paid && styles.switchButtonTextActive]}>
-                  Por Pagar
-                </Text>
-              </TouchableOpacity>
+          <Text style={styles.sectionLabel}>MONTO *</Text>
+          <View style={styles.totalCard}>
+            <Text style={styles.totalLabel}>Monto del Gasto</Text>
+            <View style={styles.totalInputContainer}>
+              <Text style={styles.currencySymbol}>$</Text>
+              <TextInput
+                style={styles.totalInput}
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+                placeholderTextColor="#BDBDBD"
+              />
             </View>
           </View>
         </View>
 
+        {/* Category */}
         <View style={styles.section}>
-          <Text style={styles.label}>Proveedor (Opcional)</Text>
+          <Text style={styles.sectionLabel}>CATEGORÍA *</Text>
           <TouchableOpacity
             style={styles.selectButton}
-            onPress={() => setShowSupplierModal(true)}
+            onPress={() => setShowCategoryModal(true)}
+            activeOpacity={0.7}
           >
+            <Ionicons name="pricetag-outline" size={20} color="#757575" />
             <Text style={styles.selectButtonText}>
-              {selectedSupplier ? selectedSupplier.name : 'Seleccionar proveedor'}
+              {category || 'Seleccionar categoría'}
             </Text>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
+            <Ionicons name="chevron-down" size={20} color="#9E9E9E" />
           </TouchableOpacity>
         </View>
 
+        {/* Payment Method */}
         <View style={styles.section}>
-          <Text style={styles.label}>Notas (Opcional)</Text>
+          <Text style={styles.sectionLabel}>MÉTODO DE PAGO</Text>
+          <TouchableOpacity
+            style={styles.selectButton}
+            onPress={() => setShowPaymentModal(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="card-outline" size={20} color="#757575" />
+            <Text style={styles.selectButtonText}>{paymentMethod}</Text>
+            <Ionicons name="chevron-down" size={20} color="#9E9E9E" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Payment Status */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>ESTADO</Text>
+          <View style={styles.statusButtons}>
+            <TouchableOpacity
+              style={[styles.statusButton, paid && styles.statusButtonActive]}
+              onPress={() => setPaid(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.statusButtonText, paid && styles.statusButtonTextActive]}>
+                Pagado
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.statusButton, !paid && styles.statusButtonActive]}
+              onPress={() => setPaid(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.statusButtonText, !paid && styles.statusButtonTextActive]}>
+                Por Pagar
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Supplier (always visible, optional) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>PROVEEDOR {!paid && '(Recomendado)'}</Text>
+          <TouchableOpacity
+            style={styles.selectButton}
+            onPress={() => setShowSupplierModal(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="business-outline" size={20} color="#757575" />
+            <Text style={styles.selectButtonText}>
+              {selectedSupplier 
+                ? selectedSupplier.name
+                : 'Seleccionar proveedor (opcional)'}
+            </Text>
+            <Ionicons name="chevron-down" size={20} color="#9E9E9E" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Notes */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>NOTAS</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={styles.notesInput}
             value={notes}
             onChangeText={setNotes}
-            placeholder="Agregar notas..."
+            placeholder="Notas opcionales..."
+            placeholderTextColor="#BDBDBD"
             multiline
             numberOfLines={3}
           />
         </View>
 
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+
+      {/* Fixed Bottom Button */}
+      <View style={styles.bottomBar}>
         <TouchableOpacity
           style={[styles.submitButton, loading && styles.submitButtonDisabled]}
           onPress={handleSubmit}
           disabled={loading}
+          activeOpacity={0.8}
         >
-          <Text style={styles.submitButtonText}>
-            {loading ? 'Guardando...' : 'Guardar Gasto'}
-          </Text>
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+              <Text style={styles.submitButtonText}>Registrar Gasto</Text>
+            </>
+          )}
         </TouchableOpacity>
-      </ScrollView>
+      </View>
+
+      {/* Category Modal */}
+      <Modal visible={showCategoryModal} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Categoría de Gasto</Text>
+              <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
+                <Ionicons name="close" size={24} color="#212121" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Create New Category Button */}
+            <View style={styles.createNewContainer}>
+              <TouchableOpacity
+                style={styles.createNewButton}
+                onPress={() => {
+                  setShowCategoryModal(false);
+                  setShowNewCategoryModal(true);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add-circle" size={20} color="#4CAF50" />
+                <Text style={styles.createNewText}>Nueva Categoría</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView>
+              {categories.map((cat) => (
+                <TouchableOpacity
+                  key={cat._id}
+                  style={[
+                    styles.modalItem,
+                    category === cat.name && styles.modalItemSelected
+                  ]}
+                  onPress={() => {
+                    setCategory(cat.name);
+                    setShowCategoryModal(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.modalItemText,
+                    category === cat.name && styles.modalItemTextSelected
+                  ]}>
+                    {cat.name}
+                  </Text>
+                  {category === cat.name && (
+                    <Ionicons name="checkmark" size={24} color="#4CAF50" />
+                  )}
+                </TouchableOpacity>
+              ))}
+
+              {categories.length === 0 && (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>
+                    No hay categorías. Crea una nueva.
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* New Category Modal */}
+      <Modal visible={showNewCategoryModal} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={[styles.modalContent, { maxHeight: 300 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Nueva Categoría</Text>
+              <TouchableOpacity onPress={() => {
+                setShowNewCategoryModal(false);
+                setNewCategoryName('');
+              }}>
+                <Ionicons name="close" size={24} color="#212121" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ paddingHorizontal: 24 }}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nombre de la categoría</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ej: Servicios básicos"
+                  placeholderTextColor="#BDBDBD"
+                  value={newCategoryName}
+                  onChangeText={setNewCategoryName}
+                  autoFocus
+                />
+              </View>
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowNewCategoryModal(false);
+                  setNewCategoryName('');
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleCreateCategory}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveText}>Crear</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Payment Method Modal */}
+      <Modal visible={showPaymentModal} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { maxHeight: 400 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Método de Pago</Text>
+              <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
+                <Ionicons name="close" size={24} color="#212121" />
+              </TouchableOpacity>
+            </View>
+            {paymentMethods.map((method) => (
+              <TouchableOpacity
+                key={method}
+                style={[
+                  styles.modalItem,
+                  paymentMethod === method && styles.modalItemSelected
+                ]}
+                onPress={() => {
+                  setPaymentMethod(method);
+                  setShowPaymentModal(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.modalItemText,
+                  paymentMethod === method && styles.modalItemTextSelected
+                ]}>
+                  {method}
+                </Text>
+                {paymentMethod === method && (
+                  <Ionicons name="checkmark" size={24} color="#4CAF50" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
 
       {/* Supplier Modal */}
       <Modal visible={showSupplierModal} animationType="slide" transparent>
@@ -231,95 +466,161 @@ export default function ExpenseScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Seleccionar Proveedor</Text>
               <TouchableOpacity onPress={() => setShowSupplierModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color="#212121" />
               </TouchableOpacity>
             </View>
-            <ScrollView>
+
+            {/* Create New Supplier Button */}
+            <View style={styles.createNewContainer}>
               <TouchableOpacity
-                style={styles.modalItem}
+                style={styles.createNewButton}
                 onPress={() => {
-                  setSelectedSupplier(null);
                   setShowSupplierModal(false);
+                  setShowNewSupplierModal(true);
                 }}
+                activeOpacity={0.7}
               >
-                <Text style={[styles.modalItemText, { color: '#666' }]}>Ninguno</Text>
+                <Ionicons name="add-circle" size={20} color="#4CAF50" />
+                <Text style={styles.createNewText}>Crear Nuevo Proveedor</Text>
               </TouchableOpacity>
-              {suppliers.length === 0 ? (
-                <View style={styles.emptyModalState}>
-                  <Ionicons name="business-outline" size={64} color="#ccc" />
-                  <Text style={styles.emptyModalTitle}>No hay proveedores</Text>
-                  <Text style={styles.emptyModalText}>
-                    Agrega tu primer proveedor para comenzar
+            </View>
+
+            <ScrollView>
+              {suppliers.map((supplier) => (
+                <TouchableOpacity
+                  key={supplier._id}
+                  style={[
+                    styles.modalItem,
+                    selectedSupplier?._id === supplier._id && styles.modalItemSelected
+                  ]}
+                  onPress={() => {
+                    setSelectedSupplier(supplier);
+                    setShowSupplierModal(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.modalItemLeft}>
+                    <Text style={[
+                      styles.modalItemName,
+                      selectedSupplier?._id === supplier._id && styles.modalItemTextSelected
+                    ]}>
+                      {supplier.name}
+                    </Text>
+                    {supplier.phone && (
+                      <Text style={styles.modalItemPhone}>{supplier.phone}</Text>
+                    )}
+                  </View>
+                  {selectedSupplier?._id === supplier._id && (
+                    <Ionicons name="checkmark" size={24} color="#4CAF50" />
+                  )}
+                </TouchableOpacity>
+              ))}
+
+              {suppliers.length === 0 && (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>
+                    No hay proveedores. Crea uno nuevo.
                   </Text>
-                  <TouchableOpacity
-                    style={styles.createNewButton}
-                    onPress={() => {
-                      setShowSupplierModal(false);
-                      router.push('/suppliers');
-                    }}
-                  >
-                    <Ionicons name="add-circle" size={20} color="#fff" />
-                    <Text style={styles.createNewButtonText}>Crear Nuevo Proveedor</Text>
-                  </TouchableOpacity>
                 </View>
-              ) : (
-                <>
-                  {suppliers.map((supplier) => (
-                    <TouchableOpacity
-                      key={supplier._id}
-                      style={styles.modalItem}
-                      onPress={() => {
-                        setSelectedSupplier(supplier);
-                        setShowSupplierModal(false);
-                      }}
-                    >
-                      <Text style={styles.modalItemText}>{supplier.name}</Text>
-                      <Text style={styles.modalItemSubtext}>{supplier.phone}</Text>
-                    </TouchableOpacity>
-                  ))}
-                  <TouchableOpacity
-                    style={styles.createNewButtonBottom}
-                    onPress={() => {
-                      setShowSupplierModal(false);
-                      router.push('/suppliers');
-                    }}
-                  >
-                    <Ionicons name="add-circle" size={20} color="#f44336" />
-                    <Text style={styles.createNewButtonBottomText}>Agregar Nuevo Proveedor</Text>
-                  </TouchableOpacity>
-                </>
               )}
             </ScrollView>
           </View>
         </View>
       </Modal>
 
-      {/* Category Modal */}
-      <Modal visible={showCategoryModal} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+      {/* New Supplier Modal */}
+      <Modal visible={showNewSupplierModal} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Seleccionar Categoría</Text>
-              <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+              <Text style={styles.modalTitle}>Nuevo Proveedor</Text>
+              <TouchableOpacity onPress={() => {
+                setShowNewSupplierModal(false);
+                setNewSupplier({ name: '', contact: '', phone: '', email: '' });
+              }}>
+                <Ionicons name="close" size={24} color="#212121" />
               </TouchableOpacity>
             </View>
-            <ScrollView>
-              {expenseCategories.map((cat) => (
-                <TouchableOpacity
-                  key={cat}
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setCategory(cat);
-                    setShowCategoryModal(false);
-                  }}
-                >
-                  <Text style={styles.modalItemText}>{cat}</Text>
-                </TouchableOpacity>
-              ))}
+
+            <ScrollView style={{ paddingHorizontal: 24 }} showsVerticalScrollIndicator={false}>
+              {/* Name */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nombre *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Empresa XYZ"
+                  placeholderTextColor="#BDBDBD"
+                  value={newSupplier.name}
+                  onChangeText={(text) => setNewSupplier({ ...newSupplier, name: text })}
+                />
+              </View>
+
+              {/* Contact */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Persona de Contacto</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Juan Pérez"
+                  placeholderTextColor="#BDBDBD"
+                  value={newSupplier.contact}
+                  onChangeText={(text) => setNewSupplier({ ...newSupplier, contact: text })}
+                />
+              </View>
+
+              {/* Phone */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Teléfono *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="+593 99 123 4567"
+                  placeholderTextColor="#BDBDBD"
+                  value={newSupplier.phone}
+                  onChangeText={(text) => setNewSupplier({ ...newSupplier, phone: text })}
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              {/* Email */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="ejemplo@correo.com"
+                  placeholderTextColor="#BDBDBD"
+                  value={newSupplier.email}
+                  onChangeText={(text) => setNewSupplier({ ...newSupplier, email: text })}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={{ height: 20 }} />
             </ScrollView>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowNewSupplierModal(false);
+                  setNewSupplier({ name: '', contact: '', phone: '', email: '' });
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleCreateSupplier}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveText}>Crear Proveedor</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </KeyboardAvoidingView>
   );
@@ -328,212 +629,334 @@ export default function ExpenseScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FFFFFF',
   },
+
+  // Header
   header: {
-    backgroundColor: '#f44336',
-    padding: 16,
-    paddingTop: 48,
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  backButton: {
-    padding: 8,
-    marginRight: 8,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#212121',
   },
-  scrollContent: {
+
+  // Form
+  form: {
     flex: 1,
+  },
+  formContent: {
     padding: 20,
+    paddingBottom: 120,
   },
   section: {
     marginBottom: 24,
   },
-  label: {
-    fontSize: 16,
+  sectionLabel: {
+    fontSize: 12,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    color: '#9E9E9E',
+    letterSpacing: 1,
+    marginBottom: 12,
+    textTransform: 'uppercase',
   },
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+
+  // Total Card
+  totalCard: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    padding: 20,
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#757575',
+    marginBottom: 12,
   },
-  selectButton: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+  totalInputContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'baseline',
+  },
+  currencySymbol: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#F44336',
+    marginRight: 8,
+  },
+  totalInput: {
+    flex: 1,
+    fontSize: 40,
+    fontWeight: '800',
+    color: '#212121',
+    padding: 0,
+  },
+
+  // Select Button
+  selectButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
   },
   selectButtonText: {
+    flex: 1,
     fontSize: 16,
-    color: '#333',
+    fontWeight: '400',
+    color: '#212121',
   },
-  paymentMethods: {
+
+  // Status Buttons
+  statusButtons: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    gap: 12,
   },
-  paymentMethod: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  paymentMethodActive: {
-    backgroundColor: '#f44336',
-    borderColor: '#f44336',
-  },
-  paymentMethodText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  paymentMethodTextActive: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  switchButtons: {
-    flexDirection: 'row',
-    backgroundColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 4,
-  },
-  switchButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  switchButtonActive: {
-    backgroundColor: '#f44336',
-  },
-  switchButtonText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  switchButtonTextActive: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  submitButton: {
-    backgroundColor: '#f44336',
+  statusButton: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    marginBottom: 32,
+    borderWidth: 2,
+    borderColor: '#F5F5F5',
+  },
+  statusButtonActive: {
+    backgroundColor: '#FFEBEE',
+    borderColor: '#F44336',
+  },
+  statusButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#757575',
+  },
+  statusButtonTextActive: {
+    color: '#F44336',
+  },
+
+  // Notes Input
+  notesInput: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#212121',
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+
+  // Bottom Bar
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
+    padding: 20,
+    paddingBottom: 40,
+  },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F44336',
+    borderRadius: 12,
+    paddingVertical: 16,
+    gap: 8,
+    shadowColor: '#F44336',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   submitButtonDisabled: {
     opacity: 0.6,
   },
   submitButtonText: {
-    color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
+
+  // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: '80%',
-    padding: 20,
+    paddingTop: 24,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 24,
     marginBottom: 20,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#212121',
   },
   modalItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginHorizontal: 24,
+    marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
+  },
+  modalItemSelected: {
+    backgroundColor: '#FFEBEE',
+    borderColor: '#F44336',
+  },
+  modalItemLeft: {
+    flex: 1,
+  },
+  modalItemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 4,
+  },
+  modalItemPhone: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#757575',
   },
   modalItemText: {
     fontSize: 16,
+    fontWeight: '500',
+    color: '#212121',
+  },
+  modalItemTextSelected: {
+    color: '#F44336',
     fontWeight: '600',
-    color: '#333',
   },
-  modalItemSubtext: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  emptyModalState: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyModalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyModalText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 24,
+
+  // Create New Button
+  createNewContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   createNewButton: {
-    backgroundColor: '#f44336',
-    borderRadius: 8,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  createNewButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  createNewButtonBottom: {
-    backgroundColor: 'transparent',
-    borderRadius: 8,
-    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
     gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    marginTop: 8,
   },
-  createNewButtonBottomText: {
-    color: '#f44336',
+  createNewText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4CAF50',
+  },
+
+  // Empty State
+  emptyState: {
+    paddingVertical: 40,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#9E9E9E',
+    textAlign: 'center',
+  },
+
+  // Input Group
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
     fontSize: 14,
     fontWeight: '600',
+    color: '#212121',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#212121',
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
+  },
+
+  // Modal Actions
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#616161',
+  },
+  modalSaveButton: {
+    flex: 1,
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  modalSaveText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Bottom Spacing
+  bottomSpacing: {
+    height: 20,
   },
 });
