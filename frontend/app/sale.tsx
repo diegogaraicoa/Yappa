@@ -28,6 +28,13 @@ export default function SaleScreen() {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    lastname: '',
+    phone: '',
+    email: '',
+  });
   const [products, setProducts] = useState<any[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
   const [showProductModal, setShowProductModal] = useState(false);
