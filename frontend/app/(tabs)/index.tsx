@@ -104,16 +104,15 @@ export default function HomeScreen() {
       bgColor: '#FFF3E0',
       action: () => router.push('/debts'),
     },
-    {
-      id: 'inventory',
-      title: 'Inventario',
-      subtitle: 'Ver productos',
-      icon: 'cube-outline',
-      iconColor: '#2196F3',
-      bgColor: '#E3F2FD',
-      action: () => router.push('/(tabs)/inventory'),
-    },
   ];
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-EC', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
 
   return (
     <View style={styles.container}>
