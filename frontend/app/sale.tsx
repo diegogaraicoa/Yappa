@@ -175,6 +175,38 @@ export default function SaleScreen() {
     }
   };
 
+  const handleCreateProductQuick = async () => {
+    if (!newProductQuick.name || !newProductQuick.price) {
+      Alert.alert('Error', 'Ingresa al menos nombre y precio');
+      return;
+    }
+
+    try {
+      const productData = {
+        name: newProductQuick.name,
+        price: parseFloat(newProductQuick.price),
+        cost: parseFloat(newProductQuick.cost) || 0,
+        quantity: parseFloat(newProductQuick.quantity) || 0,
+        description: '',
+        category_id: '',
+        alert_enabled: false,
+      };
+
+      const response = await api.post('/api/products', productData);
+      Alert.alert('Éxito', 'Producto creado correctamente');
+      
+      // Auto-add to selected products
+      addProduct(response.data);
+      
+      setShowNewProductModal(false);
+      setShowProductModal(false);
+      setNewProductQuick({ name: '', price: '', cost: '', quantity: '1' });
+      await loadProducts();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Error al crear producto');
+    }
+  };
+
   // Initial Selection Screen
   if (withInventory === null) {
     return (
