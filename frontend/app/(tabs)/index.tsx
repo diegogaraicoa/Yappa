@@ -288,30 +288,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  
-  // Header minimalista
-  header: {
-    backgroundColor: '#FFFFFF',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+
+  // ScrollView
+  scrollView: {
+    flex: 1,
   },
-  headerTop: {
+  scrollContent: {
+    paddingTop: 108, // Space for top tabs (60px) + extra spacing
+    paddingBottom: 40,
+  },
+
+  // Welcome Section
+  welcomeSection: {
+    paddingHorizontal: 20,
+    paddingTop: 0,
+    paddingBottom: 16,
+  },
+  welcomeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    marginBottom: 24,
   },
   appName: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#4CAF50',
     letterSpacing: 1,
     marginBottom: 4,
+    textTransform: 'uppercase',
   },
   storeName: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: '#212121',
     letterSpacing: -0.5,
@@ -319,21 +327,6 @@ const styles = StyleSheet.create({
   logoutButton: {
     padding: 8,
     borderRadius: 8,
-  },
-
-  // ScrollView
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-
-  // Welcome Section
-  welcomeSection: {
-    paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 16,
   },
   greeting: {
     fontSize: 32,
