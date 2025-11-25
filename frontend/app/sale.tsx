@@ -80,9 +80,10 @@ export default function SaleScreen() {
       return;
     }
 
+    // Cliente es opcional, pero si es "Por Cobrar" y no hay cliente, advertir
     if (!paid && !selectedCustomer) {
-      Alert.alert('Error', 'Selecciona un cliente para ventas por cobrar');
-      return;
+      const confirmed = window.confirm('No has seleccionado un cliente. ¿Continuar sin cliente?');
+      if (!confirmed) return;
     }
 
     setLoading(true);
