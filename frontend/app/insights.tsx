@@ -4,12 +4,11 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
+  TouchableOpacity,
   ActivityIndicator,
   Alert,
   RefreshControl,
   Modal,
-  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,8 +24,6 @@ export default function InsightsScreen() {
   const [showHistory, setShowHistory] = useState(false);
   const [historyReports, setHistoryReports] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
-  const [toastAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
     loadLatestInsight();
@@ -38,7 +35,6 @@ export default function InsightsScreen() {
       setLatestInsight(response.data);
     } catch (error: any) {
       if (error.response?.status === 404) {
-        // No insights yet
         setLatestInsight(null);
       } else {
         console.error('Error loading insights:', error);
@@ -49,36 +45,21 @@ export default function InsightsScreen() {
     }
   };
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    Animated.sequence([
-      Animated.timing(toastAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.delay(3000),
-      Animated.timing(toastAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start(() => setToast(null));
-  };
-
   const generateNewInsight = async () => {
     setGenerating(true);
     try {
-      const response = await api.post('/api/insights/generate', {}, {
-        timeout: 60000 // 60 segundos para AI
-      });
+      const response = await api.post(
+        '/api/insights/generate',
+        {},
+        {
+          timeout: 60000,
+        }
+      );
       setLatestInsight(response.data);
-      
-      // Mostrar toast de éxito
-      showToast('✅ Reporte generado exitosamente');
+      Alert.alert('Éxito', 'Reporte generado exitosamente');
     } catch (error: any) {
       console.error('Error generating insight:', error);
-      showToast('❌ Error al generar el reporte', 'error');
+      Alert.alert('Error', 'No se pudo generar el reporte');
     } finally {
       setGenerating(false);
     }
@@ -114,22 +95,20 @@ export default function InsightsScreen() {
   const sendToWhatsApp = async () => {
     setSending(true);
     try {
-      // Aumentar timeout para WhatsApp (puede tardar varios segundos)
-      const response = await api.post('/api/insights/send-whatsapp', {}, {
-        timeout: 30000 // 30 segundos
-      });
-      
-      // Mostrar toast de éxito
-      showToast(`✅ Enviado a WhatsApp: ${response.data.whatsapp_number}`);
+      const response = await api.post(
+        '/api/insights/send-whatsapp',
+        {},
+        {
+          timeout: 30000,
+        }
+      );
+      Alert.alert(
+        'Éxito',
+        `Enviado a WhatsApp: ${response.data.whatsapp_number}`
+      );
     } catch (error: any) {
       console.error('Error sending to WhatsApp:', error);
-      
-      // Si es timeout, el mensaje probablemente se envió de todos modos
-      if (error.code === 'ECONNABORTED') {
-        showToast('⏱️ Mensaje enviándose...', 'error');
-      } else {
-        showToast('❌ Error al enviar WhatsApp', 'error');
-      }
+      Alert.alert('Error', 'No se pudo enviar el reporte por WhatsApp');
     } finally {
       setSending(false);
     }
@@ -149,53 +128,115 @@ export default function InsightsScreen() {
     });
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-EC', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
+
   const renderMetrics = () => {
     if (!latestInsight?.metrics) return null;
 
     const metrics = latestInsight.metrics;
 
     return (
-      <View style={styles.metricsContainer}>
-        <Text style={styles.sectionTitle}>📊 Resumen de Números</Text>
-        
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>RESUMEN DE NÚMEROS</Text>
+
         <View style={styles.metricsGrid}>
-          <View style={[styles.metricCard, { backgroundColor: '#E8F5E9' }]}>
-            <Ionicons name="trending-up" size={32} color="#4CAF50" />
-            <Text style={styles.metricValue}>${metrics.total_sales?.toFixed(2) || '0.00'}</Text>
-            <Text style={styles.metricLabel}>Ventas Totales</Text>
+          {/* Ventas */}
+          <View style={styles.metricCard}>
+            <View
+              style={[
+                styles.metricIconContainer,
+                { backgroundColor: '#E8F5E9' },
+              ]}
+            >
+              <Ionicons name="trending-up" size={24} color="#4CAF50" />
+            </View>
+            <Text style={styles.metricValue}>
+              {formatCurrency(metrics.total_sales || 0)}
+            </Text>
+            <Text style={styles.metricLabel}>Ventas</Text>
           </View>
 
-          <View style={[styles.metricCard, { backgroundColor: '#FFEBEE' }]}>
-            <Ionicons name="trending-down" size={32} color="#f44336" />
-            <Text style={styles.metricValue}>${metrics.total_expenses?.toFixed(2) || '0.00'}</Text>
-            <Text style={styles.metricLabel}>Gastos Totales</Text>
+          {/* Gastos */}
+          <View style={styles.metricCard}>
+            <View
+              style={[
+                styles.metricIconContainer,
+                { backgroundColor: '#FFEBEE' },
+              ]}
+            >
+              <Ionicons name="trending-down" size={24} color="#F44336" />
+            </View>
+            <Text style={styles.metricValue}>
+              {formatCurrency(metrics.total_expenses || 0)}
+            </Text>
+            <Text style={styles.metricLabel}>Gastos</Text>
           </View>
 
-          <View style={[styles.metricCard, { backgroundColor: '#E3F2FD' }]}>
-            <Ionicons name="wallet" size={32} color="#2196F3" />
-            <Text style={styles.metricValue}>${metrics.balance?.toFixed(2) || '0.00'}</Text>
+          {/* Balance */}
+          <View style={styles.metricCard}>
+            <View
+              style={[
+                styles.metricIconContainer,
+                { backgroundColor: '#E3F2FD' },
+              ]}
+            >
+              <Ionicons name="wallet" size={24} color="#2196F3" />
+            </View>
+            <Text style={styles.metricValue}>
+              {formatCurrency(metrics.balance || 0)}
+            </Text>
             <Text style={styles.metricLabel}>Balance</Text>
           </View>
 
-          <View style={[styles.metricCard, { backgroundColor: '#FFF3E0' }]}>
-            <Ionicons name="pulse" size={32} color="#FF9800" />
-            <Text style={styles.metricValue}>{metrics.margin?.toFixed(1) || '0'}%</Text>
+          {/* Margen */}
+          <View style={styles.metricCard}>
+            <View
+              style={[
+                styles.metricIconContainer,
+                { backgroundColor: '#FFF3E0' },
+              ]}
+            >
+              <Ionicons name="pulse" size={24} color="#FF9800" />
+            </View>
+            <Text style={styles.metricValue}>
+              {(metrics.margin || 0).toFixed(1)}%
+            </Text>
             <Text style={styles.metricLabel}>Margen</Text>
           </View>
         </View>
 
+        {/* Top Products */}
         {metrics.top_products && metrics.top_products.length > 0 && (
-          <View style={styles.topProductsSection}>
-            <Text style={styles.subsectionTitle}>🏆 Productos Estrella</Text>
+          <View style={styles.topProductsContainer}>
+            <Text style={styles.subsectionLabel}>PRODUCTOS ESTRELLA</Text>
             {metrics.top_products.slice(0, 3).map((product: any, index: number) => (
               <View key={index} style={styles.topProductCard}>
-                <View style={styles.topProductRank}>
+                <View
+                  style={[
+                    styles.rankBadge,
+                    {
+                      backgroundColor:
+                        index === 0
+                          ? '#FFD700'
+                          : index === 1
+                          ? '#C0C0C0'
+                          : '#CD7F32',
+                    },
+                  ]}
+                >
                   <Text style={styles.rankNumber}>{index + 1}</Text>
                 </View>
                 <View style={styles.topProductInfo}>
                   <Text style={styles.topProductName}>{product.name}</Text>
                   <Text style={styles.topProductStats}>
-                    {product.quantity} vendidos • ${product.revenue?.toFixed(2)}
+                    {product.quantity} vendidos •{' '}
+                    {formatCurrency(product.revenue || 0)}
                   </Text>
                 </View>
               </View>
@@ -203,11 +244,12 @@ export default function InsightsScreen() {
           </View>
         )}
 
+        {/* Low Stock Alert */}
         {metrics.low_stock_count > 0 && (
           <View style={styles.alertBox}>
-            <Ionicons name="warning" size={24} color="#FF9800" />
+            <Ionicons name="warning" size={20} color="#FF9800" />
             <Text style={styles.alertText}>
-              Tienes {metrics.low_stock_count} producto{metrics.low_stock_count !== 1 ? 's' : ''} con stock bajo
+              {metrics.low_stock_count} producto{metrics.low_stock_count !== 1 ? 's' : ''} con stock bajo
             </Text>
           </View>
         )}
@@ -221,9 +263,13 @@ export default function InsightsScreen() {
     const insightsText = latestInsight.insights;
 
     return (
-      <View style={styles.insightsContainer}>
-        <Text style={styles.sectionTitle}>🤖 Análisis Inteligente</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>ANÁLISIS INTELIGENTE</Text>
         <View style={styles.insightsCard}>
+          <View style={styles.insightsHeader}>
+            <Ionicons name="sparkles" size={20} color="#9C27B0" />
+            <Text style={styles.insightsHeaderText}>IA de Negocio</Text>
+          </View>
           <Text style={styles.insightsText}>{insightsText}</Text>
         </View>
       </View>
@@ -234,14 +280,17 @@ export default function InsightsScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </Pressable>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="arrow-back" size={24} color="#212121" />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Mis Datos</Text>
-          <View style={styles.headerRight} />
+          <View style={{ width: 24 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+          <ActivityIndicator size="large" color="#9C27B0" />
           <Text style={styles.loadingText}>Cargando datos...</Text>
         </View>
       </View>
@@ -250,35 +299,54 @@ export default function InsightsScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </Pressable>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="arrow-back" size={24} color="#212121" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Mis Datos</Text>
-        <View style={styles.headerRight} />
+        <TouchableOpacity
+          onPress={openHistory}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="time-outline" size={24} color="#212121" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4CAF50']} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#9C27B0"
+            colors={['#9C27B0']}
+          />
         }
       >
         {!latestInsight ? (
           <View style={styles.emptyState}>
-            <Ionicons name="analytics" size={80} color="#ccc" />
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="analytics-outline" size={64} color="#9E9E9E" />
+            </View>
             <Text style={styles.emptyTitle}>No hay reportes aún</Text>
             <Text style={styles.emptyText}>
-              Genera tu primer análisis inteligente del negocio y descubre cómo mejorar tus ventas
+              Genera tu primer análisis inteligente del negocio y descubre cómo
+              mejorar tus ventas
             </Text>
           </View>
         ) : (
           <>
-            <View style={styles.dateHeader}>
-              <Ionicons name="calendar" size={20} color="#666" />
+            {/* Date Badge */}
+            <View style={styles.dateBadge}>
+              <Ionicons name="calendar" size={16} color="#757575" />
               <Text style={styles.dateText}>
-                Generado el {formatDate(latestInsight.generated_at)}
+                {formatDate(latestInsight.generated_at)}
               </Text>
             </View>
 
@@ -287,139 +355,96 @@ export default function InsightsScreen() {
           </>
         )}
 
-        <Pressable
-          style={[styles.generateButton, generating && styles.buttonDisabled]}
-          onPress={generateNewInsight}
-          disabled={generating}
-        >
-          {generating ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Ionicons name="sparkles" size={24} color="#fff" />
-              <Text style={styles.generateButtonText}>
-                {latestInsight ? 'Generar Nuevo Reporte' : 'Generar Mi Primer Reporte'}
-              </Text>
-            </>
-          )}
-        </Pressable>
+        {/* Action Buttons */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.generateButton,
+              generating && styles.buttonDisabled,
+            ]}
+            onPress={generateNewInsight}
+            disabled={generating}
+            activeOpacity={0.8}
+          >
+            {generating ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <Ionicons name="sparkles" size={20} color="#FFFFFF" />
+                <Text style={styles.generateButtonText}>
+                  {latestInsight ? 'Generar Nuevo Reporte' : 'Generar Reporte'}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
 
-        {latestInsight && (
-          <>
-            <Pressable
+          {latestInsight && (
+            <TouchableOpacity
               style={[styles.whatsappButton, sending && styles.buttonDisabled]}
               onPress={sendToWhatsApp}
               disabled={sending}
+              activeOpacity={0.8}
             >
               {sending ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <>
-                  <Ionicons name="logo-whatsapp" size={24} color="#fff" />
-                  <Text style={styles.whatsappButtonText}>Enviar por WhatsApp</Text>
+                  <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
+                  <Text style={styles.whatsappButtonText}>
+                    Enviar por WhatsApp
+                  </Text>
                 </>
               )}
-            </Pressable>
-
-            <Pressable style={styles.historyButton} onPress={openHistory}>
-              <Ionicons name="time" size={24} color="#2196F3" />
-              <Text style={styles.historyButtonText}>Ver Reportes Anteriores</Text>
-            </Pressable>
-          </>
-        )}
-
-        <View style={styles.infoBox}>
-          <Ionicons name="bulb" size={20} color="#FF9800" />
-          <Text style={styles.infoText}>
-            Los reportes se generan automáticamente cada semana (lunes) y cada mes.
-            También puedes generarlos cuando quieras usando el botón de arriba.
-          </Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Modal de Historial */}
-      <Modal
-        visible={showHistory}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowHistory(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+      {/* History Modal */}
+      <Modal visible={showHistory} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>📚 Historial de Reportes</Text>
-              <Pressable onPress={() => setShowHistory(false)} style={styles.modalCloseButton}>
-                <Ionicons name="close" size={28} color="#666" />
-              </Pressable>
+              <Text style={styles.modalTitle}>Historial de Reportes</Text>
+              <TouchableOpacity onPress={() => setShowHistory(false)}>
+                <Ionicons name="close" size={24} color="#212121" />
+              </TouchableOpacity>
             </View>
 
             {loadingHistory ? (
               <View style={styles.modalLoading}>
-                <ActivityIndicator size="large" color="#4CAF50" />
-                <Text style={styles.loadingText}>Cargando historial...</Text>
-              </View>
-            ) : historyReports.length === 0 ? (
-              <View style={styles.modalEmpty}>
-                <Ionicons name="file-tray-outline" size={64} color="#ccc" />
-                <Text style={styles.emptyTitle}>No hay reportes anteriores</Text>
-                <Text style={styles.emptyText}>
-                  Genera más reportes y podrás verlos aquí
-                </Text>
+                <ActivityIndicator size="large" color="#9C27B0" />
               </View>
             ) : (
-              <ScrollView style={styles.modalScroll}>
+              <ScrollView style={styles.historyList}>
                 {historyReports.map((report, index) => (
-                  <Pressable
-                    key={report._id || index}
+                  <TouchableOpacity
+                    key={index}
                     style={styles.historyItem}
                     onPress={() => viewHistoricalReport(report)}
+                    activeOpacity={0.7}
                   >
                     <View style={styles.historyItemIcon}>
-                      <Ionicons name="document-text" size={32} color="#4CAF50" />
+                      <Ionicons name="document-text" size={24} color="#9C27B0" />
                     </View>
-                    <View style={styles.historyItemContent}>
-                      <Text style={styles.historyItemTitle}>
-                        Reporte #{historyReports.length - index}
-                      </Text>
+                    <View style={styles.historyItemInfo}>
                       <Text style={styles.historyItemDate}>
                         {formatDate(report.generated_at)}
                       </Text>
-                      {report.metrics && (
-                        <Text style={styles.historyItemStats}>
-                          Ventas: ${report.metrics.total_sales?.toFixed(2) || '0'} • 
-                          Balance: ${report.metrics.balance?.toFixed(2) || '0'}
-                        </Text>
-                      )}
+                      <Text style={styles.historyItemStats}>
+                        Ventas: {formatCurrency(report.metrics?.total_sales || 0)}
+                      </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={24} color="#ccc" />
-                  </Pressable>
+                    <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
+                  </TouchableOpacity>
                 ))}
               </ScrollView>
             )}
           </View>
         </View>
       </Modal>
-
-      {/* Toast Notification */}
-      {toast && (
-        <Animated.View
-          style={[
-            styles.toast,
-            {
-              backgroundColor: toast.type === 'success' ? '#4CAF50' : '#f44336',
-              opacity: toastAnim,
-              transform: [{
-                translateY: toastAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-100, 0]
-                })
-              }]
-            }
-          ]}
-        >
-          <Text style={styles.toastText}>{toast.message}</Text>
-        </Animated.View>
-      )}
     </View>
   );
 }
@@ -427,365 +452,361 @@ export default function InsightsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FAFAFA',
   },
+
+  // Header
   header: {
-    backgroundColor: '#4CAF50',
-    padding: 20,
-    paddingTop: 50,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  backButton: {
-    padding: 8,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    flex: 1,
-    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#212121',
   },
-  headerRight: {
-    width: 40,
-  },
+
+  // Loading
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 16,
   },
   loadingText: {
-    marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    fontWeight: '500',
+    color: '#9E9E9E',
   },
+
+  // Content
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: 20,
   },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 32,
-  },
-  emptyTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  dateHeader: {
+
+  // Date Badge
+  dateBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 8,
+    backgroundColor: '#F5F5F5',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 20,
+    gap: 6,
   },
   dateText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#757575',
   },
-  metricsContainer: {
-    marginBottom: 16,
+
+  // Section
+  section: {
+    marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9E9E9E',
+    letterSpacing: 1,
+    marginBottom: 12,
+    textTransform: 'uppercase',
   },
+
+  // Metrics Grid
   metricsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   metricCard: {
     flex: 1,
-    minWidth: '45%',
+    minWidth: '47%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 12,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 1,
+  },
+  metricIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   metricValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 8,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 4,
   },
   metricLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-    textAlign: 'center',
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#757575',
   },
-  topProductsSection: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+
+  // Top Products
+  topProductsContainer: {
+    marginTop: 8,
   },
-  subsectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+  subsectionLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#9E9E9E',
+    letterSpacing: 1,
     marginBottom: 12,
+    textTransform: 'uppercase',
   },
   topProductCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    gap: 12,
   },
-  topProductRank: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
+  rankBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
-    marginRight: 12,
+    justifyContent: 'center',
   },
   rankNumber: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   topProductInfo: {
     flex: 1,
   },
   topProductName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#333',
+    color: '#212121',
     marginBottom: 4,
   },
   topProductStats: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#757575',
   },
+
+  // Alert Box
   alertBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF3E0',
+    borderRadius: 12,
     padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
+    marginTop: 12,
+    gap: 8,
+    borderLeftWidth: 3,
     borderLeftColor: '#FF9800',
   },
   alertText: {
-    fontSize: 14,
-    color: '#E65100',
-    marginLeft: 12,
     flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#E65100',
   },
-  insightsContainer: {
-    marginBottom: 16,
-  },
+
+  // Insights
   insightsCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 1,
+  },
+  insightsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  insightsHeaderText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#9C27B0',
   },
   insightsText: {
     fontSize: 15,
-    color: '#333',
+    fontWeight: '400',
+    color: '#424242',
     lineHeight: 24,
   },
+
+  // Empty State
+  emptyState: {
+    paddingTop: 80,
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#9E9E9E',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+
+  // Buttons
+  buttonContainer: {
+    gap: 12,
+    marginTop: 8,
+  },
   generateButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 16,
-    shadowColor: '#000',
+    backgroundColor: '#9C27B0',
+    borderRadius: 12,
+    paddingVertical: 16,
+    gap: 8,
+    shadowColor: '#9C27B0',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 2,
   },
   generateButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginLeft: 8,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  whatsappButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#25D366',
+    borderRadius: 12,
+    paddingVertical: 16,
+    gap: 8,
+    shadowColor: '#25D366',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  whatsappButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
-  whatsappButton: {
-    backgroundColor: '#25D366',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  whatsappButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginLeft: 8,
-  },
-  infoBox: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF3E0',
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#FF9800',
-  },
-  infoText: {
-    fontSize: 13,
-    color: '#E65100',
-    marginLeft: 12,
-    flex: 1,
-    lineHeight: 20,
-  },
-  historyButton: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: '#2196F3',
-  },
-  historyButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2196F3',
-    marginLeft: 8,
-  },
-  modalOverlay: {
+
+  // Modal
+  modalContainer: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
-  modalContainer: {
-    backgroundColor: '#fff',
+  modalContent: {
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
-    minHeight: '50%',
+    paddingTop: 24,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingHorizontal: 24,
+    marginBottom: 20,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalCloseButton: {
-    padding: 4,
+    fontWeight: '700',
+    color: '#212121',
   },
   modalLoading: {
-    padding: 40,
+    paddingVertical: 60,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  modalEmpty: {
-    padding: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalScroll: {
-    flex: 1,
+  historyList: {
+    paddingHorizontal: 24,
   },
   historyItem: {
     flexDirection: 'row',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
     alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    gap: 12,
   },
   historyItemIcon: {
-    marginRight: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F3E5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  historyItemContent: {
+  historyItemInfo: {
     flex: 1,
   },
-  historyItemTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
   historyItemDate: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#212121',
     marginBottom: 4,
   },
   historyItemStats: {
-    fontSize: 12,
-    color: '#999',
-  },
-  toast: {
-    position: 'absolute',
-    top: 60,
-    left: 16,
-    right: 16,
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-    zIndex: 9999,
-  },
-  toastText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    flex: 1,
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#757575',
   },
 });
