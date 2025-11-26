@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#212121',
+    color: '#4CAF50',
     letterSpacing: 1,
   },
   storeName: {
