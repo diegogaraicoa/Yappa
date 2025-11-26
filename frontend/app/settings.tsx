@@ -153,7 +153,7 @@ export default function SettingsScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#212121" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Configuración</Text>
+        <Text style={styles.headerTitle}>Alertas de tu Negocio</Text>
         <View style={{ width: 24 }} />
       </View>
 
