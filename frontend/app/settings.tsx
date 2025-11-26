@@ -6,15 +6,13 @@ import {
   ScrollView,
   TextInput,
   Switch,
-  Pressable,
+  TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 import api from '../utils/api';
 
 // Configure notification handler
@@ -31,12 +29,12 @@ export default function SettingsScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  
+
   // Form state
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [alertEmail, setAlertEmail] = useState('');
   const [expoPushToken, setExpoPushToken] = useState('');
-  
+
   // Toggle states
   const [alertsEnabled, setAlertsEnabled] = useState(true);
   const [stockAlertsEnabled, setStockAlertsEnabled] = useState(true);
@@ -45,14 +43,13 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     loadSettings();
-    registerForPushNotifications();
   }, []);
 
   const loadSettings = async () => {
     try {
       const response = await api.get('/api/user/notification-settings');
       const settings = response.data;
-      
+
       setWhatsappNumber(settings.whatsapp_number || '');
       setAlertEmail(settings.alert_email || '');
       setExpoPushToken(settings.expo_push_token || '');
@@ -67,16 +64,12 @@ export default function SettingsScreen() {
     }
   };
 
-  const registerForPushNotifications = async () => {
-    // Push notifications are not supported in Expo Go
-    // This functionality is disabled for now
-    console.log('Push notifications disabled (not supported in Expo Go)');
-    return;
-  };
-
   const handleSave = async () => {
     if (whatsappNumber && !whatsappNumber.startsWith('+')) {
-      Alert.alert('Error', 'El número de WhatsApp debe incluir el código de país (ej: +593...)');
+      Alert.alert(
+        'Error',
+        'El número de WhatsApp debe incluir el código de país (ej: +593...)'
+      );
       return;
     }
 
@@ -92,10 +85,13 @@ export default function SettingsScreen() {
         weekly_summary_enabled: weeklySummaryEnabled,
       });
 
-      Alert.alert('✅ Guardado', 'Tu configuración se guardó correctamente');
+      Alert.alert('Éxito', 'Tu configuración se guardó correctamente');
     } catch (error: any) {
       console.error('Error saving settings:', error);
-      Alert.alert('Error', error.response?.data?.detail || 'No se pudo guardar la configuración');
+      Alert.alert(
+        'Error',
+        error.response?.data?.detail || 'No se pudo guardar la configuración'
+      );
     } finally {
       setSaving(false);
     }
@@ -118,7 +114,7 @@ export default function SettingsScreen() {
       // Only show WhatsApp result (email is disabled)
       if (results.whatsapp && results.whatsapp.success) {
         Alert.alert(
-          '🎉 Prueba Exitosa',
+          'Prueba Exitosa',
           '✅ Mensaje enviado por WhatsApp.\n\nRevisa tu WhatsApp en los próximos segundos.'
         );
       } else {
@@ -129,7 +125,10 @@ export default function SettingsScreen() {
       }
     } catch (error: any) {
       console.error('Error testing alerts:', error);
-      Alert.alert('Error', 'No se pudo enviar la prueba. Verifica tu configuración.');
+      Alert.alert(
+        'Error',
+        'No se pudo enviar la prueba. Verifica tu configuración.'
+      );
     } finally {
       setTesting(false);
     }
@@ -138,7 +137,7 @@ export default function SettingsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4CAF50" />
+        <ActivityIndicator size="large" color="#607D8B" />
         <Text style={styles.loadingText}>Cargando configuración...</Text>
       </View>
     );
@@ -146,151 +145,217 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Configuración de Alertas</Text>
-        <View style={styles.headerRight} />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="arrow-back" size={24} color="#212121" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Configuración</Text>
+        <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        {/* Main Toggle */}
-        <View style={styles.section}>
-          <View style={styles.mainToggle}>
-            <View style={styles.mainToggleLeft}>
-              <Ionicons name="notifications" size={32} color={alertsEnabled ? '#4CAF50' : '#999'} />
-              <View style={styles.mainToggleText}>
-                <Text style={styles.mainToggleTitle}>Alertas Activas</Text>
-                <Text style={styles.mainToggleSubtitle}>
-                  {alertsEnabled ? 'Recibirás notificaciones' : 'Notificaciones desactivadas'}
-                </Text>
-              </View>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Main Toggle Card */}
+        <View style={styles.mainCard}>
+          <View style={styles.mainCardHeader}>
+            <View style={styles.mainIconContainer}>
+              <Ionicons
+                name="notifications"
+                size={28}
+                color={alertsEnabled ? '#607D8B' : '#9E9E9E'}
+              />
+            </View>
+            <View style={styles.mainCardText}>
+              <Text style={styles.mainCardTitle}>Alertas Activas</Text>
+              <Text style={styles.mainCardSubtitle}>
+                {alertsEnabled
+                  ? 'Recibirás notificaciones'
+                  : 'Notificaciones desactivadas'}
+              </Text>
             </View>
             <Switch
               value={alertsEnabled}
               onValueChange={setAlertsEnabled}
-              trackColor={{ false: '#ccc', true: '#4CAF50' }}
-              thumbColor="#fff"
+              trackColor={{ false: '#E0E0E0', true: '#B0BEC5' }}
+              thumbColor={alertsEnabled ? '#607D8B' : '#F5F5F5'}
+              ios_backgroundColor="#E0E0E0"
             />
           </View>
         </View>
 
         {/* Contact Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📱 Información de Contacto</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Número de WhatsApp</Text>
-            <TextInput
-              style={styles.input}
-              value={whatsappNumber}
-              onChangeText={setWhatsappNumber}
-              placeholder="+593992913093"
-              keyboardType="phone-pad"
-              editable={alertsEnabled}
-            />
-            <Text style={styles.hint}>Incluye el código de país (ej: +593)</Text>
+          <Text style={styles.sectionLabel}>INFORMACIÓN DE CONTACTO</Text>
+
+          <View style={styles.card}>
+            <View style={styles.inputGroup}>
+              <View style={styles.inputHeader}>
+                <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+                <Text style={styles.inputLabel}>Número de WhatsApp</Text>
+              </View>
+              <TextInput
+                style={[
+                  styles.input,
+                  !alertsEnabled && styles.inputDisabled,
+                ]}
+                value={whatsappNumber}
+                onChangeText={setWhatsappNumber}
+                placeholder="+593 99 123 4567"
+                placeholderTextColor="#BDBDBD"
+                keyboardType="phone-pad"
+                editable={alertsEnabled}
+              />
+              <Text style={styles.hint}>
+                Incluye el código de país (ej: +593)
+              </Text>
+            </View>
           </View>
         </View>
 
         {/* Alert Types */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🔔 Tipos de Alertas</Text>
-          
-          <View style={styles.toggleItem}>
-            <View style={styles.toggleItemLeft}>
-              <Ionicons name="cube" size={24} color="#FF9800" />
-              <View style={styles.toggleItemText}>
-                <Text style={styles.toggleItemTitle}>Alertas de Stock</Text>
-                <Text style={styles.toggleItemSubtitle}>Diarias a las 8:00 AM</Text>
-              </View>
-            </View>
-            <Switch
-              value={stockAlertsEnabled}
-              onValueChange={setStockAlertsEnabled}
-              disabled={!alertsEnabled}
-              trackColor={{ false: '#ccc', true: '#4CAF50' }}
-              thumbColor="#fff"
-            />
-          </View>
+          <Text style={styles.sectionLabel}>TIPOS DE ALERTAS</Text>
 
-          <View style={styles.toggleItem}>
-            <View style={styles.toggleItemLeft}>
-              <Ionicons name="stats-chart" size={24} color="#2196F3" />
-              <View style={styles.toggleItemText}>
-                <Text style={styles.toggleItemTitle}>Resumen Diario</Text>
-                <Text style={styles.toggleItemSubtitle}>Diario a las 8:00 PM</Text>
+          <View style={styles.card}>
+            {/* Stock Alerts */}
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleLeft}>
+                <View
+                  style={[
+                    styles.toggleIcon,
+                    { backgroundColor: '#FFF3E0' },
+                  ]}
+                >
+                  <Ionicons name="cube" size={22} color="#FF9800" />
+                </View>
+                <View style={styles.toggleText}>
+                  <Text style={styles.toggleTitle}>Alertas de Stock</Text>
+                  <Text style={styles.toggleSubtitle}>Diarias a las 8:00 AM</Text>
+                </View>
               </View>
+              <Switch
+                value={stockAlertsEnabled}
+                onValueChange={setStockAlertsEnabled}
+                disabled={!alertsEnabled}
+                trackColor={{ false: '#E0E0E0', true: '#B0BEC5' }}
+                thumbColor={stockAlertsEnabled ? '#607D8B' : '#F5F5F5'}
+                ios_backgroundColor="#E0E0E0"
+              />
             </View>
-            <Switch
-              value={dailySummaryEnabled}
-              onValueChange={setDailySummaryEnabled}
-              disabled={!alertsEnabled}
-              trackColor={{ false: '#ccc', true: '#4CAF50' }}
-              thumbColor="#fff"
-            />
-          </View>
 
-          <View style={styles.toggleItem}>
-            <View style={styles.toggleItemLeft}>
-              <Ionicons name="calendar" size={24} color="#9C27B0" />
-              <View style={styles.toggleItemText}>
-                <Text style={styles.toggleItemTitle}>Resumen Semanal</Text>
-                <Text style={styles.toggleItemSubtitle}>Lunes a las 9:00 AM</Text>
+            <View style={styles.divider} />
+
+            {/* Daily Summary */}
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleLeft}>
+                <View
+                  style={[
+                    styles.toggleIcon,
+                    { backgroundColor: '#E3F2FD' },
+                  ]}
+                >
+                  <Ionicons name="stats-chart" size={22} color="#2196F3" />
+                </View>
+                <View style={styles.toggleText}>
+                  <Text style={styles.toggleTitle}>Resumen Diario</Text>
+                  <Text style={styles.toggleSubtitle}>Diario a las 8:00 PM</Text>
+                </View>
               </View>
+              <Switch
+                value={dailySummaryEnabled}
+                onValueChange={setDailySummaryEnabled}
+                disabled={!alertsEnabled}
+                trackColor={{ false: '#E0E0E0', true: '#B0BEC5' }}
+                thumbColor={dailySummaryEnabled ? '#607D8B' : '#F5F5F5'}
+                ios_backgroundColor="#E0E0E0"
+              />
             </View>
-            <Switch
-              value={weeklySummaryEnabled}
-              onValueChange={setWeeklySummaryEnabled}
-              disabled={!alertsEnabled}
-              trackColor={{ false: '#ccc', true: '#4CAF50' }}
-              thumbColor="#fff"
-            />
+
+            <View style={styles.divider} />
+
+            {/* Weekly Summary */}
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleLeft}>
+                <View
+                  style={[
+                    styles.toggleIcon,
+                    { backgroundColor: '#F3E5F5' },
+                  ]}
+                >
+                  <Ionicons name="calendar" size={22} color="#9C27B0" />
+                </View>
+                <View style={styles.toggleText}>
+                  <Text style={styles.toggleTitle}>Resumen Semanal</Text>
+                  <Text style={styles.toggleSubtitle}>Lunes a las 9:00 AM</Text>
+                </View>
+              </View>
+              <Switch
+                value={weeklySummaryEnabled}
+                onValueChange={setWeeklySummaryEnabled}
+                disabled={!alertsEnabled}
+                trackColor={{ false: '#E0E0E0', true: '#B0BEC5' }}
+                thumbColor={weeklySummaryEnabled ? '#607D8B' : '#F5F5F5'}
+                ios_backgroundColor="#E0E0E0"
+              />
+            </View>
           </View>
         </View>
 
         {/* Info Box */}
         <View style={styles.infoBox}>
-          <Ionicons name="logo-whatsapp" size={24} color="#25D366" />
+          <Ionicons name="information-circle" size={20} color="#2196F3" />
           <Text style={styles.infoText}>
-            Recibirás alertas por WhatsApp sobre: productos con stock bajo, resúmenes de ventas y gastos, 
-            y recordatorios de deudas pendientes.
+            Recibirás alertas por WhatsApp sobre: productos con stock bajo,
+            resúmenes de ventas y gastos, y recordatorios de deudas pendientes.
           </Text>
         </View>
 
-        {/* Buttons */}
+        {/* Action Buttons */}
         <View style={styles.buttonContainer}>
-          <Pressable
-            style={[styles.testButton, testing && styles.buttonDisabled]}
+          <TouchableOpacity
+            style={[
+              styles.testButton,
+              (testing || !alertsEnabled) && styles.buttonDisabled,
+            ]}
             onPress={handleTest}
             disabled={testing || !alertsEnabled}
+            activeOpacity={0.8}
           >
             {testing ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <>
-                <Ionicons name="paper-plane" size={20} color="#fff" />
+                <Ionicons name="paper-plane" size={20} color="#FFFFFF" />
                 <Text style={styles.testButtonText}>Enviar Prueba</Text>
               </>
             )}
-          </Pressable>
+          </TouchableOpacity>
 
-          <Pressable
+          <TouchableOpacity
             style={[styles.saveButton, saving && styles.buttonDisabled]}
             onPress={handleSave}
             disabled={saving}
+            activeOpacity={0.8}
           >
             {saving ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <>
-                <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
                 <Text style={styles.saveButtonText}>Guardar Configuración</Text>
               </>
             )}
-          </Pressable>
+          </TouchableOpacity>
         </View>
+
+        <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );
@@ -299,183 +364,251 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FAFAFA',
   },
+
+  // Header
   header: {
-    backgroundColor: '#4CAF50',
-    padding: 20,
-    paddingTop: 50,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  backButton: {
-    padding: 8,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    flex: 1,
-    textAlign: 'center',
+    fontWeight: '600',
+    color: '#212121',
   },
-  headerRight: {
-    width: 40,
-  },
+
+  // Loading
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FAFAFA',
+    gap: 16,
   },
   loadingText: {
-    marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    fontWeight: '500',
+    color: '#9E9E9E',
   },
+
+  // Content
   content: {
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
-    paddingBottom: 40,
+    padding: 20,
   },
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+
+  // Main Card
+  mainCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-  },
-  mainToggle: {
+  mainCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 16,
   },
-  mainToggleLeft: {
-    flexDirection: 'row',
+  mainIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#ECEFF1',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mainCardText: {
     flex: 1,
   },
-  mainToggleText: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  mainToggleTitle: {
+  mainCardTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#212121',
     marginBottom: 4,
   },
-  mainToggleSubtitle: {
+  mainCardSubtitle: {
     fontSize: 14,
-    color: '#666',
+    fontWeight: '400',
+    color: '#757575',
   },
-  inputGroup: {
-    marginBottom: 16,
+
+  // Section
+  section: {
+    marginBottom: 24,
   },
-  label: {
-    fontSize: 14,
+  sectionLabel: {
+    fontSize: 12,
     fontWeight: '600',
-    color: '#333',
+    color: '#9E9E9E',
+    letterSpacing: 1,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+  },
+
+  // Card
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+
+  // Input
+  inputGroup: {
+    gap: 8,
+  },
+  inputHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 8,
   },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#212121',
+  },
   input: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    padding: 12,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
+    fontWeight: '400',
+    color: '#212121',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#F5F5F5',
+  },
+  inputDisabled: {
+    opacity: 0.5,
   },
   hint: {
     fontSize: 12,
-    color: '#999',
-    marginTop: 4,
+    fontWeight: '400',
+    color: '#9E9E9E',
   },
-  toggleItem: {
+
+  // Toggle Row
+  toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
-  toggleItemLeft: {
+  toggleLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    gap: 12,
   },
-  toggleItemText: {
-    marginLeft: 12,
+  toggleIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toggleText: {
     flex: 1,
   },
-  toggleItemTitle: {
+  toggleTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 2,
+    color: '#212121',
+    marginBottom: 4,
   },
-  toggleItemSubtitle: {
+  toggleSubtitle: {
     fontSize: 13,
-    color: '#666',
+    fontWeight: '400',
+    color: '#757575',
   },
+  divider: {
+    height: 1,
+    backgroundColor: '#F5F5F5',
+    marginVertical: 8,
+  },
+
+  // Info Box
   infoBox: {
     flexDirection: 'row',
     backgroundColor: '#E3F2FD',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
-    borderLeftWidth: 4,
+    marginBottom: 24,
+    gap: 12,
+    borderLeftWidth: 3,
     borderLeftColor: '#2196F3',
   },
   infoText: {
-    fontSize: 14,
-    color: '#1976D2',
-    marginLeft: 12,
     flex: 1,
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#1565C0',
     lineHeight: 20,
   },
+
+  // Buttons
   buttonContainer: {
     gap: 12,
   },
   testButton: {
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
-    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#2196F3',
+    borderRadius: 12,
+    paddingVertical: 16,
+    gap: 8,
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   testButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   saveButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#607D8B',
+    borderRadius: 12,
+    paddingVertical: 16,
+    gap: 8,
+    shadowColor: '#607D8B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   saveButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   buttonDisabled: {
     opacity: 0.6,
