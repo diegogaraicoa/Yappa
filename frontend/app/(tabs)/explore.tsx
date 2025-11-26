@@ -48,8 +48,8 @@ export default function ExploreScreen() {
     },
     {
       id: 3,
-      title: 'Configuración',
-      description: 'Ajustes de la app',
+      title: 'Alertas',
+      description: 'Configura notificaciones',
       icon: 'settings-outline',
       iconFilled: 'settings',
       color: '#607D8B',
@@ -58,7 +58,7 @@ export default function ExploreScreen() {
     },
     {
       id: 4,
-      title: 'Mis Datos',
+      title: 'Datos de mi Negocio',
       description: 'Estadísticas y análisis',
       icon: 'analytics-outline',
       iconFilled: 'analytics',
