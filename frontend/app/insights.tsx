@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../utils/api';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function InsightsScreen() {
   const router = useRouter();
@@ -24,10 +25,18 @@ export default function InsightsScreen() {
   const [showHistory, setShowHistory] = useState(false);
   const [historyReports, setHistoryReports] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  
+  // Date filter state
+  const [startDate, setStartDate] = useState(new Date(new Date().setDate(new Date().getDate() - 30)));
+  const [endDate, setEndDate] = useState(new Date());
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
 
   useEffect(() => {
     loadLatestInsight();
-  }, []);
+    loadLowStockProducts();
+  }, [startDate, endDate]);
 
   const loadLatestInsight = async () => {
     try {
@@ -45,6 +54,15 @@ export default function InsightsScreen() {
     }
   };
 
+  const loadLowStockProducts = async () => {
+    try {
+      const response = await api.get('/api/alerts/low-stock');
+      setLowStockProducts(response.data);
+    } catch (error) {
+      console.error('Error loading low stock:', error);
+    }
+  };
+
   const generateNewInsight = async () => {
     setGenerating(true);
     try {
@@ -56,10 +74,20 @@ export default function InsightsScreen() {
         }
       );
       setLatestInsight(response.data);
-      Alert.alert('Éxito', 'Reporte generado exitosamente');
+      
+      // MENSAJE DE CONFIRMACIÓN
+      Alert.alert(
+        '✅ Éxito',
+        'Reporte generado exitosamente',
+        [{ text: 'OK' }]
+      );
     } catch (error: any) {
       console.error('Error generating insight:', error);
-      Alert.alert('Error', 'No se pudo generar el reporte');
+      Alert.alert(
+        '❌ Error',
+        'No se pudo generar el reporte',
+        [{ text: 'OK' }]
+      );
     } finally {
       setGenerating(false);
     }
@@ -102,21 +130,33 @@ export default function InsightsScreen() {
           timeout: 30000,
         }
       );
+      
+      // MENSAJE DE CONFIRMACIÓN
       Alert.alert(
-        'Éxito',
-        `Enviado a WhatsApp: ${response.data.whatsapp_number}`
+        '✅ Éxito',
+        `Reporte enviado a WhatsApp: ${response.data.whatsapp_number}`,
+        [{ text: 'OK' }]
       );
     } catch (error: any) {
       console.error('Error sending to WhatsApp:', error);
-      Alert.alert('Error', 'No se pudo enviar el reporte por WhatsApp');
+      Alert.alert(
+        '❌ Error',
+        'No se pudo enviar el reporte por WhatsApp',
+        [{ text: 'OK' }]
+      );
     } finally {
       setSending(false);
     }
   };
 
+  const navigateToInventory = () => {
+    router.push('/(tabs)/inventory');
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
     loadLatestInsight();
+    loadLowStockProducts();
   };
 
   const formatDate = (dateString: string) => {
@@ -124,6 +164,14 @@ export default function InsightsScreen() {
     return date.toLocaleDateString('es-EC', {
       day: 'numeric',
       month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  const formatShortDate = (date: Date) => {
+    return date.toLocaleDateString('es-EC', {
+      day: '2-digit',
+      month: 'short',
       year: 'numeric',
     });
   };
@@ -140,6 +188,7 @@ export default function InsightsScreen() {
     if (!latestInsight?.metrics) return null;
 
     const metrics = latestInsight.metrics;
+    const lowStockCount = lowStockProducts.length;
 
     return (
       <View style={styles.section}>
@@ -235,8 +284,7 @@ export default function InsightsScreen() {
                 <View style={styles.topProductInfo}>
                   <Text style={styles.topProductName}>{product.name}</Text>
                   <Text style={styles.topProductStats}>
-                    {product.quantity} vendidos •{' '}
-                    {formatCurrency(product.revenue || 0)}
+                    {product.quantity} vendidos • {formatCurrency(product.revenue || 0)}
                   </Text>
                 </View>
               </View>
@@ -244,14 +292,19 @@ export default function InsightsScreen() {
           </View>
         )}
 
-        {/* Low Stock Alert */}
-        {metrics.low_stock_count > 0 && (
-          <View style={styles.alertBox}>
+        {/* Low Stock Alert - CLICKEABLE */}
+        {lowStockCount > 0 && (
+          <TouchableOpacity
+            style={styles.alertBox}
+            onPress={navigateToInventory}
+            activeOpacity={0.7}
+          >
             <Ionicons name="warning" size={20} color="#FF9800" />
             <Text style={styles.alertText}>
-              {metrics.low_stock_count} producto{metrics.low_stock_count !== 1 ? 's' : ''} con stock bajo
+              {lowStockCount} producto{lowStockCount !== 1 ? 's' : ''} con stock bajo
             </Text>
-          </View>
+            <Ionicons name="chevron-forward" size={20} color="#FF9800" />
+          </TouchableOpacity>
         )}
       </View>
     );
@@ -329,6 +382,34 @@ export default function InsightsScreen() {
           />
         }
       >
+        {/* Date Filter */}
+        <View style={styles.dateFilterContainer}>
+          <Text style={styles.dateFilterLabel}>PERÍODO</Text>
+          <View style={styles.dateFilterRow}>
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => setShowStartPicker(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="calendar-outline" size={16} color="#757575" />
+              <Text style={styles.dateButtonText}>{formatShortDate(startDate)}</Text>
+            </TouchableOpacity>
+
+            <View style={styles.dateSeparator}>
+              <Ionicons name="arrow-forward" size={16} color="#BDBDBD" />
+            </View>
+
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => setShowEndPicker(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="calendar-outline" size={16} color="#757575" />
+              <Text style={styles.dateButtonText}>{formatShortDate(endDate)}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {!latestInsight ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconContainer}>
@@ -401,6 +482,35 @@ export default function InsightsScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Date Pickers */}
+      {showStartPicker && (
+        <DateTimePicker
+          value={startDate}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowStartPicker(false);
+            if (selectedDate) {
+              setStartDate(selectedDate);
+            }
+          }}
+        />
+      )}
+
+      {showEndPicker && (
+        <DateTimePicker
+          value={endDate}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowEndPicker(false);
+            if (selectedDate) {
+              setEndDate(selectedDate);
+            }
+          }}
+        />
+      )}
 
       {/* History Modal */}
       <Modal visible={showHistory} animationType="slide" transparent>
@@ -492,6 +602,47 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 20,
+  },
+
+  // Date Filter
+  dateFilterContainer: {
+    marginBottom: 20,
+  },
+  dateFilterLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9E9E9E',
+    letterSpacing: 1,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+  },
+  dateFilterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  dateButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  dateButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#212121',
+  },
+  dateSeparator: {
+    paddingHorizontal: 4,
   },
 
   // Date Badge
@@ -618,7 +769,7 @@ const styles = StyleSheet.create({
     color: '#757575',
   },
 
-  // Alert Box
+  // Alert Box - CLICKEABLE
   alertBox: {
     flexDirection: 'row',
     alignItems: 'center',
