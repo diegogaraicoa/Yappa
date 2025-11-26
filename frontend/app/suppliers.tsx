@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,13 +22,14 @@ export default function SuppliersScreen() {
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [newSupplier, setNewSupplier] = useState({
     name: '',
+    contact: '',
     phone: '',
     email: '',
-    type: '',
-    tax_id: '',
   });
 
   useEffect(() => {
@@ -48,8 +50,8 @@ export default function SuppliersScreen() {
   };
 
   const handleCreate = async () => {
-    if (!newSupplier.name) {
-      Alert.alert('Error', 'Ingresa el nombre del proveedor');
+    if (!newSupplier.name || !newSupplier.phone) {
+      Alert.alert('Error', 'Ingresa al menos nombre y teléfono');
       return;
     }
 
@@ -57,34 +59,33 @@ export default function SuppliersScreen() {
       await api.post('/api/suppliers', newSupplier);
       Alert.alert('Éxito', 'Proveedor creado correctamente');
       setShowModal(false);
-      setNewSupplier({ name: '', phone: '', email: '', type: '', tax_id: '' });
+      setNewSupplier({ name: '', contact: '', phone: '', email: '' });
       loadSuppliers();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Error al crear proveedor');
+      Alert.alert(
+        'Error',
+        error.response?.data?.detail || 'Error al crear proveedor'
+      );
     }
   };
 
-  const deleteSupplier = async (supplierId: string) => {
-    Alert.alert(
-      'Eliminar Proveedor',
-      '¿Estás seguro de que quieres eliminar este proveedor?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete(`/api/suppliers/${supplierId}`);
-              Alert.alert('Éxito', 'Proveedor eliminado');
-              loadSuppliers();
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar el proveedor');
-            }
-          },
-        },
-      ]
-    );
+  const deleteSupplier = async () => {
+    if (!selectedSupplier) return;
+
+    try {
+      await api.delete(`/api/suppliers/${selectedSupplier._id}`);
+      Alert.alert('Éxito', 'Proveedor eliminado');
+      setShowDeleteModal(false);
+      setSelectedSupplier(null);
+      loadSuppliers();
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo eliminar el proveedor');
+    }
+  };
+
+  const confirmDelete = (supplier: any) => {
+    setSelectedSupplier(supplier);
+    setShowDeleteModal(true);
   };
 
   const filteredSuppliers = suppliers.filter(
@@ -95,77 +96,149 @@ export default function SuppliersScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="arrow-back" size={24} color="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Proveedores</Text>
-        <TouchableOpacity onPress={() => setShowModal(true)} style={styles.addButton}>
-          <Ionicons name="add" size={24} color="#fff" />
+        <TouchableOpacity
+          onPress={() => setShowModal(true)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="add-circle" size={28} color="#FF9800" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar proveedores..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+      {/* Search Bar */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#9E9E9E" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar proveedores..."
+            placeholderTextColor="#BDBDBD"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color="#9E9E9E" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
+      {/* Supplier Count */}
+      <View style={styles.countContainer}>
+        <Text style={styles.countText}>
+          {filteredSuppliers.length}{' '}
+          {filteredSuppliers.length === 1 ? 'proveedor' : 'proveedores'}
+        </Text>
+      </View>
+
+      {/* List */}
       <ScrollView
         style={styles.list}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={loadSuppliers} />
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={loadSuppliers}
+            tintColor="#FF9800"
+            colors={['#FF9800']}
+          />
         }
       >
-        {filteredSuppliers.length === 0 ? (
+        {loading && suppliers.length === 0 ? (
+          <View style={styles.loadingState}>
+            <ActivityIndicator size="large" color="#FF9800" />
+            <Text style={styles.loadingText}>Cargando proveedores...</Text>
+          </View>
+        ) : filteredSuppliers.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="briefcase-outline" size={64} color="#ccc" />
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="briefcase-outline" size={48} color="#9E9E9E" />
+            </View>
+            <Text style={styles.emptyTitle}>
+              {searchQuery ? 'Sin resultados' : 'Sin proveedores aún'}
+            </Text>
             <Text style={styles.emptyText}>
-              {searchQuery ? 'No se encontraron proveedores' : 'No hay proveedores aún'}
+              {searchQuery
+                ? 'Intenta con otro término de búsqueda'
+                : 'Agrega tu primer proveedor'}
             </Text>
-            <Text style={styles.emptySubtext}>
-              {!searchQuery && 'Agrega tu primer proveedor'}
-            </Text>
+            {!searchQuery && (
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={() => setShowModal(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="add-circle" size={20} color="#FFFFFF" />
+                <Text style={styles.emptyButtonText}>Crear Proveedor</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           filteredSuppliers.map((supplier) => (
             <View key={supplier._id} style={styles.supplierCard}>
+              {/* Avatar Circle */}
+              <View style={styles.avatarContainer}>
+                <Ionicons name="briefcase" size={24} color="#FF9800" />
+              </View>
+
+              {/* Supplier Info */}
               <View style={styles.supplierInfo}>
                 <Text style={styles.supplierName}>{supplier.name}</Text>
-                {supplier.type && (
-                  <Text style={styles.supplierType}>{supplier.type}</Text>
+
+                {supplier.contact && (
+                  <View style={styles.supplierDetail}>
+                    <Ionicons name="person-outline" size={14} color="#757575" />
+                    <Text style={styles.supplierDetailText}>
+                      {supplier.contact}
+                    </Text>
+                  </View>
                 )}
+
                 {supplier.phone && (
                   <View style={styles.supplierDetail}>
-                    <Ionicons name="call" size={16} color="#666" />
-                    <Text style={styles.supplierDetailText}>{supplier.phone}</Text>
+                    <Ionicons name="call-outline" size={14} color="#757575" />
+                    <Text style={styles.supplierDetailText}>
+                      {supplier.phone}
+                    </Text>
                   </View>
                 )}
+
                 {supplier.email && (
                   <View style={styles.supplierDetail}>
-                    <Ionicons name="mail" size={16} color="#666" />
-                    <Text style={styles.supplierDetailText}>{supplier.email}</Text>
-                  </View>
-                )}
-                {supplier.tax_id && (
-                  <View style={styles.supplierDetail}>
-                    <Ionicons name="document-text" size={16} color="#666" />
-                    <Text style={styles.supplierDetailText}>{supplier.tax_id}</Text>
+                    <Ionicons name="mail-outline" size={14} color="#757575" />
+                    <Text style={styles.supplierDetailText}>
+                      {supplier.email}
+                    </Text>
                   </View>
                 )}
               </View>
-              <TouchableOpacity onPress={() => deleteSupplier(supplier._id)}>
-                <Ionicons name="trash-outline" size={20} color="#f44336" />
+
+              {/* Delete Button */}
+              <TouchableOpacity
+                onPress={() => confirmDelete(supplier)}
+                style={styles.deleteButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="trash-outline" size={22} color="#F44336" />
               </TouchableOpacity>
             </View>
           ))
         )}
+
+        <View style={{ height: 40 }} />
       </ScrollView>
 
+      {/* Create Supplier Modal */}
       <Modal visible={showModal} animationType="slide" transparent>
         <KeyboardAvoidingView
           style={styles.modalContainer}
@@ -174,61 +247,146 @@ export default function SuppliersScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Nuevo Proveedor</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+              <TouchableOpacity
+                onPress={() => {
+                  setShowModal(false);
+                  setNewSupplier({ name: '', contact: '', phone: '', email: '' });
+                }}
+              >
+                <Ionicons name="close" size={24} color="#212121" />
               </TouchableOpacity>
             </View>
-            <ScrollView>
-              <Text style={styles.inputLabel}>Nombre *</Text>
-              <TextInput
-                style={styles.input}
-                value={newSupplier.name}
-                onChangeText={(text) => setNewSupplier({ ...newSupplier, name: text })}
-                placeholder="Nombre del proveedor"
-              />
 
-              <Text style={styles.inputLabel}>Teléfono</Text>
-              <TextInput
-                style={styles.input}
-                value={newSupplier.phone}
-                onChangeText={(text) => setNewSupplier({ ...newSupplier, phone: text })}
-                placeholder="0999123456"
-                keyboardType="phone-pad"
-              />
+            <ScrollView
+              style={styles.modalForm}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Name */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nombre de la Empresa *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newSupplier.name}
+                  onChangeText={(text) =>
+                    setNewSupplier({ ...newSupplier, name: text })
+                  }
+                  placeholder="Empresa XYZ"
+                  placeholderTextColor="#BDBDBD"
+                />
+              </View>
 
-              <Text style={styles.inputLabel}>Email</Text>
-              <TextInput
-                style={styles.input}
-                value={newSupplier.email}
-                onChangeText={(text) => setNewSupplier({ ...newSupplier, email: text })}
-                placeholder="ejemplo@correo.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+              {/* Contact Person */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Persona de Contacto</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newSupplier.contact}
+                  onChangeText={(text) =>
+                    setNewSupplier({ ...newSupplier, contact: text })
+                  }
+                  placeholder="Juan Pérez"
+                  placeholderTextColor="#BDBDBD"
+                />
+              </View>
 
-              <Text style={styles.inputLabel}>Tipo</Text>
-              <TextInput
-                style={styles.input}
-                value={newSupplier.type}
-                onChangeText={(text) => setNewSupplier({ ...newSupplier, type: text })}
-                placeholder="Ej: Alimentos, Bebidas, Limpieza"
-              />
+              {/* Phone */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Teléfono *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newSupplier.phone}
+                  onChangeText={(text) =>
+                    setNewSupplier({ ...newSupplier, phone: text })
+                  }
+                  placeholder="+593 99 123 4567"
+                  placeholderTextColor="#BDBDBD"
+                  keyboardType="phone-pad"
+                />
+              </View>
 
-              <Text style={styles.inputLabel}>RUC/Cédula</Text>
-              <TextInput
-                style={styles.input}
-                value={newSupplier.tax_id}
-                onChangeText={(text) => setNewSupplier({ ...newSupplier, tax_id: text })}
-                placeholder="1234567890"
-                keyboardType="numeric"
-              />
+              {/* Email */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newSupplier.email}
+                  onChangeText={(text) =>
+                    setNewSupplier({ ...newSupplier, email: text })
+                  }
+                  placeholder="ejemplo@correo.com"
+                  placeholderTextColor="#BDBDBD"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
 
-              <TouchableOpacity style={styles.submitButton} onPress={handleCreate}>
-                <Text style={styles.submitButtonText}>Crear Proveedor</Text>
-              </TouchableOpacity>
+              <View style={{ height: 20 }} />
             </ScrollView>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowModal(false);
+                  setNewSupplier({ name: '', contact: '', phone: '', email: '' });
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleCreate}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveText}>Crear Proveedor</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal visible={showDeleteModal} animationType="fade" transparent>
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <View style={styles.deleteModalIconContainer}>
+              <Ionicons name="trash" size={48} color="#F44336" />
+            </View>
+
+            <Text style={styles.deleteModalTitle}>Eliminar Proveedor</Text>
+
+            {selectedSupplier && (
+              <Text style={styles.deleteModalText}>
+                ¿Estás seguro de que quieres eliminar a{' '}
+                <Text style={styles.deleteModalTextBold}>
+                  {selectedSupplier.name}
+                </Text>
+                ?
+              </Text>
+            )}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowDeleteModal(false);
+                  setSelectedSupplier(null);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteModalConfirmButton}
+                onPress={deleteSupplier}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveText}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </View>
   );
@@ -237,59 +395,92 @@ export default function SuppliersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FAFAFA',
   },
+
+  // Header
   header: {
-    backgroundColor: '#FF9800',
-    padding: 16,
-    paddingTop: 48,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  backButton: {
-    padding: 8,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    flex: 1,
-    marginLeft: 8,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#212121',
   },
-  addButton: {
-    padding: 8,
+
+  // Search Section
+  searchSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    margin: 16,
-    paddingHorizontal: 16,
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  searchIcon: {
-    marginRight: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
   },
   searchInput: {
     flex: 1,
-    height: 48,
     fontSize: 16,
+    fontWeight: '400',
+    color: '#212121',
   },
+
+  // Count Container
+  countContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  countText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#757575',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  // List
   list: {
     flex: 1,
-    paddingHorizontal: 16,
   },
+  listContent: {
+    paddingHorizontal: 20,
+  },
+
+  // Supplier Card
   supplierCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  avatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFF3E0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
   supplierInfo: {
     flex: 1,
@@ -297,89 +488,223 @@ const styles = StyleSheet.create({
   supplierName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  supplierType: {
-    fontSize: 14,
-    color: '#FF9800',
-    fontWeight: '500',
-    marginBottom: 8,
+    color: '#212121',
+    marginBottom: 6,
   },
   supplierDetail: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 4,
+    gap: 6,
   },
   supplierDetailText: {
     fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
+    fontWeight: '400',
+    color: '#757575',
   },
+  deleteButton: {
+    padding: 8,
+  },
+
+  // Loading State
+  loadingState: {
+    paddingTop: 80,
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#9E9E9E',
+  },
+
+  // Empty State
   emptyState: {
+    paddingTop: 80,
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 64,
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 16,
+    fontWeight: '400',
+    color: '#9E9E9E',
+    textAlign: 'center',
+    marginBottom: 24,
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF9800',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    gap: 8,
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
+  emptyButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: '90%',
-    padding: 20,
+    paddingTop: 24,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 24,
     marginBottom: 20,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#212121',
+  },
+  modalForm: {
+    paddingHorizontal: 24,
+    maxHeight: 400,
+  },
+  inputGroup: {
+    marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#212121',
     marginBottom: 8,
-    marginTop: 12,
   },
   input: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
+    fontWeight: '400',
+    color: '#212121',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#F5F5F5',
   },
-  submitButton: {
-    backgroundColor: '#FF9800',
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: 'transparent',
     borderRadius: 12,
-    padding: 16,
+    paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
   },
-  submitButtonText: {
-    color: '#fff',
+  modalCancelText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#616161',
+  },
+  modalSaveButton: {
+    flex: 1,
+    backgroundColor: '#FF9800',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  modalSaveText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Delete Modal
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  deleteModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  deleteModalIconContainer: {
+    marginBottom: 16,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  deleteModalText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#757575',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  deleteModalTextBold: {
+    fontWeight: '700',
+    color: '#212121',
+  },
+  deleteModalConfirmButton: {
+    flex: 1,
+    backgroundColor: '#F44336',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: '#F44336',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });
