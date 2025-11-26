@@ -286,7 +286,7 @@ export default function InsightsScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#212121" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Mis Datos</Text>
+          <Text style={styles.headerTitle}>Datos de mi Negocio</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.loadingContainer}>
@@ -307,7 +307,7 @@ export default function InsightsScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#212121" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mis Datos</Text>
+        <Text style={styles.headerTitle}>Datos de mi Negocio</Text>
         <TouchableOpacity
           onPress={openHistory}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
