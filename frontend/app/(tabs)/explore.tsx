@@ -1,138 +1,267 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function ExploreScreen() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const exploreItems = [
     {
       id: 0,
-      title: '📚 Capacitación',
-      icon: 'school',
+      title: 'Capacitación',
+      description: 'Aprende a usar YAPPA',
+      icon: 'school-outline',
+      iconFilled: 'school',
       color: '#E91E63',
+      bgColor: '#FCE4EC',
       route: '/training',
-      badge: '¡NUEVO!',
+      badge: 'NUEVO',
     },
     {
       id: 1,
       title: 'Clientes',
-      icon: 'people',
+      description: 'Gestiona tu cartera',
+      icon: 'people-outline',
+      iconFilled: 'people',
       color: '#4CAF50',
+      bgColor: '#E8F5E9',
       route: '/customers',
     },
     {
       id: 2,
       title: 'Proveedores',
-      icon: 'briefcase',
+      description: 'Administra proveedores',
+      icon: 'briefcase-outline',
+      iconFilled: 'briefcase',
       color: '#FF9800',
+      bgColor: '#FFF3E0',
       route: '/suppliers',
     },
-    // Empleados - Eliminado temporalmente para próxima versión
-    // Admin Console - Solo accesible desde web/desktop, no desde app móvil
     {
-      id: 4,
+      id: 3,
       title: 'Configuración',
-      icon: 'settings',
+      description: 'Ajustes de la app',
+      icon: 'settings-outline',
+      iconFilled: 'settings',
       color: '#607D8B',
+      bgColor: '#ECEFF1',
       route: '/settings',
     },
     {
-      id: 5,
+      id: 4,
       title: 'Mis Datos',
-      icon: 'analytics',
+      description: 'Estadísticas y análisis',
+      icon: 'analytics-outline',
+      iconFilled: 'analytics',
       color: '#9C27B0',
+      bgColor: '#F3E5F5',
       route: '/insights',
     },
   ];
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Explorar</Text>
-        <Text style={styles.subtitle}>Gestiona todos los aspectos de tu tienda</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.appName}>YAPPA</Text>
+            <Text style={styles.storeName}>{user?.store_name}</Text>
+          </View>
+        </View>
 
+        {/* Welcome Section */}
+        <View style={styles.welcomeSection}>
+          <Text style={styles.greeting}>Explorar</Text>
+          <Text style={styles.subtitle}>
+            Gestiona todos los aspectos de tu negocio
+          </Text>
+        </View>
+
+        {/* Grid */}
         <View style={styles.grid}>
           {exploreItems.map((item) => (
             <TouchableOpacity
               key={item.id}
               style={styles.card}
-              onPress={() => {
-                router.push(item.route as any);
-              }}
+              onPress={() => router.push(item.route as any)}
+              activeOpacity={0.7}
             >
-              <Ionicons name={item.icon as any} size={40} color={item.color} />
-              <Text style={styles.cardTitle}>{item.title}</Text>
+              {/* Badge */}
               {item.badge && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{item.badge}</Text>
                 </View>
               )}
+
+              {/* Icon Container */}
+              <View
+                style={[
+                  styles.iconContainer,
+                  { backgroundColor: item.bgColor },
+                ]}
+              >
+                <Ionicons
+                  name={item.iconFilled as any}
+                  size={32}
+                  color={item.color}
+                />
+              </View>
+
+              {/* Text Content */}
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardDescription}>{item.description}</Text>
+              </View>
+
+              {/* Arrow */}
+              <View style={styles.arrowContainer}>
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color="#BDBDBD"
+                />
+              </View>
             </TouchableOpacity>
           ))}
         </View>
-      </View>
-    </ScrollView>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FAFAFA',
   },
-  content: {
-    padding: 20,
+  scrollView: {
+    flex: 1,
   },
-  title: {
+  scrollContent: {
+    paddingBottom: 20,
+  },
+
+  // Header
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+  },
+  appName: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#212121',
+    letterSpacing: 1,
+  },
+  storeName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#757575',
+    marginTop: 4,
+  },
+
+  // Welcome Section
+  welcomeSection: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 20,
+  },
+  greeting: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#212121',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
+    fontWeight: '400',
+    color: '#757575',
+    lineHeight: 24,
   },
+
+  // Grid
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    gap: 12,
   },
+
+  // Card
   card: {
-    width: '48%',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 24,
+    padding: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 1,
+    position: 'relative',
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  cardContent: {
+    flex: 1,
+    justifyContent: 'center',
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#333',
-    marginTop: 12,
-    textAlign: 'center',
+    color: '#212121',
+    marginBottom: 4,
   },
+  cardDescription: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#757575',
+    lineHeight: 20,
+  },
+  arrowContainer: {
+    marginLeft: 8,
+  },
+
+  // Badge
   badge: {
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: '#9C27B0',
-    borderRadius: 12,
+    backgroundColor: '#E91E63',
+    borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
+    zIndex: 1,
   },
   badgeText: {
     fontSize: 10,
-    color: '#fff',
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
 });
