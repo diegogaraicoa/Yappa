@@ -25,7 +25,6 @@ export default function ExploreScreen() {
       color: '#E91E63',
       bgColor: '#FCE4EC',
       route: '/training',
-      badge: 'NUEVO',
     },
     {
       id: 1,
