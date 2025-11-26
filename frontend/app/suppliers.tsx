@@ -25,7 +25,8 @@ export default function SuppliersScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [newSupplier, setNewSupplier] = useState({
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
     name: '',
     contact: '',
     phone: '',
@@ -49,22 +50,49 @@ export default function SuppliersScreen() {
     }
   };
 
-  const handleCreate = async () => {
-    if (!newSupplier.name || !newSupplier.phone) {
+  const openCreateModal = () => {
+    setIsEditing(false);
+    setFormData({ name: '', contact: '', phone: '', email: '' });
+    setShowModal(true);
+  };
+
+  const openEditModal = (supplier: any) => {
+    setIsEditing(true);
+    setSelectedSupplier(supplier);
+    setFormData({
+      name: supplier.name,
+      contact: supplier.contact || '',
+      phone: supplier.phone || '',
+      email: supplier.email || '',
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.phone) {
       Alert.alert('Error', 'Ingresa al menos nombre y teléfono');
       return;
     }
 
     try {
-      await api.post('/api/suppliers', newSupplier);
-      Alert.alert('Éxito', 'Proveedor creado correctamente');
+      if (isEditing && selectedSupplier) {
+        // Update
+        await api.put(`/api/suppliers/${selectedSupplier._id}`, formData);
+        Alert.alert('Éxito', 'Proveedor actualizado correctamente');
+      } else {
+        // Create
+        await api.post('/api/suppliers', formData);
+        Alert.alert('Éxito', 'Proveedor creado correctamente');
+      }
       setShowModal(false);
-      setNewSupplier({ name: '', contact: '', phone: '', email: '' });
+      setFormData({ name: '', contact: '', phone: '', email: '' });
+      setSelectedSupplier(null);
       loadSuppliers();
     } catch (error: any) {
       Alert.alert(
         'Error',
-        error.response?.data?.detail || 'Error al crear proveedor'
+        error.response?.data?.detail ||
+          `Error al ${isEditing ? 'actualizar' : 'crear'} proveedor`
       );
     }
   };
@@ -170,7 +198,7 @@ export default function SuppliersScreen() {
             {!searchQuery && (
               <TouchableOpacity
                 style={styles.emptyButton}
-                onPress={() => setShowModal(true)}
+                onPress={openCreateModal}
                 activeOpacity={0.8}
               >
                 <Ionicons name="add-circle" size={20} color="#FFFFFF" />
@@ -218,14 +246,23 @@ export default function SuppliersScreen() {
                 )}
               </View>
 
-              {/* Delete Button */}
-              <TouchableOpacity
-                onPress={() => confirmDelete(supplier)}
-                style={styles.deleteButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="trash-outline" size={22} color="#F44336" />
-              </TouchableOpacity>
+              {/* Action Buttons */}
+              <View style={styles.actionsContainer}>
+                <TouchableOpacity
+                  onPress={() => openEditModal(supplier)}
+                  style={styles.actionButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="pencil" size={20} color="#2196F3" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => confirmDelete(supplier)}
+                  style={styles.actionButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#F44336" />
+                </TouchableOpacity>
+              </View>
             </View>
           ))
         )}
@@ -233,7 +270,7 @@ export default function SuppliersScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Create Supplier Modal */}
+      {/* Create/Edit Supplier Modal */}
       <Modal visible={showModal} animationType="slide" transparent>
         <KeyboardAvoidingView
           style={styles.modalContainer}
@@ -241,11 +278,14 @@ export default function SuppliersScreen() {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Nuevo Proveedor</Text>
+              <Text style={styles.modalTitle}>
+                {isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor'}
+              </Text>
               <TouchableOpacity
                 onPress={() => {
                   setShowModal(false);
-                  setNewSupplier({ name: '', contact: '', phone: '', email: '' });
+                  setFormData({ name: '', contact: '', phone: '', email: '' });
+                  setSelectedSupplier(null);
                 }}
               >
                 <Ionicons name="close" size={24} color="#212121" />
@@ -261,9 +301,9 @@ export default function SuppliersScreen() {
                 <Text style={styles.inputLabel}>Nombre de la Empresa *</Text>
                 <TextInput
                   style={styles.input}
-                  value={newSupplier.name}
+                  value={formData.name}
                   onChangeText={(text) =>
-                    setNewSupplier({ ...newSupplier, name: text })
+                    setFormData({ ...formData, name: text })
                   }
                   placeholder="Empresa XYZ"
                   placeholderTextColor="#BDBDBD"
@@ -275,9 +315,9 @@ export default function SuppliersScreen() {
                 <Text style={styles.inputLabel}>Persona de Contacto</Text>
                 <TextInput
                   style={styles.input}
-                  value={newSupplier.contact}
+                  value={formData.contact}
                   onChangeText={(text) =>
-                    setNewSupplier({ ...newSupplier, contact: text })
+                    setFormData({ ...formData, contact: text })
                   }
                   placeholder="Juan Pérez"
                   placeholderTextColor="#BDBDBD"
@@ -289,9 +329,9 @@ export default function SuppliersScreen() {
                 <Text style={styles.inputLabel}>Teléfono *</Text>
                 <TextInput
                   style={styles.input}
-                  value={newSupplier.phone}
+                  value={formData.phone}
                   onChangeText={(text) =>
-                    setNewSupplier({ ...newSupplier, phone: text })
+                    setFormData({ ...formData, phone: text })
                   }
                   placeholder="+593 99 123 4567"
                   placeholderTextColor="#BDBDBD"
@@ -304,9 +344,9 @@ export default function SuppliersScreen() {
                 <Text style={styles.inputLabel}>Email</Text>
                 <TextInput
                   style={styles.input}
-                  value={newSupplier.email}
+                  value={formData.email}
                   onChangeText={(text) =>
-                    setNewSupplier({ ...newSupplier, email: text })
+                    setFormData({ ...formData, email: text })
                   }
                   placeholder="ejemplo@correo.com"
                   placeholderTextColor="#BDBDBD"
@@ -323,7 +363,8 @@ export default function SuppliersScreen() {
                 style={styles.modalCancelButton}
                 onPress={() => {
                   setShowModal(false);
-                  setNewSupplier({ name: '', contact: '', phone: '', email: '' });
+                  setFormData({ name: '', contact: '', phone: '', email: '' });
+                  setSelectedSupplier(null);
                 }}
                 activeOpacity={0.8}
               >
@@ -331,10 +372,12 @@ export default function SuppliersScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalSaveButton}
-                onPress={handleCreate}
+                onPress={handleSubmit}
                 activeOpacity={0.8}
               >
-                <Text style={styles.modalSaveText}>Crear Proveedor</Text>
+                <Text style={styles.modalSaveText}>
+                  {isEditing ? 'Actualizar' : 'Crear Proveedor'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -497,7 +540,11 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#757575',
   },
-  deleteButton: {
+  actionsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionButton: {
     padding: 8,
   },
 
