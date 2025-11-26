@@ -103,12 +103,7 @@ export default function CustomersScreen() {
           <Ionicons name="arrow-back" size={24} color="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Clientes</Text>
-        <TouchableOpacity
-          onPress={() => setShowModal(true)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="add-circle" size={28} color="#4CAF50" />
-        </TouchableOpacity>
+        <View style={{ width: 28 }} />
       </View>
 
       {/* Search Bar */}
