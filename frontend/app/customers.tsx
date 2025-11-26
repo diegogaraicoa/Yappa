@@ -25,7 +25,8 @@ export default function CustomersScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [newCustomer, setNewCustomer] = useState({
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
     name: '',
     lastname: '',
     phone: '',
@@ -49,20 +50,50 @@ export default function CustomersScreen() {
     }
   };
 
-  const handleCreate = async () => {
-    if (!newCustomer.name || !newCustomer.lastname) {
+  const openCreateModal = () => {
+    setIsEditing(false);
+    setFormData({ name: '', lastname: '', phone: '', email: '' });
+    setShowModal(true);
+  };
+
+  const openEditModal = (customer: any) => {
+    setIsEditing(true);
+    setSelectedCustomer(customer);
+    setFormData({
+      name: customer.name,
+      lastname: customer.lastname,
+      phone: customer.phone || '',
+      email: customer.email || '',
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.lastname) {
       Alert.alert('Error', 'Ingresa al menos nombre y apellido');
       return;
     }
 
     try {
-      await api.post('/api/customers', newCustomer);
-      Alert.alert('Éxito', 'Cliente creado correctamente');
+      if (isEditing && selectedCustomer) {
+        // Update
+        await api.put(`/api/customers/${selectedCustomer._id}`, formData);
+        Alert.alert('Éxito', 'Cliente actualizado correctamente');
+      } else {
+        // Create
+        await api.post('/api/customers', formData);
+        Alert.alert('Éxito', 'Cliente creado correctamente');
+      }
       setShowModal(false);
-      setNewCustomer({ name: '', lastname: '', phone: '', email: '' });
+      setFormData({ name: '', lastname: '', phone: '', email: '' });
+      setSelectedCustomer(null);
       loadCustomers();
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.detail || 'Error al crear cliente');
+      Alert.alert(
+        'Error',
+        error.response?.data?.detail ||
+          `Error al ${isEditing ? 'actualizar' : 'crear'} cliente`
+      );
     }
   };
 
@@ -128,7 +159,8 @@ export default function CustomersScreen() {
       {/* Customer Count */}
       <View style={styles.countContainer}>
         <Text style={styles.countText}>
-          {filteredCustomers.length} {filteredCustomers.length === 1 ? 'cliente' : 'clientes'}
+          {filteredCustomers.length}{' '}
+          {filteredCustomers.length === 1 ? 'cliente' : 'clientes'}
         </Text>
       </View>
 
@@ -167,7 +199,7 @@ export default function CustomersScreen() {
             {!searchQuery && (
               <TouchableOpacity
                 style={styles.emptyButton}
-                onPress={() => setShowModal(true)}
+                onPress={openCreateModal}
                 activeOpacity={0.8}
               >
                 <Ionicons name="add-circle" size={20} color="#FFFFFF" />
@@ -195,26 +227,39 @@ export default function CustomersScreen() {
                 {customer.phone && (
                   <View style={styles.customerDetail}>
                     <Ionicons name="call-outline" size={14} color="#757575" />
-                    <Text style={styles.customerDetailText}>{customer.phone}</Text>
+                    <Text style={styles.customerDetailText}>
+                      {customer.phone}
+                    </Text>
                   </View>
                 )}
 
                 {customer.email && (
                   <View style={styles.customerDetail}>
                     <Ionicons name="mail-outline" size={14} color="#757575" />
-                    <Text style={styles.customerDetailText}>{customer.email}</Text>
+                    <Text style={styles.customerDetailText}>
+                      {customer.email}
+                    </Text>
                   </View>
                 )}
               </View>
 
-              {/* Delete Button */}
-              <TouchableOpacity
-                onPress={() => confirmDelete(customer)}
-                style={styles.deleteButton}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="trash-outline" size={22} color="#F44336" />
-              </TouchableOpacity>
+              {/* Action Buttons */}
+              <View style={styles.actionsContainer}>
+                <TouchableOpacity
+                  onPress={() => openEditModal(customer)}
+                  style={styles.actionButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="pencil" size={20} color="#2196F3" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => confirmDelete(customer)}
+                  style={styles.actionButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#F44336" />
+                </TouchableOpacity>
+              </View>
             </View>
           ))
         )}
@@ -222,7 +267,7 @@ export default function CustomersScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Create Customer Modal */}
+      {/* Create/Edit Customer Modal */}
       <Modal visible={showModal} animationType="slide" transparent>
         <KeyboardAvoidingView
           style={styles.modalContainer}
@@ -230,11 +275,14 @@ export default function CustomersScreen() {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Nuevo Cliente</Text>
+              <Text style={styles.modalTitle}>
+                {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
+              </Text>
               <TouchableOpacity
                 onPress={() => {
                   setShowModal(false);
-                  setNewCustomer({ name: '', lastname: '', phone: '', email: '' });
+                  setFormData({ name: '', lastname: '', phone: '', email: '' });
+                  setSelectedCustomer(null);
                 }}
               >
                 <Ionicons name="close" size={24} color="#212121" />
@@ -250,9 +298,9 @@ export default function CustomersScreen() {
                 <Text style={styles.inputLabel}>Nombre *</Text>
                 <TextInput
                   style={styles.input}
-                  value={newCustomer.name}
+                  value={formData.name}
                   onChangeText={(text) =>
-                    setNewCustomer({ ...newCustomer, name: text })
+                    setFormData({ ...formData, name: text })
                   }
                   placeholder="Juan"
                   placeholderTextColor="#BDBDBD"
@@ -264,9 +312,9 @@ export default function CustomersScreen() {
                 <Text style={styles.inputLabel}>Apellido *</Text>
                 <TextInput
                   style={styles.input}
-                  value={newCustomer.lastname}
+                  value={formData.lastname}
                   onChangeText={(text) =>
-                    setNewCustomer({ ...newCustomer, lastname: text })
+                    setFormData({ ...formData, lastname: text })
                   }
                   placeholder="Pérez"
                   placeholderTextColor="#BDBDBD"
@@ -278,9 +326,9 @@ export default function CustomersScreen() {
                 <Text style={styles.inputLabel}>Teléfono</Text>
                 <TextInput
                   style={styles.input}
-                  value={newCustomer.phone}
+                  value={formData.phone}
                   onChangeText={(text) =>
-                    setNewCustomer({ ...newCustomer, phone: text })
+                    setFormData({ ...formData, phone: text })
                   }
                   placeholder="+593 99 123 4567"
                   placeholderTextColor="#BDBDBD"
@@ -293,9 +341,9 @@ export default function CustomersScreen() {
                 <Text style={styles.inputLabel}>Email</Text>
                 <TextInput
                   style={styles.input}
-                  value={newCustomer.email}
+                  value={formData.email}
                   onChangeText={(text) =>
-                    setNewCustomer({ ...newCustomer, email: text })
+                    setFormData({ ...formData, email: text })
                   }
                   placeholder="ejemplo@correo.com"
                   placeholderTextColor="#BDBDBD"
@@ -312,7 +360,8 @@ export default function CustomersScreen() {
                 style={styles.modalCancelButton}
                 onPress={() => {
                   setShowModal(false);
-                  setNewCustomer({ name: '', lastname: '', phone: '', email: '' });
+                  setFormData({ name: '', lastname: '', phone: '', email: '' });
+                  setSelectedCustomer(null);
                 }}
                 activeOpacity={0.8}
               >
@@ -320,10 +369,12 @@ export default function CustomersScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalSaveButton}
-                onPress={handleCreate}
+                onPress={handleSubmit}
                 activeOpacity={0.8}
               >
-                <Text style={styles.modalSaveText}>Crear Cliente</Text>
+                <Text style={styles.modalSaveText}>
+                  {isEditing ? 'Actualizar' : 'Crear Cliente'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -491,7 +542,11 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#757575',
   },
-  deleteButton: {
+  actionsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionButton: {
     padding: 8,
   },
 
