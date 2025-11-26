@@ -77,10 +77,7 @@ export default function ExploreScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.appName}>YAPPA</Text>
-            <Text style={styles.storeName}>{user?.store_name}</Text>
-          </View>
+          <Text style={styles.appName}>YAPPA</Text>
         </View>
 
         {/* Welcome Section */}
