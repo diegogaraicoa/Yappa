@@ -167,10 +167,11 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F5F5F5',
   },
   appName: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '600',
     color: '#4CAF50',
     letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   storeName: {
     fontSize: 14,
