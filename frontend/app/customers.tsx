@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,8 @@ export default function CustomersScreen() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [newCustomer, setNewCustomer] = useState({
     name: '',
@@ -63,27 +66,23 @@ export default function CustomersScreen() {
     }
   };
 
-  const deleteCustomer = async (customerId: string) => {
-    Alert.alert(
-      'Eliminar Cliente',
-      '¿Estás seguro de que quieres eliminar este cliente?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete(`/api/customers/${customerId}`);
-              Alert.alert('Éxito', 'Cliente eliminado');
-              loadCustomers();
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar el cliente');
-            }
-          },
-        },
-      ]
-    );
+  const deleteCustomer = async () => {
+    if (!selectedCustomer) return;
+
+    try {
+      await api.delete(`/api/customers/${selectedCustomer._id}`);
+      Alert.alert('Éxito', 'Cliente eliminado');
+      setShowDeleteModal(false);
+      setSelectedCustomer(null);
+      loadCustomers();
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo eliminar el cliente');
+    }
+  };
+
+  const confirmDelete = (customer: any) => {
+    setSelectedCustomer(customer);
+    setShowDeleteModal(true);
   };
 
   const filteredCustomers = customers.filter(
@@ -95,70 +94,140 @@ export default function CustomersScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="arrow-back" size={24} color="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Clientes</Text>
-        <TouchableOpacity onPress={() => setShowModal(true)} style={styles.addButton}>
-          <Ionicons name="add" size={24} color="#fff" />
+        <TouchableOpacity
+          onPress={() => setShowModal(true)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="add-circle" size={28} color="#4CAF50" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar clientes..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+      {/* Search Bar */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#9E9E9E" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar clientes..."
+            placeholderTextColor="#BDBDBD"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color="#9E9E9E" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
+      {/* Customer Count */}
+      <View style={styles.countContainer}>
+        <Text style={styles.countText}>
+          {filteredCustomers.length} {filteredCustomers.length === 1 ? 'cliente' : 'clientes'}
+        </Text>
+      </View>
+
+      {/* List */}
       <ScrollView
         style={styles.list}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={loadCustomers} />
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={loadCustomers}
+            tintColor="#4CAF50"
+            colors={['#4CAF50']}
+          />
         }
       >
-        {filteredCustomers.length === 0 ? (
+        {loading && customers.length === 0 ? (
+          <View style={styles.loadingState}>
+            <ActivityIndicator size="large" color="#4CAF50" />
+            <Text style={styles.loadingText}>Cargando clientes...</Text>
+          </View>
+        ) : filteredCustomers.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={64} color="#ccc" />
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="people-outline" size={48} color="#9E9E9E" />
+            </View>
+            <Text style={styles.emptyTitle}>
+              {searchQuery ? 'Sin resultados' : 'Sin clientes aún'}
+            </Text>
             <Text style={styles.emptyText}>
-              {searchQuery ? 'No se encontraron clientes' : 'No hay clientes aún'}
+              {searchQuery
+                ? 'Intenta con otro término de búsqueda'
+                : 'Agrega tu primer cliente'}
             </Text>
-            <Text style={styles.emptySubtext}>
-              {!searchQuery && 'Agrega tu primer cliente'}
-            </Text>
+            {!searchQuery && (
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={() => setShowModal(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="add-circle" size={20} color="#FFFFFF" />
+                <Text style={styles.emptyButtonText}>Crear Cliente</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           filteredCustomers.map((customer) => (
             <View key={customer._id} style={styles.customerCard}>
+              {/* Avatar Circle */}
+              <View style={styles.avatarContainer}>
+                <Text style={styles.avatarText}>
+                  {customer.name.charAt(0).toUpperCase()}
+                  {customer.lastname.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+
+              {/* Customer Info */}
               <View style={styles.customerInfo}>
                 <Text style={styles.customerName}>
                   {customer.name} {customer.lastname}
                 </Text>
+
                 {customer.phone && (
                   <View style={styles.customerDetail}>
-                    <Ionicons name="call" size={16} color="#666" />
+                    <Ionicons name="call-outline" size={14} color="#757575" />
                     <Text style={styles.customerDetailText}>{customer.phone}</Text>
                   </View>
                 )}
+
                 {customer.email && (
                   <View style={styles.customerDetail}>
-                    <Ionicons name="mail" size={16} color="#666" />
+                    <Ionicons name="mail-outline" size={14} color="#757575" />
                     <Text style={styles.customerDetailText}>{customer.email}</Text>
                   </View>
                 )}
               </View>
-              <TouchableOpacity onPress={() => deleteCustomer(customer._id)}>
-                <Ionicons name="trash-outline" size={20} color="#f44336" />
+
+              {/* Delete Button */}
+              <TouchableOpacity
+                onPress={() => confirmDelete(customer)}
+                style={styles.deleteButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="trash-outline" size={22} color="#F44336" />
               </TouchableOpacity>
             </View>
           ))
         )}
+
+        <View style={{ height: 40 }} />
       </ScrollView>
 
+      {/* Create Customer Modal */}
       <Modal visible={showModal} animationType="slide" transparent>
         <KeyboardAvoidingView
           style={styles.modalContainer}
@@ -167,52 +236,146 @@ export default function CustomersScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Nuevo Cliente</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
+              <TouchableOpacity
+                onPress={() => {
+                  setShowModal(false);
+                  setNewCustomer({ name: '', lastname: '', phone: '', email: '' });
+                }}
+              >
+                <Ionicons name="close" size={24} color="#212121" />
               </TouchableOpacity>
             </View>
-            <ScrollView>
-              <Text style={styles.inputLabel}>Nombre *</Text>
-              <TextInput
-                style={styles.input}
-                value={newCustomer.name}
-                onChangeText={(text) => setNewCustomer({ ...newCustomer, name: text })}
-                placeholder="Nombre"
-              />
 
-              <Text style={styles.inputLabel}>Apellido *</Text>
-              <TextInput
-                style={styles.input}
-                value={newCustomer.lastname}
-                onChangeText={(text) => setNewCustomer({ ...newCustomer, lastname: text })}
-                placeholder="Apellido"
-              />
+            <ScrollView
+              style={styles.modalForm}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Name */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nombre *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newCustomer.name}
+                  onChangeText={(text) =>
+                    setNewCustomer({ ...newCustomer, name: text })
+                  }
+                  placeholder="Juan"
+                  placeholderTextColor="#BDBDBD"
+                />
+              </View>
 
-              <Text style={styles.inputLabel}>Teléfono</Text>
-              <TextInput
-                style={styles.input}
-                value={newCustomer.phone}
-                onChangeText={(text) => setNewCustomer({ ...newCustomer, phone: text })}
-                placeholder="0999123456"
-                keyboardType="phone-pad"
-              />
+              {/* Lastname */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Apellido *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newCustomer.lastname}
+                  onChangeText={(text) =>
+                    setNewCustomer({ ...newCustomer, lastname: text })
+                  }
+                  placeholder="Pérez"
+                  placeholderTextColor="#BDBDBD"
+                />
+              </View>
 
-              <Text style={styles.inputLabel}>Email</Text>
-              <TextInput
-                style={styles.input}
-                value={newCustomer.email}
-                onChangeText={(text) => setNewCustomer({ ...newCustomer, email: text })}
-                placeholder="ejemplo@correo.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
+              {/* Phone */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Teléfono</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newCustomer.phone}
+                  onChangeText={(text) =>
+                    setNewCustomer({ ...newCustomer, phone: text })
+                  }
+                  placeholder="+593 99 123 4567"
+                  placeholderTextColor="#BDBDBD"
+                  keyboardType="phone-pad"
+                />
+              </View>
 
-              <TouchableOpacity style={styles.submitButton} onPress={handleCreate}>
-                <Text style={styles.submitButtonText}>Crear Cliente</Text>
-              </TouchableOpacity>
+              {/* Email */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  value={newCustomer.email}
+                  onChangeText={(text) =>
+                    setNewCustomer({ ...newCustomer, email: text })
+                  }
+                  placeholder="ejemplo@correo.com"
+                  placeholderTextColor="#BDBDBD"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={{ height: 20 }} />
             </ScrollView>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowModal(false);
+                  setNewCustomer({ name: '', lastname: '', phone: '', email: '' });
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleCreate}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveText}>Crear Cliente</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal visible={showDeleteModal} animationType="fade" transparent>
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <View style={styles.deleteModalIconContainer}>
+              <Ionicons name="trash" size={48} color="#F44336" />
+            </View>
+
+            <Text style={styles.deleteModalTitle}>Eliminar Cliente</Text>
+
+            {selectedCustomer && (
+              <Text style={styles.deleteModalText}>
+                ¿Estás seguro de que quieres eliminar a{' '}
+                <Text style={styles.deleteModalTextBold}>
+                  {selectedCustomer.name} {selectedCustomer.lastname}
+                </Text>
+                ?
+              </Text>
+            )}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowDeleteModal(false);
+                  setSelectedCustomer(null);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteModalConfirmButton}
+                onPress={deleteCustomer}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveText}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </View>
   );
@@ -221,59 +384,97 @@ export default function CustomersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FAFAFA',
   },
+
+  // Header
   header: {
-    backgroundColor: '#4CAF50',
-    padding: 16,
-    paddingTop: 48,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  backButton: {
-    padding: 8,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    flex: 1,
-    marginLeft: 8,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#212121',
   },
-  addButton: {
-    padding: 8,
+
+  // Search Section
+  searchSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    margin: 16,
-    paddingHorizontal: 16,
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  searchIcon: {
-    marginRight: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
   },
   searchInput: {
     flex: 1,
-    height: 48,
     fontSize: 16,
+    fontWeight: '400',
+    color: '#212121',
   },
+
+  // Count Container
+  countContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  countText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#757575',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  // List
   list: {
     flex: 1,
-    paddingHorizontal: 16,
   },
+  listContent: {
+    paddingHorizontal: 20,
+  },
+
+  // Customer Card
   customerCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  avatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  avatarText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#4CAF50',
   },
   customerInfo: {
     flex: 1,
@@ -281,83 +482,223 @@ const styles = StyleSheet.create({
   customerName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    color: '#212121',
+    marginBottom: 6,
   },
   customerDetail: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 4,
+    gap: 6,
   },
   customerDetailText: {
     fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
+    fontWeight: '400',
+    color: '#757575',
   },
+  deleteButton: {
+    padding: 8,
+  },
+
+  // Loading State
+  loadingState: {
+    paddingTop: 80,
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#9E9E9E',
+  },
+
+  // Empty State
   emptyState: {
+    paddingTop: 80,
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 64,
+    marginBottom: 20,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 16,
+    fontWeight: '400',
+    color: '#9E9E9E',
+    textAlign: 'center',
+    marginBottom: 24,
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 8,
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    gap: 8,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
+  emptyButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Modal
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: '90%',
-    padding: 20,
+    paddingTop: 24,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 24,
     marginBottom: 20,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#212121',
+  },
+  modalForm: {
+    paddingHorizontal: 24,
+    maxHeight: 400,
+  },
+  inputGroup: {
+    marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#212121',
     marginBottom: 8,
-    marginTop: 12,
   },
   input: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
+    fontWeight: '400',
+    color: '#212121',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#F5F5F5',
   },
-  submitButton: {
-    backgroundColor: '#4CAF50',
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#F5F5F5',
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: 'transparent',
     borderRadius: 12,
-    padding: 16,
+    paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
   },
-  submitButtonText: {
-    color: '#fff',
+  modalCancelText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#616161',
+  },
+  modalSaveButton: {
+    flex: 1,
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  modalSaveText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Delete Modal
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  deleteModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  deleteModalIconContainer: {
+    marginBottom: 16,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  deleteModalText: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#757575',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  deleteModalTextBold: {
+    fontWeight: '700',
+    color: '#212121',
+  },
+  deleteModalConfirmButton: {
+    flex: 1,
+    backgroundColor: '#F44336',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: '#F44336',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });
