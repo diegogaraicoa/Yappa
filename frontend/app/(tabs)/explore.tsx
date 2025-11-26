@@ -170,12 +170,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-  storeName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#757575',
-    marginTop: 4,
-  },
 
   // Welcome Section
   welcomeSection: {
