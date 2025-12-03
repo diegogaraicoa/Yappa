@@ -52,57 +52,101 @@ export default function AlertsScreen() {
   }, []);
 
   const getAlertColor = (level: 'critical' | 'warning') => {
-    return level === 'critical' ? '#f44336' : '#FF9800';
+    return level === 'critical' ? '#F44336' : '#FF9800';
   };
 
-  const getAlertIcon = (level: 'critical' | 'warning') => {
-    return level === 'critical' ? 'warning' : 'alert-circle';
+  const getAlertBgColor = (level: 'critical' | 'warning') => {
+    return level === 'critical' ? '#FFEBEE' : '#FFF3E0';
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-EC', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const navigateToInventory = () => {
+    router.push('/(tabs)/inventory');
   };
 
   const renderAlertItem = ({ item }: { item: AlertProduct }) => (
-    <View style={[styles.alertCard, { borderLeftColor: getAlertColor(item.alert_level) }]}>
-      <View style={styles.alertHeader}>
+    <View style={styles.alertCard}>
+      {/* Alert Badge */}
+      <View
+        style={[
+          styles.alertBadge,
+          { backgroundColor: getAlertBgColor(item.alert_level) },
+        ]}
+      >
         <Ionicons
-          name={getAlertIcon(item.alert_level) as any}
-          size={24}
+          name={item.alert_level === 'critical' ? 'warning' : 'alert-circle'}
+          size={16}
           color={getAlertColor(item.alert_level)}
         />
-        <Text style={[styles.alertLevel, { color: getAlertColor(item.alert_level) }]}>
+        <Text
+          style={[
+            styles.alertBadgeText,
+            { color: getAlertColor(item.alert_level) },
+          ]}
+        >
           {item.alert_level === 'critical' ? 'CRÍTICO' : 'ADVERTENCIA'}
         </Text>
       </View>
 
-      <View style={styles.alertContent}>
+      {/* Product Content */}
+      <View style={styles.productContent}>
+        {/* Image */}
         {item.image ? (
           <Image source={{ uri: item.image }} style={styles.productImage} />
         ) : (
           <View style={styles.imagePlaceholder}>
-            <Ionicons name="cube-outline" size={32} color="#999" />
+            <Ionicons name="cube-outline" size={32} color="#BDBDBD" />
           </View>
         )}
 
+        {/* Info */}
         <View style={styles.productInfo}>
-          <Text style={styles.productName}>{item.name}</Text>
-          <View style={styles.stockInfo}>
+          <Text style={styles.productName} numberOfLines={2}>
+            {item.name}
+          </Text>
+
+          <View style={styles.stockRow}>
             <View style={styles.stockItem}>
-              <Text style={styles.stockLabel}>Stock actual:</Text>
-              <Text style={[styles.stockValue, { color: getAlertColor(item.alert_level) }]}>
+              <Text style={styles.stockLabel}>Actual</Text>
+              <Text
+                style={[
+                  styles.stockValue,
+                  { color: getAlertColor(item.alert_level) },
+                ]}
+              >
                 {item.quantity}
               </Text>
             </View>
+
+            <View style={styles.stockDivider} />
+
             <View style={styles.stockItem}>
-              <Text style={styles.stockLabel}>Mínimo:</Text>
+              <Text style={styles.stockLabel}>Mínimo</Text>
               <Text style={styles.stockValue}>{item.min_stock_alert}</Text>
             </View>
+
+            <View style={styles.stockDivider} />
+
+            <View style={styles.stockItem}>
+              <Text style={styles.stockLabel}>Precio</Text>
+              <Text style={styles.stockValue}>{formatCurrency(item.price)}</Text>
+            </View>
           </View>
-          <Text style={styles.productPrice}>Precio: ${item.price.toFixed(2)}</Text>
         </View>
       </View>
 
-      {item.alert_level === 'critical' && (
+      {/* Critical Banner */}
+      {item.alert_level === 'critical' && item.quantity === 0 && (
         <View style={styles.criticalBanner}>
-          <Ionicons name="alert-circle" size={16} color="#fff" />
-          <Text style={styles.criticalText}>¡Producto sin stock!</Text>
+          <Ionicons name="alert-circle" size={14} color="#FFFFFF" />
+          <Text style={styles.criticalText}>¡Sin stock disponible!</Text>
         </View>
       )}
     </View>
@@ -110,44 +154,63 @@ export default function AlertsScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="checkmark-circle" size={80} color="#4CAF50" />
+      <View style={styles.emptyIconContainer}>
+        <Ionicons name="checkmark-circle" size={64} color="#4CAF50" />
+      </View>
       <Text style={styles.emptyTitle}>¡Todo en orden!</Text>
       <Text style={styles.emptyText}>
         No hay productos con stock bajo en este momento
       </Text>
       <TouchableOpacity
-        style={styles.inventoryButton}
-        onPress={() => router.push('/(tabs)/inventory')}
+        style={styles.emptyButton}
+        onPress={navigateToInventory}
+        activeOpacity={0.8}
       >
-        <Ionicons name="cube" size={20} color="#fff" />
-        <Text style={styles.inventoryButtonText}>Ver Inventario</Text>
+        <Ionicons name="cube" size={20} color="#FFFFFF" />
+        <Text style={styles.emptyButtonText}>Ver Inventario</Text>
       </TouchableOpacity>
     </View>
   );
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={styles.loadingText}>Cargando alertas...</Text>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="arrow-back" size={24} color="#212121" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Alertas de Stock</Text>
+          <View style={{ width: 24 }} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF9800" />
+          <Text style={styles.loadingText}>Cargando alertas...</Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="arrow-back" size={24} color="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Alertas de Stock</Text>
-        <View style={styles.headerRight}>
-          {alerts.length > 0 && (
-            <View style={styles.alertBadge}>
-              <Text style={styles.alertBadgeText}>{alerts.length}</Text>
-            </View>
-          )}
-        </View>
+        {alerts.length > 0 ? (
+          <View style={styles.headerBadge}>
+            <Text style={styles.headerBadgeText}>{alerts.length}</Text>
+          </View>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       {alerts.length === 0 ? (
@@ -158,19 +221,27 @@ export default function AlertsScreen() {
           renderItem={renderAlertItem}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#4CAF50']}
+              tintColor="#FF9800"
+              colors={['#FF9800']}
             />
           }
           ListHeaderComponent={
             <View style={styles.summary}>
-              <Ionicons name="warning" size={24} color="#FF9800" />
-              <Text style={styles.summaryText}>
-                {alerts.length} producto{alerts.length !== 1 ? 's' : ''} con stock bajo
-              </Text>
+              <View style={styles.summaryIconContainer}>
+                <Ionicons name="warning" size={24} color="#FF9800" />
+              </View>
+              <View style={styles.summaryTextContainer}>
+                <Text style={styles.summaryTitle}>Productos con Stock Bajo</Text>
+                <Text style={styles.summarySubtitle}>
+                  {alerts.length} producto{alerts.length !== 1 ? 's' : ''} requiere
+                  {alerts.length === 1 ? '' : 'n'} atención
+                </Text>
+              </View>
             </View>
           }
         />
@@ -182,192 +253,252 @@ export default function AlertsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FAFAFA',
   },
+
+  // Header
   header: {
-    backgroundColor: '#4CAF50',
-    padding: 20,
-    paddingTop: 50,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  backButton: {
-    padding: 8,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    flex: 1,
-    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#212121',
   },
-  headerRight: {
-    width: 40,
-    alignItems: 'flex-end',
-  },
-  alertBadge: {
-    backgroundColor: '#f44336',
+  headerBadge: {
+    backgroundColor: '#FF9800',
     borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
     minWidth: 24,
+    height: 24,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
   },
-  alertBadgeText: {
-    color: '#fff',
+  headerBadgeText: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
+
+  // Loading
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    gap: 16,
   },
   loadingText: {
-    marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    fontWeight: '500',
+    color: '#9E9E9E',
   },
+
+  // List
   listContainer: {
-    padding: 16,
+    padding: 20,
+    paddingBottom: 40,
   },
+
+  // Summary
   summary: {
-    backgroundColor: '#FFF3E0',
-    padding: 16,
-    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    backgroundColor: '#FFF3E0',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    gap: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#FF9800',
   },
-  summaryText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#E65100',
-    marginLeft: 12,
+  summaryIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  summaryTextContainer: {
     flex: 1,
   },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#E65100',
+    marginBottom: 4,
+  },
+  summarySubtitle: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#EF6C00',
+  },
+
+  // Alert Card
   alertCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
-    borderLeftWidth: 4,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  alertHeader: {
+  alertBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
     marginBottom: 12,
+    gap: 6,
   },
-  alertLevel: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginLeft: 8,
-    letterSpacing: 1,
+  alertBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
-  alertContent: {
+
+  // Product Content
+  productContent: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: 12,
   },
   productImage: {
     width: 80,
     height: 80,
-    borderRadius: 8,
-    marginRight: 16,
+    borderRadius: 12,
+    backgroundColor: '#F5F5F5',
   },
   imagePlaceholder: {
     width: 80,
     height: 80,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: '#F5F5F5',
     alignItems: 'center',
-    marginRight: 16,
+    justifyContent: 'center',
   },
   productInfo: {
     flex: 1,
+    justifyContent: 'space-between',
   },
   productName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '600',
+    color: '#212121',
     marginBottom: 8,
+    lineHeight: 22,
   },
-  stockInfo: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  stockItem: {
+  stockRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 16,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    padding: 8,
+    gap: 8,
+  },
+  stockItem: {
+    flex: 1,
+    alignItems: 'center',
   },
   stockLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginRight: 4,
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#9E9E9E',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   stockValue: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    color: '#212121',
   },
-  productPrice: {
-    fontSize: 14,
-    color: '#4CAF50',
-    fontWeight: '600',
+  stockDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#E0E0E0',
   },
+
+  // Critical Banner
   criticalBanner: {
-    backgroundColor: '#f44336',
-    marginTop: 12,
-    padding: 8,
-    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#F44336',
+    borderRadius: 8,
+    paddingVertical: 8,
+    marginTop: 12,
+    gap: 6,
   },
   criticalText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    marginLeft: 8,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
+
+  // Empty State
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    paddingHorizontal: 40,
+    paddingTop: 80,
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
   },
   emptyTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4CAF50',
-    marginTop: 16,
+    fontWeight: '700',
+    color: '#212121',
     marginBottom: 8,
+    textAlign: 'center',
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    fontWeight: '400',
+    color: '#757575',
     textAlign: 'center',
-    marginBottom: 24,
+    lineHeight: 24,
+    marginBottom: 32,
   },
-  inventoryButton: {
-    backgroundColor: '#4CAF50',
+  emptyButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    paddingVertical: 14,
     paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    gap: 8,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  inventoryButtonText: {
-    color: '#fff',
+  emptyButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    color: '#FFFFFF',
   },
 });
