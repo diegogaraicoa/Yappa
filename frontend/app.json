@@ -14,7 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000"
+        "backgroundColor": "#082E72"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.barrioshop.app",
