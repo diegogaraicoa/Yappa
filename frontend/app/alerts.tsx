@@ -155,7 +155,7 @@ export default function AlertsScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <View style={styles.emptyIconContainer}>
-        <Ionicons name="checkmark-circle" size={64} color="#4CAF50" />
+        <Ionicons name="checkmark-circle" size={64} color="#00D2FF" />
       </View>
       <Text style={styles.emptyTitle}>¡Todo en orden!</Text>
       <Text style={styles.emptyText}>
@@ -485,12 +485,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
     gap: 8,
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

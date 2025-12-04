@@ -67,7 +67,7 @@ export default function AllMerchantsScreen() {
 
   const getActivationBadge = (merchant: any) => {
     if (merchant.fully_activated_at) {
-      return { label: 'Full', color: '#4CAF50' };
+      return { label: 'Full', color: '#00D2FF' };
     } else if (merchant.activated_at) {
       return { label: 'Initial', color: '#FF9800' };
     }
@@ -87,7 +87,7 @@ export default function AllMerchantsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+          <ActivityIndicator size="large" color="#00D2FF" />
           <Text style={styles.loadingText}>Cargando...</Text>
         </View>
       </SafeAreaView>
@@ -269,8 +269,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   filterButtonActive: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
+    borderColor: '#00D2FF',
   },
   filterButtonText: {
     fontSize: 13,

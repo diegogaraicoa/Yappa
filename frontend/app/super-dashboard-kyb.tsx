@@ -82,7 +82,7 @@ export default function KYBManagementScreen() {
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { label: string; color: string; bg: string }> = {
       pending: { label: 'Pendiente', color: '#FF9800', bg: '#FFF3E0' },
-      approved: { label: 'Aprobado', color: '#4CAF50', bg: '#E8F5E9' },
+      approved: { label: 'Aprobado', color: '#00D2FF', bg: '#E8F5E9' },
       rejected: { label: 'Rechazado', color: '#F44336', bg: '#FFEBEE' }
     };
     return badges[status] || badges.pending;
@@ -214,7 +214,7 @@ export default function KYBManagementScreen() {
             <Text style={styles.statValue}>{stats.pending}</Text>
             <Text style={styles.statLabel}>Pendientes</Text>
           </View>
-          <View style={[styles.statCard, { borderLeftColor: '#4CAF50' }]}>
+          <View style={[styles.statCard, { borderLeftColor: '#00D2FF' }]}>
             <Text style={styles.statValue}>{stats.approved}</Text>
             <Text style={styles.statLabel}>Aprobados</Text>
           </View>

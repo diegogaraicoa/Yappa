@@ -71,9 +71,9 @@ export default function MerchantsNewScreen() {
             <Ionicons 
               name={isPositive ? 'trending-up' : 'trending-down'} 
               size={24} 
-              color={isPositive ? '#4CAF50' : '#F44336'} 
+              color={isPositive ? '#00D2FF' : '#F44336'} 
             />
-            <Text style={[styles.comparisonText, { color: isPositive ? '#4CAF50' : '#F44336' }]}>
+            <Text style={[styles.comparisonText, { color: isPositive ? '#00D2FF' : '#F44336' }]}>
               {isPositive ? '+' : ''}{changePercentage.toFixed(1)}% vs período anterior
             </Text>
           </View>

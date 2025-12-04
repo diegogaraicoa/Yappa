@@ -104,7 +104,7 @@ export default function BalanceScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+          <ActivityIndicator size="large" color="#00D2FF" />
           <Text style={styles.loadingText}>Cargando balance...</Text>
         </View>
       </View>
@@ -119,8 +119,8 @@ export default function BalanceScreen() {
           <RefreshControl 
             refreshing={loading} 
             onRefresh={onRefresh}
-            tintColor="#4CAF50"
-            colors={['#4CAF50']}
+            tintColor="#00D2FF"
+            colors={['#00D2FF']}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -187,7 +187,7 @@ export default function BalanceScreen() {
             <Text style={styles.mainBalanceLabel}>BALANCE</Text>
             {balance.balance >= 0 ? (
               <View style={styles.positiveIndicator}>
-                <Ionicons name="trending-up" size={20} color="#4CAF50" />
+                <Ionicons name="trending-up" size={20} color="#00D2FF" />
               </View>
             ) : (
               <View style={styles.negativeIndicator}>
@@ -198,14 +198,14 @@ export default function BalanceScreen() {
           <Text
             style={[
               styles.mainBalanceAmount,
-              { color: balance.balance >= 0 ? '#4CAF50' : '#F44336' },
+              { color: balance.balance >= 0 ? '#00D2FF' : '#F44336' },
             ]}
           >
             ${balance.balance.toFixed(2)}
           </Text>
           <View style={styles.mainBalanceDetails}>
             <View style={styles.mainBalanceDetailItem}>
-              <View style={[styles.detailDot, { backgroundColor: '#4CAF50' }]} />
+              <View style={[styles.detailDot, { backgroundColor: '#00D2FF' }]} />
               <Text style={styles.detailLabel}>Ingresos</Text>
               <Text style={styles.detailValue}>${balance.ingresos.toFixed(2)}</Text>
             </View>
@@ -224,7 +224,7 @@ export default function BalanceScreen() {
         <View style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
             <View style={styles.summaryIconContainer} style={{ backgroundColor: '#E8F5E9' }}>
-              <Ionicons name="arrow-up" size={20} color="#4CAF50" />
+              <Ionicons name="arrow-up" size={20} color="#00D2FF" />
             </View>
             <Text style={styles.summaryTitle}>Ingresos</Text>
           </View>
@@ -275,7 +275,7 @@ export default function BalanceScreen() {
                 {sales.map((sale) => (
                   <View key={sale._id} style={styles.transactionItem}>
                     <View style={[styles.transactionIcon, { backgroundColor: '#E8F5E9' }]}>
-                      <Ionicons name="arrow-up" size={16} color="#4CAF50" />
+                      <Ionicons name="arrow-up" size={16} color="#00D2FF" />
                     </View>
                     <View style={styles.transactionInfo}>
                       <Text style={styles.transactionTitle}>
@@ -285,7 +285,7 @@ export default function BalanceScreen() {
                         {format(new Date(sale.date), 'dd MMM yyyy')}
                       </Text>
                     </View>
-                    <Text style={[styles.transactionAmount, { color: '#4CAF50' }]}>
+                    <Text style={[styles.transactionAmount, { color: '#00D2FF' }]}>
                       +${sale.total.toFixed(2)}
                     </Text>
                   </View>
@@ -338,13 +338,13 @@ export default function BalanceScreen() {
             <Calendar
               onDayPress={(day) => handleDateSelect(day.dateString)}
               markedDates={{
-                [startDate]: { selected: true, selectedColor: '#4CAF50' },
+                [startDate]: { selected: true, selectedColor: '#00D2FF' },
                 [endDate]: { selected: true, selectedColor: '#2196F3' },
               }}
               theme={{
-                selectedDayBackgroundColor: '#4CAF50',
-                todayTextColor: '#4CAF50',
-                arrowColor: '#4CAF50',
+                selectedDayBackgroundColor: '#00D2FF',
+                todayTextColor: '#00D2FF',
+                arrowColor: '#00D2FF',
                 textDayFontSize: 16,
                 textMonthFontSize: 18,
                 textDayHeaderFontSize: 14,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#00D2FF',
     letterSpacing: 1,
     marginBottom: 4,
     textTransform: 'uppercase',

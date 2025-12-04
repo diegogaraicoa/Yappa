@@ -82,7 +82,7 @@ export default function HomeScreen() {
       title: 'Venta',
       subtitle: 'Registrar venta',
       icon: 'arrow-up-circle',
-      iconColor: '#4CAF50',
+      iconColor: '#00D2FF',
       bgColor: '#E8F5E9',
       action: () => router.push('/sale'),
     },
@@ -124,8 +124,8 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#4CAF50"
-            colors={['#4CAF50']}
+            tintColor="#00D2FF"
+            colors={['#00D2FF']}
           />
         }
       >
@@ -163,13 +163,13 @@ export default function HomeScreen() {
             <View style={styles.balanceAmountContainer}>
               <Text style={[
                 styles.balanceAmount,
-                { color: balanceData.balance >= 0 ? '#4CAF50' : '#F44336' }
+                { color: balanceData.balance >= 0 ? '#00D2FF' : '#F44336' }
               ]}>
                 {formatCurrency(balanceData.balance)}
               </Text>
               {balanceData.balance >= 0 ? (
                 <View style={styles.positiveIndicator}>
-                  <Ionicons name="trending-up" size={24} color="#4CAF50" />
+                  <Ionicons name="trending-up" size={24} color="#00D2FF" />
                 </View>
               ) : (
                 <View style={styles.negativeIndicator}>
@@ -180,7 +180,7 @@ export default function HomeScreen() {
 
             <View style={styles.balanceDetails}>
               <View style={styles.balanceDetailItem}>
-                <View style={styles.balanceDetailDot} style={{ backgroundColor: '#4CAF50' }} />
+                <View style={styles.balanceDetailDot} style={{ backgroundColor: '#00D2FF' }} />
                 <Text style={styles.balanceDetailLabel}>Ingresos</Text>
                 <Text style={styles.balanceDetailValue}>{formatCurrency(balanceData.income)}</Text>
               </View>
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#00D2FF',
     letterSpacing: 1,
     marginBottom: 4,
     textTransform: 'uppercase',

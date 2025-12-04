@@ -34,7 +34,7 @@ export default function MerchantsActiveScreen() {
 
   const getActivationBadge = (merchant: any) => {
     if (merchant.fully_activated_at) {
-      return { label: 'Full', color: '#4CAF50' };
+      return { label: 'Full', color: '#00D2FF' };
     } else if (merchant.activated_at) {
       return { label: 'Initial', color: '#FF9800' };
     }
@@ -51,7 +51,7 @@ export default function MerchantsActiveScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+          <ActivityIndicator size="large" color="#00D2FF" />
           <Text style={styles.loadingText}>Cargando...</Text>
         </View>
       </SafeAreaView>

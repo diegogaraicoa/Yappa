@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#00D2FF',
     letterSpacing: 2,
     marginBottom: 24,
     textTransform: 'uppercase',
@@ -300,13 +300,13 @@ const styles = StyleSheet.create({
 
   // Botón principal
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 16,
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   switchLink: {
-    color: '#4CAF50',
+    color: '#00D2FF',
     fontSize: 14,
     fontWeight: '600',
   },

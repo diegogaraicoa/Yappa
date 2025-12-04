@@ -293,7 +293,7 @@ export default function SuperDashboardScreen() {
     const clerkChurn = kpiData.churn.clerks;
 
     const getChurnColor = (count: number): string => {
-      if (count === 0) return '#4CAF50';
+      if (count === 0) return '#00D2FF';
       if (count < 5) return '#FF9800';
       return '#F44336';
     };
@@ -366,7 +366,7 @@ export default function SuperDashboardScreen() {
             onPress={() => router.push('/super-dashboard-all-merchants')}
             activeOpacity={0.7}
           >
-            <Ionicons name="storefront-outline" size={32} color="#4CAF50" />
+            <Ionicons name="storefront-outline" size={32} color="#00D2FF" />
             <Text style={styles.hierarchyCardValue}>{hierarchy.total_merchants}</Text>
             <Text style={styles.hierarchyCardLabel}>Merchants</Text>
             <Ionicons name="chevron-forward" size={16} color="#999" style={styles.hierarchyCardArrow} />
@@ -400,7 +400,7 @@ export default function SuperDashboardScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+          <ActivityIndicator size="large" color="#00D2FF" />
           <Text style={styles.loadingText}>Cargando KPIs...</Text>
         </View>
       </SafeAreaView>
@@ -441,7 +441,7 @@ export default function SuperDashboardScreen() {
             <Text style={styles.adminOpsButtonText}>Admin Ops</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
-            <Ionicons name="refresh" size={24} color="#4CAF50" />
+            <Ionicons name="refresh" size={24} color="#00D2FF" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#F44336" />
@@ -462,7 +462,7 @@ export default function SuperDashboardScreen() {
             'Merchants Activos',
             kpiData.active_merchants.count,
             'storefront',
-            '#4CAF50',
+            '#00D2FF',
             'Con actividad en el período',
             () => router.push('/super-dashboard-merchants-active')
           )}
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 8,
   },
   retryButtonText: {
@@ -613,8 +613,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   filterButtonActive: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
+    borderColor: '#00D2FF',
   },
   filterButtonText: {
     fontSize: 14,

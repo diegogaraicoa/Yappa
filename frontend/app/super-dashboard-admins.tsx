@@ -80,7 +80,7 @@ export default function AllAdminsScreenCRUD() {
 
   const getActivationBadge = (admin: any) => {
     if (admin.merchants_count > 0 && admin.clerks_count > 5) {
-      return { label: 'Full', color: '#4CAF50' };
+      return { label: 'Full', color: '#00D2FF' };
     } else if (admin.merchants_count > 0) {
       return { label: 'Initial', color: '#FF9800' };
     }

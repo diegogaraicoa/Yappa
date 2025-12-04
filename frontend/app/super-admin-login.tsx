@@ -66,7 +66,7 @@ export default function SuperAdminLoginScreen() {
           {/* Logo/Header */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <Ionicons name="shield-checkmark" size={64} color="#4CAF50" />
+              <Ionicons name="shield-checkmark" size={64} color="#00D2FF" />
             </View>
             <Text style={styles.title}>Super Dashboard</Text>
             <Text style={styles.subtitle}>Acceso restringido - Solo administradores</Text>
@@ -236,11 +236,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     paddingVertical: 16,
     marginTop: 8,
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

@@ -90,7 +90,7 @@ export default function AllMerchantsScreenCRUD() {
 
   const getActivationBadge = (merchant: any) => {
     if (merchant.fully_activated_at) {
-      return { label: 'Full', color: '#4CAF50' };
+      return { label: 'Full', color: '#00D2FF' };
     } else if (merchant.activated_at) {
       return { label: 'Initial', color: '#FF9800' };
     }
@@ -193,7 +193,7 @@ export default function AllMerchantsScreenCRUD() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+          <ActivityIndicator size="large" color="#00D2FF" />
           <Text style={styles.loadingText}>Cargando...</Text>
         </View>
       </SafeAreaView>
@@ -519,8 +519,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   filterButtonActive: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
+    borderColor: '#00D2FF',
   },
   filterButtonText: {
     fontSize: 13,
@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -708,8 +708,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   adminOptionSelected: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
+    borderColor: '#00D2FF',
   },
   adminOptionText: {
     fontSize: 14,
@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   saveButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
   },
   cancelButtonText: {
     fontSize: 16,

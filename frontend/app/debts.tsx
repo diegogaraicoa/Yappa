@@ -103,10 +103,10 @@ export default function DebtsScreen() {
         <View style={styles.summaryRow}>
           <View style={styles.summaryItem}>
             <View style={styles.summaryIconContainer}>
-              <Ionicons name="arrow-down-circle" size={20} color="#4CAF50" />
+              <Ionicons name="arrow-down-circle" size={20} color="#00D2FF" />
             </View>
             <Text style={styles.summaryItemLabel}>Por Cobrar</Text>
-            <Text style={[styles.summaryItemValue, { color: '#4CAF50' }]}>
+            <Text style={[styles.summaryItemValue, { color: '#00D2FF' }]}>
               {formatCurrency(customerDebt)}
             </Text>
           </View>
@@ -205,7 +205,7 @@ export default function DebtsScreen() {
         ) : debts.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconContainer}>
-              <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
+              <Ionicons name="checkmark-circle" size={48} color="#00D2FF" />
             </View>
             <Text style={styles.emptyTitle}>¡Todo al día!</Text>
             <Text style={styles.emptyText}>No hay deudas pendientes</Text>
@@ -231,7 +231,7 @@ export default function DebtsScreen() {
                         : 'arrow-up-circle'
                     }
                     size={24}
-                    color={debt.type === 'customer' ? '#4CAF50' : '#F44336'}
+                    color={debt.type === 'customer' ? '#00D2FF' : '#F44336'}
                   />
                 </View>
                 <View style={styles.debtInfo}>
@@ -246,7 +246,7 @@ export default function DebtsScreen() {
                   style={[
                     styles.debtAmount,
                     {
-                      color: debt.type === 'customer' ? '#4CAF50' : '#F44336',
+                      color: debt.type === 'customer' ? '#00D2FF' : '#F44336',
                     },
                   ]}
                 >
@@ -302,7 +302,7 @@ export default function DebtsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalIconContainer}>
-              <Ionicons name="checkmark-circle" size={56} color="#4CAF50" />
+              <Ionicons name="checkmark-circle" size={56} color="#00D2FF" />
             </View>
             
             <Text style={styles.modalTitle}>Confirmar Pago</Text>
@@ -555,11 +555,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     paddingVertical: 12,
     gap: 8,
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -669,11 +669,11 @@ const styles = StyleSheet.create({
   },
   modalConfirmButton: {
     flex: 1,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

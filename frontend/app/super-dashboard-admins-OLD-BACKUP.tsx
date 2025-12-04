@@ -90,7 +90,7 @@ export default function AdminsScreen() {
               </View>
               <View style={styles.cardFooter}>
                 <View style={styles.statItem}>
-                  <Ionicons name="storefront" size={16} color="#4CAF50" />
+                  <Ionicons name="storefront" size={16} color="#00D2FF" />
                   <Text style={styles.statText}>{admin.merchants_count} merchants</Text>
                 </View>
                 <Text style={styles.dateText}>Creado: {formatDate(admin.created_at)}</Text>
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 13,
-    color: '#4CAF50',
+    color: '#00D2FF',
     fontWeight: '600',
     marginLeft: 6,
   },

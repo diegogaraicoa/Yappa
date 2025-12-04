@@ -84,11 +84,11 @@ export default function ForgotPasswordScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#4CAF50" />
+          <Ionicons name="arrow-back" size={24} color="#00D2FF" />
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <Ionicons name="lock-closed" size={60} color="#4CAF50" />
+          <Ionicons name="lock-closed" size={60} color="#00D2FF" />
           <Text style={styles.title}>Recuperar Contraseña</Text>
           <Text style={styles.subtitle}>
             {step === 'email' && 'Ingresa tu correo electrónico'}
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     height: 56,
     justifyContent: 'center',
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   linkText: {
-    color: '#4CAF50',
+    color: '#00D2FF',
     fontSize: 16,
   },
 });

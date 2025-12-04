@@ -32,7 +32,7 @@ export default function ExploreScreen() {
       description: 'Gestiona tu cartera',
       icon: 'people-outline',
       iconFilled: 'people',
-      color: '#4CAF50',
+      color: '#00D2FF',
       bgColor: '#E8F5E9',
       route: '/customers',
     },
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#00D2FF',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },

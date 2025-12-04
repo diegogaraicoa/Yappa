@@ -80,7 +80,7 @@ export default function AdminConsoleScreen() {
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+          <ActivityIndicator size="large" color="#00D2FF" />
         </View>
       );
     }
@@ -106,7 +106,7 @@ export default function AdminConsoleScreen() {
   };
 
   const menuItems = [
-    { id: 'dashboard', title: 'Dashboard', icon: 'stats-chart', color: '#4CAF50' },
+    { id: 'dashboard', title: 'Dashboard', icon: 'stats-chart', color: '#00D2FF' },
     { id: 'products', title: 'Productos', icon: 'cube', color: '#2196F3' },
     { id: 'customers', title: 'Clientes', icon: 'people', color: '#9C27B0' },
     { id: 'suppliers', title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
@@ -389,7 +389,7 @@ function DashboardView({ data }: any) {
 
       {/* KPI Cards */}
       <View style={styles.kpiGrid}>
-        <View style={[styles.kpiCard, { borderLeftColor: '#4CAF50' }]}>
+        <View style={[styles.kpiCard, { borderLeftColor: '#00D2FF' }]}>
           <Text style={styles.kpiLabel}>Ventas del Mes</Text>
           <Text style={styles.kpiValue}>${analytics.sales?.month?.toFixed(2) || '0.00'}</Text>
           <Text style={styles.kpiSubtext}>{analytics.sales?.count_month || 0} transacciones</Text>
@@ -397,7 +397,7 @@ function DashboardView({ data }: any) {
 
         <View style={[styles.kpiCard, { borderLeftColor: '#2196F3' }]}>
           <Text style={styles.kpiLabel}>Balance Mensual</Text>
-          <Text style={[styles.kpiValue, { color: analytics.balance?.month >= 0 ? '#4CAF50' : '#f44336' }]}>
+          <Text style={[styles.kpiValue, { color: analytics.balance?.month >= 0 ? '#00D2FF' : '#f44336' }]}>
             ${analytics.balance?.month?.toFixed(2) || '0.00'}
           </Text>
           <Text style={styles.kpiSubtext}>Ventas - Gastos</Text>
@@ -441,7 +441,7 @@ function DashboardView({ data }: any) {
               <Text style={styles.comparisonLabel}>Cambio</Text>
               <Text style={[
                 styles.comparisonValue,
-                { color: comparisons.week_comparison?.change_percent >= 0 ? '#4CAF50' : '#f44336' }
+                { color: comparisons.week_comparison?.change_percent >= 0 ? '#00D2FF' : '#f44336' }
               ]}>
                 {comparisons.week_comparison?.change_percent >= 0 ? '+' : ''}
                 {comparisons.week_comparison?.change_percent?.toFixed(1) || '0'}%
@@ -469,7 +469,7 @@ function DashboardView({ data }: any) {
               <Text style={styles.comparisonLabel}>Cambio</Text>
               <Text style={[
                 styles.comparisonValue,
-                { color: comparisons.month_comparison?.change_percent >= 0 ? '#4CAF50' : '#f44336' }
+                { color: comparisons.month_comparison?.change_percent >= 0 ? '#00D2FF' : '#f44336' }
               ]}>
                 {comparisons.month_comparison?.change_percent >= 0 ? '+' : ''}
                 {comparisons.month_comparison?.change_percent?.toFixed(1) || '0'}%
@@ -870,7 +870,7 @@ function BulkUploadView({ onReload }: any) {
             style={[styles.uploadTypeCard, uploadType === 'products' && styles.uploadTypeActive]}
             onPress={() => setUploadType('products')}
           >
-            <Ionicons name="cube" size={32} color={uploadType === 'products' ? '#4CAF50' : '#999'} />
+            <Ionicons name="cube" size={32} color={uploadType === 'products' ? '#00D2FF' : '#999'} />
             <Text style={styles.uploadTypeText}>Productos</Text>
           </TouchableOpacity>
 
@@ -878,7 +878,7 @@ function BulkUploadView({ onReload }: any) {
             style={[styles.uploadTypeCard, uploadType === 'customers' && styles.uploadTypeActive]}
             onPress={() => setUploadType('customers')}
           >
-            <Ionicons name="people" size={32} color={uploadType === 'customers' ? '#4CAF50' : '#999'} />
+            <Ionicons name="people" size={32} color={uploadType === 'customers' ? '#00D2FF' : '#999'} />
             <Text style={styles.uploadTypeText}>Clientes</Text>
           </TouchableOpacity>
 
@@ -886,7 +886,7 @@ function BulkUploadView({ onReload }: any) {
             style={[styles.uploadTypeCard, uploadType === 'suppliers' && styles.uploadTypeActive]}
             onPress={() => setUploadType('suppliers')}
           >
-            <Ionicons name="briefcase" size={32} color={uploadType === 'suppliers' ? '#4CAF50' : '#999'} />
+            <Ionicons name="briefcase" size={32} color={uploadType === 'suppliers' ? '#00D2FF' : '#999'} />
             <Text style={styles.uploadTypeText}>Proveedores</Text>
           </TouchableOpacity>
         </View>
@@ -899,7 +899,7 @@ function BulkUploadView({ onReload }: any) {
           <Text style={styles.actionButtonText}>Descargar Plantilla</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#4CAF50' }]} onPress={handleFileUpload}>
+        <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#00D2FF' }]} onPress={handleFileUpload}>
           <Ionicons name="cloud-upload" size={24} color="#fff" />
           <Text style={styles.actionButtonText}>Cargar Archivo CSV</Text>
         </TouchableOpacity>
@@ -1011,7 +1011,7 @@ function ReportsView({ data }: any) {
             onPress={() => openReport(report)}
           >
             <View style={styles.reportHeader}>
-              <Ionicons name="document-text" size={24} color="#4CAF50" />
+              <Ionicons name="document-text" size={24} color="#00D2FF" />
               <View style={styles.reportInfo}>
                 <Text style={styles.reportTitle}>Reporte #{history.length - index}</Text>
                 <Text style={styles.reportDate}>{formatDate(report.generated_at)}</Text>
@@ -1064,7 +1064,7 @@ function ReportsView({ data }: any) {
                       <View style={styles.reportModalMetricCard}>
                         <Text style={styles.reportModalMetricLabel}>Balance</Text>
                         <Text style={[styles.reportModalMetricValue, {
-                          color: selectedReport.metrics.balance >= 0 ? '#4CAF50' : '#f44336'
+                          color: selectedReport.metrics.balance >= 0 ? '#00D2FF' : '#f44336'
                         }]}>
                           ${selectedReport.metrics.balance?.toFixed(2) || '0.00'}
                         </Text>
@@ -1097,7 +1097,7 @@ function TrainingView({ data }: any) {
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      basic: '#4CAF50',
+      basic: '#00D2FF',
       intermediate: '#FF9800',
       advanced: '#F44336',
       whatsapp: '#25D366',
@@ -1387,7 +1387,7 @@ const styles = StyleSheet.create({
   seasonalityValue: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: '#00D2FF',
   },
   topItemCard: {
     flexDirection: 'row',
@@ -1400,7 +1400,7 @@ const styles = StyleSheet.create({
   topItemRank: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: '#00D2FF',
     marginRight: 16,
     width: 40,
   },
@@ -1430,7 +1430,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   activeTab: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
   },
   tabText: {
     fontSize: 14,
@@ -1446,7 +1446,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
+    borderLeftColor: '#00D2FF',
   },
   productName: {
     fontSize: 16,
@@ -1512,7 +1512,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
+    borderLeftColor: '#00D2FF',
   },
   customerHeader: {
     flexDirection: 'row',
@@ -1522,7 +1522,7 @@ const styles = StyleSheet.create({
   customerRank: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: '#00D2FF',
     marginRight: 12,
     width: 30,
   },
@@ -1542,7 +1542,7 @@ const styles = StyleSheet.create({
   customerRevenue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: '#00D2FF',
   },
   customerStats: {
     flexDirection: 'row',
@@ -1612,7 +1612,7 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
   },
   uploadTypeActive: {
-    borderColor: '#4CAF50',
+    borderColor: '#00D2FF',
     backgroundColor: '#f1f8f4',
   },
   uploadTypeText: {
@@ -1685,7 +1685,7 @@ const styles = StyleSheet.create({
   },
   reportMetric: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: '#00D2FF',
     fontWeight: '600',
   },
   reportInsights: {
@@ -1765,7 +1765,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   confirmButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
   },
   cancelButtonText: {
     fontSize: 16,
@@ -1865,7 +1865,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -1904,14 +1904,14 @@ const styles = StyleSheet.create({
   },
   supportTabActive: {
     borderBottomWidth: 3,
-    borderBottomColor: '#4CAF50',
+    borderBottomColor: '#00D2FF',
   },
   supportTabText: {
     fontSize: 16,
     color: '#666',
   },
   supportTabTextActive: {
-    color: '#4CAF50',
+    color: '#00D2FF',
     fontWeight: '600',
   },
   supportModalContent: {
@@ -1997,8 +1997,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   priorityButtonActive: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
+    borderColor: '#00D2FF',
   },
   priorityButtonText: {
     fontSize: 14,
@@ -2010,7 +2010,7 @@ const styles = StyleSheet.create({
   },
   supportSubmitButton: {
     flexDirection: 'row',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',

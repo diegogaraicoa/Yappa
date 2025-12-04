@@ -395,7 +395,7 @@ export default function KYBFormScreen() {
             {documentoRepresentante ? (
               <View style={styles.documentPreview}>
                 <View style={styles.documentInfo}>
-                  <Ionicons name="document-attach" size={24} color="#4CAF50" />
+                  <Ionicons name="document-attach" size={24} color="#00D2FF" />
                   <Text style={styles.documentText}>Documento cargado</Text>
                 </View>
                 <TouchableOpacity
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#E8F5E9',
     borderWidth: 1,
-    borderColor: '#4CAF50',
+    borderColor: '#00D2FF',
     borderRadius: 8,
     padding: 16,
   },
@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
   },
   documentText: {
     fontSize: 14,
-    color: '#4CAF50',
+    color: '#00D2FF',
     fontWeight: '600',
   },
   removeButton: {

@@ -269,8 +269,8 @@ export default function InventoryScreen() {
           <RefreshControl 
             refreshing={loading} 
             onRefresh={loadData}
-            tintColor="#4CAF50"
-            colors={['#4CAF50']}
+            tintColor="#00D2FF"
+            colors={['#00D2FF']}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -297,7 +297,7 @@ export default function InventoryScreen() {
           
           <View style={styles.statCard}>
             <View style={[styles.statIconContainer, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="cash" size={20} color="#4CAF50" />
+              <Ionicons name="cash" size={20} color="#00D2FF" />
             </View>
             <View style={styles.statInfo}>
               <Text style={styles.statValue}>${totalInventoryValue.toFixed(0)}</Text>
@@ -561,7 +561,7 @@ export default function InventoryScreen() {
                     value={newProduct.alert_enabled}
                     onValueChange={(value) => setNewProduct({ ...newProduct, alert_enabled: value })}
                     trackColor={{ false: '#E0E0E0', true: '#A5D6A7' }}
-                    thumbColor={newProduct.alert_enabled ? '#4CAF50' : '#F5F5F5'}
+                    thumbColor={newProduct.alert_enabled ? '#00D2FF' : '#F5F5F5'}
                   />
                 </View>
               </View>
@@ -726,7 +726,7 @@ export default function InventoryScreen() {
                   Sin categoría
                 </Text>
                 {!newProduct.category_id && (
-                  <Ionicons name="checkmark" size={24} color="#4CAF50" />
+                  <Ionicons name="checkmark" size={24} color="#00D2FF" />
                 )}
               </TouchableOpacity>
 
@@ -751,7 +751,7 @@ export default function InventoryScreen() {
                     {category.name}
                   </Text>
                   {newProduct.category_id === category._id && (
-                    <Ionicons name="checkmark" size={24} color="#4CAF50" />
+                    <Ionicons name="checkmark" size={24} color="#00D2FF" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#00D2FF',
     letterSpacing: 1,
     marginBottom: 4,
     textTransform: 'uppercase',
@@ -903,11 +903,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     paddingVertical: 14,
     gap: 8,
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -1106,11 +1106,11 @@ const styles = StyleSheet.create({
   },
   modalSaveButton: {
     flex: 1,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -1245,7 +1245,7 @@ const styles = StyleSheet.create({
   },
   categoryOptionSelected: {
     backgroundColor: '#E8F5E9',
-    borderColor: '#4CAF50',
+    borderColor: '#00D2FF',
   },
   categoryOptionText: {
     fontSize: 16,
@@ -1253,7 +1253,7 @@ const styles = StyleSheet.create({
     color: '#212121',
   },
   categoryOptionTextSelected: {
-    color: '#4CAF50',
+    color: '#00D2FF',
     fontWeight: '600',
   },
   emptyCategories: {

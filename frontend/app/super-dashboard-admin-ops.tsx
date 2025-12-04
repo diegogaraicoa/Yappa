@@ -341,7 +341,7 @@ export default function AdminOpsScreen() {
               <Ionicons 
                 name="storefront" 
                 size={24} 
-                color="#4CAF50" 
+                color="#00D2FF" 
                 style={styles.accordionIcon} 
               />
               <View>
@@ -367,7 +367,7 @@ export default function AdminOpsScreen() {
                   onChangeText={setSearchMerchant}
                 />
                 <TouchableOpacity 
-                  style={[styles.addButton, { backgroundColor: '#4CAF50' }]}
+                  style={[styles.addButton, { backgroundColor: '#00D2FF' }]}
                   onPress={() => openCreateModal('merchant')}
                 >
                   <Ionicons name="add" size={20} color="#FFF" />
@@ -575,7 +575,7 @@ export default function AdminOpsScreen() {
                           <Ionicons 
                             name="checkmark-circle" 
                             size={20} 
-                            color={isActive ? '#FFF' : '#4CAF50'} 
+                            color={isActive ? '#FFF' : '#00D2FF'} 
                           />
                           <Text style={[
                             styles.toggleText,
@@ -694,7 +694,7 @@ export default function AdminOpsScreen() {
                           <Ionicons 
                             name="checkmark-circle" 
                             size={20} 
-                            color={isActive ? '#FFF' : '#4CAF50'} 
+                            color={isActive ? '#FFF' : '#00D2FF'} 
                           />
                           <Text style={[
                             styles.toggleText,
@@ -837,7 +837,7 @@ export default function AdminOpsScreen() {
                           <Ionicons 
                             name="checkmark-circle" 
                             size={20} 
-                            color={isActive ? '#FFF' : '#4CAF50'} 
+                            color={isActive ? '#FFF' : '#00D2FF'} 
                           />
                           <Text style={[
                             styles.toggleText,
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
   // Toggle styles
   activeToggleContainer: { flexDirection: 'column', gap: 8, marginTop: 8 },
   toggleOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: '#E0E0E0', backgroundColor: '#F5F5F5', gap: 10 },
-  toggleOptionActive: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
+  toggleOptionActive: { backgroundColor: '#00D2FF', borderColor: '#00D2FF' },
   toggleOptionInactive: { backgroundColor: '#F44336', borderColor: '#F44336' },
   toggleText: { fontSize: 14, color: '#666', fontWeight: '500', flex: 1 },
   toggleTextActive: { color: '#FFF', fontWeight: '600' },

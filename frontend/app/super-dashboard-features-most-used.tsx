@@ -68,7 +68,7 @@ export default function FeaturesMostUsedScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
+          <ActivityIndicator size="large" color="#00D2FF" />
           <Text style={styles.loadingText}>Cargando...</Text>
         </View>
       </SafeAreaView>
@@ -98,7 +98,7 @@ export default function FeaturesMostUsedScreen() {
             <View key={index} style={styles.card}>
               <View style={styles.cardHeader}>
                 <View style={styles.iconContainer}>
-                  <Ionicons name={getIconName(feature.section)} size={28} color="#4CAF50" />
+                  <Ionicons name={getIconName(feature.section)} size={28} color="#00D2FF" />
                 </View>
                 <View style={styles.cardContent}>
                   <Text style={styles.cardTitle}>{getSectionName(feature.section)}</Text>
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     justifyContent: 'center',
     alignItems: 'center',
   },

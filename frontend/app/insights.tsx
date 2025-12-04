@@ -203,7 +203,7 @@ export default function InsightsScreen() {
                 { backgroundColor: '#E8F5E9' },
               ]}
             >
-              <Ionicons name="trending-up" size={24} color="#4CAF50" />
+              <Ionicons name="trending-up" size={24} color="#00D2FF" />
             </View>
             <Text style={styles.metricValue}>
               {formatCurrency(metrics.total_sales || 0)}

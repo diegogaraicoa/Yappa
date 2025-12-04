@@ -173,14 +173,14 @@ export default function CustomersScreen() {
           <RefreshControl
             refreshing={loading}
             onRefresh={loadCustomers}
-            tintColor="#4CAF50"
-            colors={['#4CAF50']}
+            tintColor="#00D2FF"
+            colors={['#00D2FF']}
           />
         }
       >
         {loading && customers.length === 0 ? (
           <View style={styles.loadingState}>
-            <ActivityIndicator size="large" color="#4CAF50" />
+            <ActivityIndicator size="large" color="#00D2FF" />
             <Text style={styles.loadingText}>Cargando clientes...</Text>
           </View>
         ) : filteredCustomers.length === 0 ? (
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#4CAF50',
+    color: '#00D2FF',
   },
   customerInfo: {
     flex: 1,
@@ -595,12 +595,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
     gap: 8,
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -685,11 +685,11 @@ const styles = StyleSheet.create({
   },
   modalSaveButton: {
     flex: 1,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

@@ -230,7 +230,7 @@ export default function SaleScreen() {
             activeOpacity={0.7}
           >
             <View style={[styles.optionIcon, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="cube" size={32} color="#4CAF50" />
+              <Ionicons name="cube" size={32} color="#00D2FF" />
             </View>
             <View style={styles.optionContent}>
               <Text style={styles.optionTitle}>Con Inventario</Text>
@@ -330,7 +330,7 @@ export default function SaleScreen() {
               onPress={() => setShowProductModal(true)}
               activeOpacity={0.7}
             >
-              <Ionicons name="add" size={20} color="#4CAF50" />
+              <Ionicons name="add" size={20} color="#00D2FF" />
               <Text style={styles.addButtonText}>Agregar Producto</Text>
             </TouchableOpacity>
           </View>
@@ -470,7 +470,7 @@ export default function SaleScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <Ionicons name="add-circle" size={20} color="#4CAF50" />
+                <Ionicons name="add-circle" size={20} color="#00D2FF" />
                 <Text style={styles.createNewText}>Crear Producto Rápido</Text>
               </TouchableOpacity>
             </View>
@@ -631,7 +631,7 @@ export default function SaleScreen() {
                   {method}
                 </Text>
                 {paymentMethod === method && (
-                  <Ionicons name="checkmark" size={24} color="#4CAF50" />
+                  <Ionicons name="checkmark" size={24} color="#00D2FF" />
                 )}
               </TouchableOpacity>
             ))}
@@ -660,7 +660,7 @@ export default function SaleScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <Ionicons name="add-circle" size={20} color="#4CAF50" />
+                <Ionicons name="add-circle" size={20} color="#00D2FF" />
                 <Text style={styles.createNewText}>Crear Nuevo Cliente</Text>
               </TouchableOpacity>
             </View>
@@ -689,7 +689,7 @@ export default function SaleScreen() {
                     <Text style={styles.modalItemPhone}>{customer.phone}</Text>
                   </View>
                   {selectedCustomer?._id === customer._id && (
-                    <Ionicons name="checkmark" size={24} color="#4CAF50" />
+                    <Ionicons name="checkmark" size={24} color="#00D2FF" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -962,14 +962,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: '#00D2FF',
     borderStyle: 'dashed',
     gap: 8,
   },
   addButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#00D2FF',
   },
 
   // Total Card
@@ -991,7 +991,7 @@ const styles = StyleSheet.create({
   currencySymbol: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#4CAF50',
+    color: '#00D2FF',
     marginRight: 8,
   },
   totalInput: {
@@ -1034,7 +1034,7 @@ const styles = StyleSheet.create({
   },
   statusButtonActive: {
     backgroundColor: '#E8F5E9',
-    borderColor: '#4CAF50',
+    borderColor: '#00D2FF',
   },
   statusButtonText: {
     fontSize: 16,
@@ -1042,7 +1042,7 @@ const styles = StyleSheet.create({
     color: '#757575',
   },
   statusButtonTextActive: {
-    color: '#4CAF50',
+    color: '#00D2FF',
   },
 
   // Notes Input
@@ -1073,11 +1073,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     paddingVertical: 16,
     gap: 8,
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -1133,7 +1133,7 @@ const styles = StyleSheet.create({
   },
   modalItemSelected: {
     backgroundColor: '#E8F5E9',
-    borderColor: '#4CAF50',
+    borderColor: '#00D2FF',
   },
   modalItemLeft: {
     flex: 1,
@@ -1168,7 +1168,7 @@ const styles = StyleSheet.create({
     color: '#212121',
   },
   modalItemTextSelected: {
-    color: '#4CAF50',
+    color: '#00D2FF',
     fontWeight: '600',
   },
 
@@ -1190,13 +1190,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: '#00D2FF',
     gap: 8,
   },
   createNewText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: '#00D2FF',
   },
 
   // Empty Customers
@@ -1259,11 +1259,11 @@ const styles = StyleSheet.create({
   },
   modalSaveButton: {
     flex: 1,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: '#4CAF50',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

@@ -73,7 +73,7 @@ export default function TrainingScreen() {
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      basic: '#4CAF50',
+      basic: '#00D2FF',
       intermediate: '#FF9800',
       advanced: '#F44336',
       whatsapp: '#25D366',

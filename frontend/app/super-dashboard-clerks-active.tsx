@@ -89,7 +89,7 @@ export default function AllClerksScreenCRUD() {
 
   const getActivationBadge = (clerk: any) => {
     if (clerk.fully_activated_at) {
-      return { label: 'Full', color: '#4CAF50' };
+      return { label: 'Full', color: '#00D2FF' };
     } else if (clerk.activated_at) {
       return { label: 'Initial', color: '#FF9800' };
     }

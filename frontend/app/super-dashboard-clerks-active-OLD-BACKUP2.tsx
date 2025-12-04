@@ -35,7 +35,7 @@ export default function ClerksActiveScreen() {
 
   const getActivationBadge = (clerk: any) => {
     if (clerk.fully_activated_at) {
-      return { label: 'Full', color: '#4CAF50' };
+      return { label: 'Full', color: '#00D2FF' };
     } else if (clerk.activated_at) {
       return { label: 'Initial', color: '#FF9800' };
     }
@@ -173,7 +173,7 @@ export default function ClerksActiveScreen() {
                       backgroundColor: clerk.status === 'new' ? '#E8F5E9' : '#E3F2FD' 
                     }]}>
                       <Text style={[styles.statusText, { 
-                        color: clerk.status === 'new' ? '#4CAF50' : '#2196F3' 
+                        color: clerk.status === 'new' ? '#00D2FF' : '#2196F3' 
                       }]}>
                         {clerk.status === 'new' ? 'Nuevo' : 'Existente'}
                       </Text>
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   },
   statCardActive: {
     backgroundColor: '#E8F5E9',
-    borderColor: '#4CAF50',
+    borderColor: '#00D2FF',
   },
   statValue: {
     fontSize: 32,
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   statValueActive: {
-    color: '#4CAF50',
+    color: '#00D2FF',
   },
   statLabel: {
     fontSize: 14,
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   statLabelActive: {
-    color: '#4CAF50',
+    color: '#00D2FF',
     fontWeight: '600',
   },
   activeIndicator: {
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     bottom: 8,
     width: 24,
     height: 3,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D2FF',
     borderRadius: 2,
   },
   scrollView: {

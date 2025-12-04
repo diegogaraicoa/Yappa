@@ -86,7 +86,7 @@ export default function ChurnClerksScreen() {
       <ScrollView style={styles.scrollView}>
         {clerks.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="happy-outline" size={64} color="#4CAF50" />
+            <Ionicons name="happy-outline" size={64} color="#00D2FF" />
             <Text style={styles.emptyText}>¡Excelente! No hay clerks churned</Text>
             <Text style={styles.emptySubtext}>Todos tus clerks siguen activos</Text>
           </View>
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: '#00D2FF',
   },
   emptySubtext: {
     marginTop: 8,
