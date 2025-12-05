@@ -1,23 +1,45 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, Linking, Alert } from 'react-native';
+import { TouchableOpacity, StyleSheet, Linking, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function FloatingHelpButton() {
-  const handlePress = () => {
+  const handlePress = async () => {
     Alert.alert(
       '¿Necesitas ayuda?',
       'Elige una opción de soporte',
       [
         {
           text: 'WhatsApp',
-          onPress: () => {
-            Linking.openURL('https://wa.me/593999999999?text=Hola%2C%20necesito%20ayuda%20con%20YAPPA');
+          onPress: async () => {
+            try {
+              const url = 'https://wa.me/593999999999?text=Hola%2C%20necesito%20ayuda%20con%20YAPPA';
+              const canOpen = await Linking.canOpenURL(url);
+              if (canOpen) {
+                await Linking.openURL(url);
+              } else {
+                Alert.alert('Error', 'No se pudo abrir WhatsApp');
+              }
+            } catch (error) {
+              console.error('Error opening WhatsApp:', error);
+              Alert.alert('Error', 'No se pudo abrir WhatsApp');
+            }
           },
         },
         {
           text: 'Email',
-          onPress: () => {
-            Linking.openURL('mailto:soporte@yappa.app?subject=Ayuda%20YAPPA');
+          onPress: async () => {
+            try {
+              const url = 'mailto:soporte@yappa.app?subject=Ayuda%20YAPPA';
+              const canOpen = await Linking.canOpenURL(url);
+              if (canOpen) {
+                await Linking.openURL(url);
+              } else {
+                Alert.alert('Error', 'No se pudo abrir el cliente de email');
+              }
+            } catch (error) {
+              console.error('Error opening email:', error);
+              Alert.alert('Error', 'No se pudo abrir el cliente de email');
+            }
           },
         },
         {
