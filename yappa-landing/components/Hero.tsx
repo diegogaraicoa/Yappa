@@ -1,6 +1,6 @@
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#082E72] via-[#0A3A8F] to-[#00D2FF] min-h-screen flex items-center">
+    <section id="hero" className="relative overflow-hidden bg-gradient-to-br from-[#082E72] via-[#0A3A8F] to-[#00D2FF] min-h-screen flex items-center">
       <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
       
       <div className="container mx-auto px-6 lg:px-12 py-24 relative z-10">
