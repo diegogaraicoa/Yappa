@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../utils/api';
 import { useFocusEffect } from '@react-navigation/native';
+import FloatingHelpButton from '../../components/FloatingHelpButton';
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
