@@ -1,3 +1,4 @@
+import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import Benefits from '@/components/Benefits';
 import Mission from '@/components/Mission';
@@ -9,15 +10,18 @@ import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
-      <Hero />
-      <Benefits />
-      <Mission />
-      <AboutUs />
-      <Demo />
-      <ForStores />
-      <Contact />
-      <Footer />
-    </main>
+    <>
+      <Header />
+      <main className="min-h-screen bg-white">
+        <Hero />
+        <Benefits />
+        <Mission />
+        <AboutUs />
+        <Demo />
+        <ForStores />
+        <Contact />
+        <Footer />
+      </main>
+    </>
   );
 }
