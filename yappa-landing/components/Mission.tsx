@@ -1,6 +1,6 @@
 export default function Mission() {
   return (
-    <section className="py-24 bg-gradient-to-br from-[#082E72] to-[#0A3A8F] text-white relative overflow-hidden">
+    <section id="mision" className="py-24 bg-gradient-to-br from-[#082E72] to-[#0A3A8F] text-white relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-5"></div>
       
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
