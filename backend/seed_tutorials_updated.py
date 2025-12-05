@@ -294,17 +294,14 @@ Un asistente con Inteligencia Artificial que entiende mensajes en español y te 
 ## Cómo Empezar
 
 ### Paso 1: Configura tu Número
-Perfil → Ingresa tu número de WhatsApp → Guarda
+Ve a **Perfil** → Ingresa tu número de WhatsApp con código de país (ej: +593...) → Guarda
 
-### Paso 2: Únete al Servicio
-Envía un mensaje a: **+1 415 523 8886**
+### Paso 2: ¡Empieza a Usar!
+Envía un mensaje a WhatsApp al número configurado por tu tienda.
 
-Escribe: `join cake-husband`
+Escribe simplemente: `venta` o `gasto`
 
-Recibirás confirmación.
-
-### Paso 3: ¡Empieza a Usar!
-Envía simplemente: `venta` o `gasto`
+El asistente de IA te guiará paso a paso
 
 ---
 
