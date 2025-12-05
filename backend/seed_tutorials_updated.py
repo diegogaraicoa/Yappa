@@ -511,7 +511,7 @@ La deuda se actualizará automáticamente.
 
 Interfaz web profesional para analytics profundos, comparaciones temporales, exportación de datos y gestión masiva.
 
-**URL:** https://minimal-commerce-app.preview.emergentagent.com/admin
+**URL:** https://yappa-landing.preview.emergentagent.com/admin
 
 ---
 

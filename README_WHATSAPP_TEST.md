@@ -91,7 +91,7 @@ python3 check_my_sales.py
 ```
 
 O desde la Admin Console web:
-https://minimal-commerce-app.preview.emergentagent.com/admin
+https://yappa-landing.preview.emergentagent.com/admin
 
 ---
 
