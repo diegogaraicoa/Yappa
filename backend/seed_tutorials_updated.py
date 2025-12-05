@@ -294,14 +294,19 @@ Un asistente con Inteligencia Artificial que entiende mensajes en español y te 
 ## Cómo Empezar
 
 ### Paso 1: Configura tu Número
-Ve a **Perfil** → Ingresa tu número de WhatsApp con código de país (ej: +593...) → Guarda
+Ve a **Configuración** → Ingresa tu número de WhatsApp con código de país (ej: +593...) → Guarda
 
-### Paso 2: ¡Empieza a Usar!
-Envía un mensaje a WhatsApp al número configurado por tu tienda.
+### Paso 2: Envía un Mensaje
+Escribe al número de WhatsApp de YAPPA: **+1 415 523 8886**
 
-Escribe simplemente: `venta` o `gasto`
+**IMPORTANTE:** Primero envía este código para activar: `join cake-husband`
 
-El asistente de IA te guiará paso a paso
+Recibirás confirmación de activación.
+
+### Paso 3: ¡Empieza a Registrar!
+Ahora escribe simplemente: `venta` o `gasto`
+
+El asistente de IA te guiará paso a paso para completar el registro
 
 ---
 
