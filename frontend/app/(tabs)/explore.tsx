@@ -18,6 +18,16 @@ export default function ExploreScreen() {
   const exploreItems = [
     {
       id: 0,
+      title: 'Datos de mi Negocio',
+      description: 'Estadísticas y análisis con IA',
+      icon: 'analytics-outline',
+      iconFilled: 'analytics',
+      color: '#9C27B0',
+      bgColor: '#F3E5F5',
+      route: '/insights',
+    },
+    {
+      id: 1,
       title: 'Capacitación',
       description: 'Aprende a usar YAPPA',
       icon: 'school-outline',
@@ -27,7 +37,7 @@ export default function ExploreScreen() {
       route: '/training',
     },
     {
-      id: 1,
+      id: 2,
       title: 'Clientes',
       description: 'Gestiona tu cartera',
       icon: 'people-outline',
@@ -37,7 +47,7 @@ export default function ExploreScreen() {
       route: '/customers',
     },
     {
-      id: 2,
+      id: 3,
       title: 'Proveedores',
       description: 'Administra proveedores',
       icon: 'briefcase-outline',
@@ -47,7 +57,7 @@ export default function ExploreScreen() {
       route: '/suppliers',
     },
     {
-      id: 3,
+      id: 4,
       title: 'Alertas',
       description: 'Configura notificaciones',
       icon: 'settings-outline',
@@ -55,16 +65,6 @@ export default function ExploreScreen() {
       color: '#607D8B',
       bgColor: '#ECEFF1',
       route: '/settings',
-    },
-    {
-      id: 4,
-      title: 'Datos de mi Negocio',
-      description: 'Estadísticas y análisis',
-      icon: 'analytics-outline',
-      iconFilled: 'analytics',
-      color: '#9C27B0',
-      bgColor: '#F3E5F5',
-      route: '/insights',
     },
   ];
 
