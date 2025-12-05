@@ -33,7 +33,7 @@ export default function Benefits() {
   ];
 
   return (
-    <section className="py-24 bg-white">
+    <section id="porque-yappa" className="py-24 bg-white">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-[#082E72] mb-4">
