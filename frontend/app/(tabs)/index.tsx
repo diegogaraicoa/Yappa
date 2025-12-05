@@ -279,6 +279,8 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+      
+      <FloatingHelpButton />
     </View>
   );
 }
