@@ -5,34 +5,39 @@ import { Ionicons } from '@expo/vector-icons';
 export default function FloatingHelpButton() {
   const handlePress = () => {
     console.log('FloatingHelpButton pressed!');
-    Alert.alert(
-      '¿Necesitas ayuda?',
-      'Elige una opción de soporte',
-      [
-        {
-          text: 'WhatsApp',
-          onPress: () => {
-            const url = 'https://wa.me/593999999999?text=Hola%2C%20necesito%20ayuda%20con%20YAPPA';
-            Linking.openURL(url).catch(() => {
-              Alert.alert('Error', 'No se pudo abrir WhatsApp');
-            });
+    
+    setTimeout(() => {
+      Alert.alert(
+        'Necesitas ayuda?',
+        'Elige una opción de soporte',
+        [
+          {
+            text: 'WhatsApp',
+            onPress: () => {
+              const url = 'https://wa.me/593999999999?text=Hola%2C%20necesito%20ayuda%20con%20YAPPA';
+              Linking.openURL(url).catch((err) => {
+                console.error('Error opening WhatsApp:', err);
+                Alert.alert('Error', 'No se pudo abrir WhatsApp');
+              });
+            },
           },
-        },
-        {
-          text: 'Email',
-          onPress: () => {
-            const url = 'mailto:soporte@yappa.app?subject=Ayuda%20YAPPA';
-            Linking.openURL(url).catch(() => {
-              Alert.alert('Error', 'No se pudo abrir el cliente de email');
-            });
+          {
+            text: 'Email',
+            onPress: () => {
+              const url = 'mailto:soporte@yappa.app?subject=Ayuda%20YAPPA';
+              Linking.openURL(url).catch((err) => {
+                console.error('Error opening email:', err);
+                Alert.alert('Error', 'No se pudo abrir el cliente de email');
+              });
+            },
           },
-        },
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-      ]
-    );
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+          },
+        ]
+      );
+    }, 50);
   };
 
   return (
