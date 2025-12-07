@@ -1637,7 +1637,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   instructionsCard: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: '#E0F7FA',
     padding: 20,
     borderRadius: 12,
     marginTop: 16,
