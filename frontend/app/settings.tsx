@@ -107,33 +107,37 @@ export default function SettingsScreen() {
     }
 
     setTesting(true);
-    try {
-      console.log('Sending test alert to:', whatsappNumber);
-      const response = await api.post('/api/alerts/test', {
-        whatsapp_number: whatsappNumber,
-      });
-      
-      console.log('Test alert response:', response.data);
-      
-      setTimeout(() => {
-        Alert.alert(
-          '✅ Mensaje Enviado',
-          'Se ha enviado un mensaje de prueba a tu WhatsApp',
-          [{ text: 'OK' }]
-        );
-      }, 100);
-    } catch (error: any) {
-      console.error('Error sending test:', error);
-      setTimeout(() => {
-        Alert.alert(
-          '❌ Error',
-          error.response?.data?.detail || 'No se pudo enviar el mensaje de prueba',
-          [{ text: 'OK' }]
-        );
-      }, 100);
-    } finally {
-      setTesting(false);
-    }
+    
+    setTimeout(async () => {
+      try {
+        console.log('Sending test alert to:', whatsappNumber);
+        const response = await api.post('/api/alerts/test', {
+          whatsapp_number: whatsappNumber,
+        });
+        
+        console.log('Test alert response:', response.data);
+        
+        // Esperar un frame antes de mostrar el Alert
+        requestAnimationFrame(() => {
+          Alert.alert(
+            'Mensaje Enviado',
+            'Se ha enviado un mensaje de prueba a tu WhatsApp',
+            [{ text: 'OK' }]
+          );
+        });
+      } catch (error: any) {
+        console.error('Error sending test:', error);
+        requestAnimationFrame(() => {
+          Alert.alert(
+            'Error',
+            'No se pudo enviar el mensaje de prueba',
+            [{ text: 'OK' }]
+          );
+        });
+      } finally {
+        setTesting(false);
+      }
+    }, 50);
   };
 
   if (loading) {
