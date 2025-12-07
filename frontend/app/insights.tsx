@@ -121,8 +121,14 @@ export default function InsightsScreen() {
   };
 
   const sendToWhatsApp = async () => {
+    if (!latestInsight) {
+      Alert.alert('Error', 'No hay reporte disponible para enviar');
+      return;
+    }
+    
     setSending(true);
     try {
+      console.log('Sending report to WhatsApp...');
       const response = await api.post(
         '/api/insights/send-whatsapp',
         {},
@@ -131,19 +137,25 @@ export default function InsightsScreen() {
         }
       );
       
+      console.log('WhatsApp send response:', response.data);
+      
       // MENSAJE DE CONFIRMACIÓN
-      Alert.alert(
-        '✅ Éxito',
-        `Reporte enviado a WhatsApp: ${response.data.whatsapp_number}`,
-        [{ text: 'OK' }]
-      );
+      setTimeout(() => {
+        Alert.alert(
+          '✅ Reporte Enviado',
+          `Tu reporte fue enviado exitosamente a WhatsApp`,
+          [{ text: 'OK' }]
+        );
+      }, 100);
     } catch (error: any) {
       console.error('Error sending to WhatsApp:', error);
-      Alert.alert(
-        '❌ Error',
-        'No se pudo enviar el reporte por WhatsApp',
-        [{ text: 'OK' }]
-      );
+      setTimeout(() => {
+        Alert.alert(
+          '❌ Error',
+          error.response?.data?.detail || 'No se pudo enviar el reporte por WhatsApp',
+          [{ text: 'OK' }]
+        );
+      }, 100);
     } finally {
       setSending(false);
     }
