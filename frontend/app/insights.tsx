@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   RefreshControl,
   Modal,
 } from 'react-native';
@@ -14,53 +13,51 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../utils/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { showAlert } from '../utils/showAlert';
 
 export default function InsightsScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [sending, setSending] = useState(false);
   const [latestInsight, setLatestInsight] = useState<any>(null);
-  const [showHistory, setShowHistory] = useState(false);
-  const [historyReports, setHistoryReports] = useState<any[]>([]);
+  const [sending, setSending] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [historyVisible, setHistoryVisible] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  
-  // Date filter state
+
+  // Date range for filtering
   const [startDate, setStartDate] = useState(new Date(new Date().setDate(new Date().getDate() - 30)));
   const [endDate, setEndDate] = useState(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    loadLatestInsight();
-    loadLowStockProducts();
-  }, [startDate, endDate]);
+    fetchLatestInsight();
+  }, []);
 
-  const loadLatestInsight = async () => {
+  const fetchLatestInsight = async () => {
     try {
+      setLoading(true);
       const response = await api.get('/api/insights/latest');
-      setLatestInsight(response.data);
+      if (response.data.report) {
+        setLatestInsight(response.data.report);
+      }
     } catch (error: any) {
+      console.error('Error fetching latest insight:', error);
       if (error.response?.status === 404) {
+        // No hay reporte todavía
         setLatestInsight(null);
-      } else {
-        console.error('Error loading insights:', error);
       }
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const loadLowStockProducts = async () => {
-    try {
-      const response = await api.get('/api/alerts/low-stock');
-      setLowStockProducts(response.data);
-    } catch (error) {
-      console.error('Error loading low stock:', error);
-    }
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchLatestInsight();
+    setRefreshing(false);
   };
 
   const generateNewInsight = async () => {
@@ -68,61 +65,41 @@ export default function InsightsScreen() {
     try {
       const response = await api.post(
         '/api/insights/generate',
-        {},
+        {
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0],
+        },
         {
           timeout: 60000,
         }
       );
-      setLatestInsight(response.data);
       
-      // MENSAJE DE CONFIRMACIÓN
-      Alert.alert(
-        '✅ Éxito',
-        'Reporte generado exitosamente',
-        [{ text: 'OK' }]
+      const report = response.data;
+      if (!report || !report.id) {
+        throw new Error('Invalid report received');
+      }
+      
+      showAlert(
+        'Reporte Generado',
+        'Tu reporte con IA ha sido generado exitosamente'
       );
+      
+      setLatestInsight(report);
     } catch (error: any) {
       console.error('Error generating insight:', error);
-      Alert.alert(
-        '❌ Error',
-        'No se pudo generar el reporte',
-        [{ text: 'OK' }]
-      );
+      const errorMessage = error.response?.status === 400 
+        ? 'No hay suficientes datos para generar el reporte'
+        : 'No se pudo generar el reporte. Intenta nuevamente.';
+      
+      showAlert('Error', errorMessage);
     } finally {
       setGenerating(false);
     }
   };
 
-  const loadHistory = async () => {
-    setLoadingHistory(true);
-    try {
-      const response = await api.get('/api/insights/history?limit=10');
-      setHistoryReports(response.data);
-    } catch (error: any) {
-      console.error('Error loading history:', error);
-      Alert.alert('Error', 'No se pudo cargar el historial');
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
-
-  const openHistory = () => {
-    setShowHistory(true);
-    loadHistory();
-  };
-
-  const viewHistoricalReport = (report: any) => {
-    setLatestInsight(report);
-    setShowHistory(false);
-    Alert.alert(
-      'Reporte Histórico',
-      `Viendo reporte del ${formatDate(report.generated_at)}`
-    );
-  };
-
   const sendToWhatsApp = async () => {
     if (!latestInsight) {
-      Alert.alert('Error', 'No hay reporte disponible para enviar');
+      showAlert('Error', 'No hay reporte disponible para enviar');
       return;
     }
     
@@ -131,7 +108,7 @@ export default function InsightsScreen() {
     setTimeout(async () => {
       try {
         console.log('Sending report to WhatsApp...');
-        const response = await api.post(
+        await api.post(
           '/api/insights/send-whatsapp',
           {},
           {
@@ -139,25 +116,11 @@ export default function InsightsScreen() {
           }
         );
         
-        console.log('WhatsApp send response:', response.data);
-        
-        // Esperar un frame antes de mostrar el Alert
-        requestAnimationFrame(() => {
-          Alert.alert(
-            'Enviado',
-            'Tu reporte fue enviado exitosamente a WhatsApp',
-            [{ text: 'OK' }]
-          );
-        });
+        console.log('WhatsApp send successful');
+        showAlert('Enviado', 'Tu reporte fue enviado exitosamente a WhatsApp');
       } catch (error: any) {
         console.error('Error sending to WhatsApp:', error);
-        requestAnimationFrame(() => {
-          Alert.alert(
-            'Error',
-            'No se pudo enviar el reporte por WhatsApp',
-            [{ text: 'OK' }]
-          );
-        });
+        showAlert('Error', 'No se pudo enviar el reporte por WhatsApp');
       } finally {
         setSending(false);
       }
@@ -165,183 +128,39 @@ export default function InsightsScreen() {
   };
 
   const navigateToInventory = () => {
-    router.push('/(tabs)/inventory');
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadLatestInsight();
-    loadLowStockProducts();
+    router.push('/products');
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-EC', {
       day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
-
-  const formatShortDate = (date: Date) => {
-    return date.toLocaleDateString('es-EC', {
-      day: '2-digit',
       month: 'short',
       year: 'numeric',
     });
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-EC', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(amount);
+  const fetchHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const response = await api.get('/api/insights/history?limit=10');
+      setHistory(response.data.reports || []);
+    } catch (error) {
+      console.error('Error fetching history:', error);
+      showAlert('Error', 'No se pudo cargar el historial');
+    } finally {
+      setLoadingHistory(false);
+    }
   };
 
-  const renderMetrics = () => {
-    if (!latestInsight?.metrics) return null;
-
-    const metrics = latestInsight.metrics;
-    const lowStockCount = lowStockProducts.length;
-
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>RESUMEN DE NÚMEROS</Text>
-
-        <View style={styles.metricsGrid}>
-          {/* Ventas */}
-          <View style={styles.metricCard}>
-            <View
-              style={[
-                styles.metricIconContainer,
-                { backgroundColor: '#E8F5E9' },
-              ]}
-            >
-              <Ionicons name="trending-up" size={24} color="#00D2FF" />
-            </View>
-            <Text style={styles.metricValue}>
-              {formatCurrency(metrics.total_sales || 0)}
-            </Text>
-            <Text style={styles.metricLabel}>Ventas</Text>
-          </View>
-
-          {/* Gastos */}
-          <View style={styles.metricCard}>
-            <View
-              style={[
-                styles.metricIconContainer,
-                { backgroundColor: '#FFEBEE' },
-              ]}
-            >
-              <Ionicons name="trending-down" size={24} color="#F44336" />
-            </View>
-            <Text style={styles.metricValue}>
-              {formatCurrency(metrics.total_expenses || 0)}
-            </Text>
-            <Text style={styles.metricLabel}>Gastos</Text>
-          </View>
-
-          {/* Balance */}
-          <View style={styles.metricCard}>
-            <View
-              style={[
-                styles.metricIconContainer,
-                { backgroundColor: '#E3F2FD' },
-              ]}
-            >
-              <Ionicons name="wallet" size={24} color="#2196F3" />
-            </View>
-            <Text style={styles.metricValue}>
-              {formatCurrency(metrics.balance || 0)}
-            </Text>
-            <Text style={styles.metricLabel}>Balance</Text>
-          </View>
-
-          {/* Margen */}
-          <View style={styles.metricCard}>
-            <View
-              style={[
-                styles.metricIconContainer,
-                { backgroundColor: '#FFF3E0' },
-              ]}
-            >
-              <Ionicons name="pulse" size={24} color="#FF9800" />
-            </View>
-            <Text style={styles.metricValue}>
-              {(metrics.margin || 0).toFixed(1)}%
-            </Text>
-            <Text style={styles.metricLabel}>Margen</Text>
-          </View>
-        </View>
-
-        {/* Top Products */}
-        {metrics.top_products && metrics.top_products.length > 0 && (
-          <View style={styles.topProductsContainer}>
-            <Text style={styles.subsectionLabel}>PRODUCTOS ESTRELLA</Text>
-            {metrics.top_products.slice(0, 3).map((product: any, index: number) => (
-              <View key={index} style={styles.topProductCard}>
-                <View
-                  style={[
-                    styles.rankBadge,
-                    {
-                      backgroundColor:
-                        index === 0
-                          ? '#FFD700'
-                          : index === 1
-                          ? '#C0C0C0'
-                          : '#CD7F32',
-                    },
-                  ]}
-                >
-                  <Text style={styles.rankNumber}>{index + 1}</Text>
-                </View>
-                <View style={styles.topProductInfo}>
-                  <Text style={styles.topProductName}>{product.name}</Text>
-                  <Text style={styles.topProductStats}>
-                    {product.quantity} vendidos • {formatCurrency(product.revenue || 0)}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Low Stock Alert - CLICKEABLE */}
-        {lowStockCount > 0 && (
-          <TouchableOpacity
-            style={styles.alertBox}
-            onPress={navigateToInventory}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="warning" size={20} color="#FF9800" />
-            <Text style={styles.alertText}>
-              {lowStockCount} producto{lowStockCount !== 1 ? 's' : ''} con stock bajo
-            </Text>
-            <Ionicons name="chevron-forward" size={20} color="#FF9800" />
-          </TouchableOpacity>
-        )}
-      </View>
-    );
+  const openHistory = () => {
+    fetchHistory();
+    setHistoryVisible(true);
   };
 
-  const renderInsights = () => {
-    if (!latestInsight?.insights) return null;
-
-    const insightsText = latestInsight.insights;
-
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>ANÁLISIS INTELIGENTE</Text>
-        <View style={styles.insightsCard}>
-          <View style={styles.insightsHeader}>
-            <Ionicons name="sparkles" size={20} color="#9C27B0" />
-            <Text style={styles.insightsHeaderText}>IA de Negocio</Text>
-          </View>
-          <Text style={styles.insightsText}>{insightsText}</Text>
-        </View>
-      </View>
-    );
+  const viewHistoryReport = (report: any) => {
+    setLatestInsight(report);
+    setHistoryVisible(false);
   };
 
   if (loading) {
@@ -358,8 +177,8 @@ export default function InsightsScreen() {
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#9C27B0" />
-          <Text style={styles.loadingText}>Cargando datos...</Text>
+          <ActivityIndicator size="large" color="#00D2FF" />
+          <Text style={styles.loadingText}>Cargando reporte...</Text>
         </View>
       </View>
     );
@@ -367,7 +186,6 @@ export default function InsightsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -385,187 +203,184 @@ export default function InsightsScreen() {
       </View>
 
       <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#9C27B0"
-            colors={['#9C27B0']}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00D2FF']} />
         }
       >
-        {/* Date Filter */}
-        <View style={styles.dateFilterContainer}>
-          <Text style={styles.dateFilterLabel}>PERÍODO</Text>
-          <View style={styles.dateFilterRow}>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowStartPicker(true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="calendar-outline" size={16} color="#757575" />
-              <Text style={styles.dateButtonText}>{formatShortDate(startDate)}</Text>
-            </TouchableOpacity>
-
-            <View style={styles.dateSeparator}>
-              <Ionicons name="arrow-forward" size={16} color="#BDBDBD" />
+        {latestInsight ? (
+          <View style={styles.reportCard}>
+            <View style={styles.reportHeader}>
+              <Ionicons name="analytics" size={32} color="#00D2FF" />
+              <View style={styles.reportHeaderText}>
+                <Text style={styles.reportTitle}>Reporte con IA</Text>
+                <Text style={styles.reportDate}>
+                  {formatDate(latestInsight.created_at)}
+                </Text>
+              </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowEndPicker(true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="calendar-outline" size={16} color="#757575" />
-              <Text style={styles.dateButtonText}>{formatShortDate(endDate)}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {!latestInsight ? (
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIconContainer}>
-              <Ionicons name="analytics-outline" size={64} color="#9E9E9E" />
+            <View style={styles.reportContent}>
+              <Text style={styles.reportText}>{latestInsight.report_text}</Text>
             </View>
-            <Text style={styles.emptyTitle}>No hay reportes aún</Text>
-            <Text style={styles.emptyText}>
-              Genera tu primer análisis inteligente del negocio y descubre cómo
-              mejorar tus ventas
-            </Text>
+
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.whatsappButton]}
+                onPress={sendToWhatsApp}
+                disabled={sending}
+              >
+                {sending ? (
+                  <ActivityIndicator color="#FFF" size="small" />
+                ) : (
+                  <>
+                    <Ionicons name="logo-whatsapp" size={20} color="#FFF" />
+                    <Text style={styles.actionButtonText}>Enviar por WhatsApp</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         ) : (
-          <>
-            {/* Date Badge */}
-            <View style={styles.dateBadge}>
-              <Ionicons name="calendar" size={16} color="#757575" />
-              <Text style={styles.dateText}>
-                {formatDate(latestInsight.generated_at)}
-              </Text>
-            </View>
-
-            {renderMetrics()}
-            {renderInsights()}
-          </>
+          <View style={styles.emptyState}>
+            <Ionicons name="analytics-outline" size={64} color="#BDBDBD" />
+            <Text style={styles.emptyText}>No hay reportes disponibles</Text>
+            <Text style={styles.emptySubtext}>
+              Genera tu primer reporte con IA
+            </Text>
+          </View>
         )}
 
-        {/* Action Buttons */}
-        <View style={styles.buttonContainer}>
+        <View style={styles.dateRangeCard}>
+          <Text style={styles.sectionTitle}>Generar Nuevo Reporte</Text>
+          <Text style={styles.sectionSubtitle}>
+            Selecciona el rango de fechas para analizar
+          </Text>
+
+          <View style={styles.dateRow}>
+            <View style={styles.dateItem}>
+              <Text style={styles.dateLabel}>Desde:</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowStartPicker(true)}
+              >
+                <Text style={styles.dateButtonText}>
+                  {startDate.toLocaleDateString('es-EC')}
+                </Text>
+                <Ionicons name="calendar-outline" size={20} color="#00D2FF" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.dateItem}>
+              <Text style={styles.dateLabel}>Hasta:</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowEndPicker(true)}
+              >
+                <Text style={styles.dateButtonText}>
+                  {endDate.toLocaleDateString('es-EC')}
+                </Text>
+                <Ionicons name="calendar-outline" size={20} color="#00D2FF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <TouchableOpacity
             style={[
               styles.generateButton,
-              generating && styles.buttonDisabled,
+              generating && styles.generateButtonDisabled,
             ]}
             onPress={generateNewInsight}
             disabled={generating}
-            activeOpacity={0.8}
           >
             {generating ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <>
+                <ActivityIndicator color="#FFF" size="small" />
+                <Text style={styles.generateButtonText}>Generando...</Text>
+              </>
             ) : (
               <>
-                <Ionicons name="sparkles" size={20} color="#FFFFFF" />
-                <Text style={styles.generateButtonText}>
-                  {latestInsight ? 'Generar Nuevo Reporte' : 'Generar Reporte'}
-                </Text>
+                <Ionicons name="sparkles" size={20} color="#FFF" />
+                <Text style={styles.generateButtonText}>Generar con IA</Text>
               </>
             )}
           </TouchableOpacity>
-
-          {latestInsight && (
-            <TouchableOpacity
-              style={[styles.whatsappButton, sending && styles.buttonDisabled]}
-              onPress={sendToWhatsApp}
-              disabled={sending}
-              activeOpacity={0.8}
-            >
-              {sending ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <>
-                  <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
-                  <Text style={styles.whatsappButtonText}>
-                    Enviar por WhatsApp
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
         </View>
 
-        <View style={{ height: 40 }} />
+        {showStartPicker && (
+          <DateTimePicker
+            value={startDate}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowStartPicker(false);
+              if (selectedDate) {
+                setStartDate(selectedDate);
+              }
+            }}
+          />
+        )}
+
+        {showEndPicker && (
+          <DateTimePicker
+            value={endDate}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowEndPicker(false);
+              if (selectedDate) {
+                setEndDate(selectedDate);
+              }
+            }}
+          />
+        )}
       </ScrollView>
 
-      {/* Date Pickers */}
-      {showStartPicker && (
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowStartPicker(false);
-            if (selectedDate) {
-              setStartDate(selectedDate);
-            }
-          }}
-        />
-      )}
-
-      {showEndPicker && (
-        <DateTimePicker
-          value={endDate}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowEndPicker(false);
-            if (selectedDate) {
-              setEndDate(selectedDate);
-            }
-          }}
-        />
-      )}
-
-      {/* History Modal */}
-      <Modal visible={showHistory} animationType="slide" transparent>
+      <Modal
+        visible={historyVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setHistoryVisible(false)}
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Historial de Reportes</Text>
-              <TouchableOpacity onPress={() => setShowHistory(false)}>
-                <Ionicons name="close" size={24} color="#212121" />
+              <TouchableOpacity onPress={() => setHistoryVisible(false)}>
+                <Ionicons name="close" size={28} color="#212121" />
               </TouchableOpacity>
             </View>
 
             {loadingHistory ? (
-              <View style={styles.modalLoading}>
-                <ActivityIndicator size="large" color="#9C27B0" />
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#00D2FF" />
               </View>
-            ) : (
+            ) : history.length > 0 ? (
               <ScrollView style={styles.historyList}>
-                {historyReports.map((report, index) => (
+                {history.map((report, index) => (
                   <TouchableOpacity
-                    key={index}
+                    key={report.id || index}
                     style={styles.historyItem}
-                    onPress={() => viewHistoricalReport(report)}
-                    activeOpacity={0.7}
+                    onPress={() => viewHistoryReport(report)}
                   >
-                    <View style={styles.historyItemIcon}>
-                      <Ionicons name="document-text" size={24} color="#9C27B0" />
-                    </View>
-                    <View style={styles.historyItemInfo}>
+                    <Ionicons name="document-text" size={24} color="#00D2FF" />
+                    <View style={styles.historyItemContent}>
                       <Text style={styles.historyItemDate}>
-                        {formatDate(report.generated_at)}
+                        {formatDate(report.created_at)}
                       </Text>
-                      <Text style={styles.historyItemStats}>
-                        Ventas: {formatCurrency(report.metrics?.total_sales || 0)}
+                      <Text style={styles.historyItemText} numberOfLines={2}>
+                        {report.report_text}
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
                   </TouchableOpacity>
                 ))}
               </ScrollView>
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>No hay reportes en el historial</Text>
+              </View>
             )}
           </View>
         </View>
@@ -579,400 +394,229 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAFAFA',
   },
-
-  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#FFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: '#E0E0E0',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#212121',
   },
-
-  // Loading
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 16,
   },
   loadingText: {
+    marginTop: 12,
     fontSize: 16,
-    fontWeight: '500',
-    color: '#9E9E9E',
+    color: '#757575',
   },
-
-  // Content
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
+  reportCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
     padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-
-  // Date Filter
-  dateFilterContainer: {
-    marginBottom: 20,
-  },
-  dateFilterLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#9E9E9E',
-    letterSpacing: 1,
-    marginBottom: 12,
-    textTransform: 'uppercase',
-  },
-  dateFilterRow: {
+  reportHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
+  },
+  reportHeaderText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  reportTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#212121',
+  },
+  reportDate: {
+    fontSize: 14,
+    color: '#757575',
+    marginTop: 2,
+  },
+  reportContent: {
+    marginBottom: 16,
+  },
+  reportText: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: '#424242',
+  },
+  actionButtons: {
+    flexDirection: 'row',
     gap: 12,
   },
-  dateButton: {
+  actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    justifyContent: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
+    borderRadius: 12,
     gap: 8,
+  },
+  whatsappButton: {
+    backgroundColor: '#25D366',
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#757575',
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#9E9E9E',
+    marginTop: 8,
+  },
+  dateRangeCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 1,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 16,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  dateItem: {
+    flex: 1,
+  },
+  dateLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#424242',
+    marginBottom: 8,
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   dateButtonText: {
     fontSize: 14,
-    fontWeight: '500',
     color: '#212121',
-  },
-  dateSeparator: {
-    paddingHorizontal: 4,
-  },
-
-  // Date Badge
-  dateBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 20,
-    gap: 6,
-  },
-  dateText: {
-    fontSize: 13,
     fontWeight: '500',
-    color: '#757575',
-  },
-
-  // Section
-  section: {
-    marginBottom: 24,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#9E9E9E',
-    letterSpacing: 1,
-    marginBottom: 12,
-    textTransform: 'uppercase',
-  },
-
-  // Metrics Grid
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 20,
-  },
-  metricCard: {
-    flex: 1,
-    minWidth: '47%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  metricIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  metricValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#212121',
-    marginBottom: 4,
-  },
-  metricLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#757575',
-  },
-
-  // Top Products
-  topProductsContainer: {
-    marginTop: 8,
-  },
-  subsectionLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#9E9E9E',
-    letterSpacing: 1,
-    marginBottom: 12,
-    textTransform: 'uppercase',
-  },
-  topProductCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-    gap: 12,
-  },
-  rankBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rankNumber: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  topProductInfo: {
-    flex: 1,
-  },
-  topProductName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#212121',
-    marginBottom: 4,
-  },
-  topProductStats: {
-    fontSize: 13,
-    fontWeight: '400',
-    color: '#757575',
-  },
-
-  // Alert Box - CLICKEABLE
-  alertBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 12,
-    gap: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#FF9800',
-  },
-  alertText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#E65100',
-  },
-
-  // Insights
-  insightsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  insightsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
-  },
-  insightsHeaderText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#9C27B0',
-  },
-  insightsText: {
-    fontSize: 15,
-    fontWeight: '400',
-    color: '#424242',
-    lineHeight: 24,
-  },
-
-  // Empty State
-  emptyState: {
-    paddingTop: 80,
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#F5F5F5',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#212121',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#9E9E9E',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-
-  // Buttons
-  buttonContainer: {
-    gap: 12,
-    marginTop: 8,
   },
   generateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#9C27B0',
+    backgroundColor: '#00D2FF',
+    paddingVertical: 14,
     borderRadius: 12,
-    paddingVertical: 16,
     gap: 8,
-    shadowColor: '#9C27B0',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+  },
+  generateButtonDisabled: {
+    opacity: 0.6,
   },
   generateButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
+    fontWeight: '700',
+    color: '#FFF',
   },
-  whatsappButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#25D366',
-    borderRadius: 12,
-    paddingVertical: 16,
-    gap: 8,
-    shadowColor: '#25D366',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  whatsappButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-
-  // Modal
   modalContainer: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    paddingTop: 20,
     maxHeight: '80%',
-    paddingTop: 24,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    marginBottom: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#212121',
   },
-  modalLoading: {
-    paddingVertical: 60,
-    alignItems: 'center',
-  },
   historyList: {
-    paddingHorizontal: 24,
+    flex: 1,
   },
   historyItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
     gap: 12,
   },
-  historyItemIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F3E5F5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  historyItemInfo: {
+  historyItemContent: {
     flex: 1,
   },
   historyItemDate: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: '#212121',
     marginBottom: 4,
   },
-  historyItemStats: {
-    fontSize: 13,
-    fontWeight: '400',
+  historyItemText: {
+    fontSize: 14,
     color: '#757575',
+    lineHeight: 20,
   },
 });
