@@ -3,43 +3,28 @@ import { TouchableOpacity, StyleSheet, Linking, Alert, Platform } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 
 export default function FloatingHelpButton() {
-  const handlePress = async () => {
+  const handlePress = () => {
+    console.log('FloatingHelpButton pressed!');
     Alert.alert(
       '¿Necesitas ayuda?',
       'Elige una opción de soporte',
       [
         {
           text: 'WhatsApp',
-          onPress: async () => {
-            try {
-              const url = 'https://wa.me/593999999999?text=Hola%2C%20necesito%20ayuda%20con%20YAPPA';
-              const canOpen = await Linking.canOpenURL(url);
-              if (canOpen) {
-                await Linking.openURL(url);
-              } else {
-                Alert.alert('Error', 'No se pudo abrir WhatsApp');
-              }
-            } catch (error) {
-              console.error('Error opening WhatsApp:', error);
+          onPress: () => {
+            const url = 'https://wa.me/593999999999?text=Hola%2C%20necesito%20ayuda%20con%20YAPPA';
+            Linking.openURL(url).catch(() => {
               Alert.alert('Error', 'No se pudo abrir WhatsApp');
-            }
+            });
           },
         },
         {
           text: 'Email',
-          onPress: async () => {
-            try {
-              const url = 'mailto:soporte@yappa.app?subject=Ayuda%20YAPPA';
-              const canOpen = await Linking.canOpenURL(url);
-              if (canOpen) {
-                await Linking.openURL(url);
-              } else {
-                Alert.alert('Error', 'No se pudo abrir el cliente de email');
-              }
-            } catch (error) {
-              console.error('Error opening email:', error);
+          onPress: () => {
+            const url = 'mailto:soporte@yappa.app?subject=Ayuda%20YAPPA';
+            Linking.openURL(url).catch(() => {
               Alert.alert('Error', 'No se pudo abrir el cliente de email');
-            }
+            });
           },
         },
         {
