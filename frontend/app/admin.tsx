@@ -107,7 +107,7 @@ export default function AdminConsoleScreen() {
 
   const menuItems = [
     { id: 'dashboard', title: 'Dashboard', icon: 'stats-chart', color: '#00D2FF' },
-    { id: 'products', title: 'Productos', icon: 'cube', color: '#2196F3' },
+    { id: 'products', title: 'Productos', icon: 'cube', color: '#00D2FF' },
     { id: 'customers', title: 'Clientes', icon: 'people', color: '#9C27B0' },
     { id: 'suppliers', title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
     { id: 'bulk-upload', title: 'Carga Masiva', icon: 'cloud-upload', color: '#00BCD4' },
@@ -395,7 +395,7 @@ function DashboardView({ data }: any) {
           <Text style={styles.kpiSubtext}>{analytics.sales?.count_month || 0} transacciones</Text>
         </View>
 
-        <View style={[styles.kpiCard, { borderLeftColor: '#2196F3' }]}>
+        <View style={[styles.kpiCard, { borderLeftColor: '#00D2FF' }]}>
           <Text style={styles.kpiLabel}>Balance Mensual</Text>
           <Text style={[styles.kpiValue, { color: analytics.balance?.month >= 0 ? '#00D2FF' : '#f44336' }]}>
             ${analytics.balance?.month?.toFixed(2) || '0.00'}
@@ -1101,7 +1101,7 @@ function TrainingView({ data }: any) {
       intermediate: '#FF9800',
       advanced: '#F44336',
       whatsapp: '#25D366',
-      reports: '#2196F3',
+      reports: '#00D2FF',
       critical: '#E91E63',
     };
     return colors[category] || '#9E9E9E';
@@ -1622,7 +1622,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   actionButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#00D2FF',
     padding: 16,
     borderRadius: 12,
     flexDirection: 'row',
@@ -1779,7 +1779,7 @@ const styles = StyleSheet.create({
   },
   reportExpandText: {
     fontSize: 12,
-    color: '#2196F3',
+    color: '#00D2FF',
     marginTop: 8,
     textAlign: 'center',
     fontStyle: 'italic',
