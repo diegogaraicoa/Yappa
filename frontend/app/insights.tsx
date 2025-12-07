@@ -77,14 +77,14 @@ export default function InsightsScreen() {
       setLatestInsight(response.data);
       
       // MENSAJE DE CONFIRMACIÓN
-      Alert.alert(
+      showAlert(
         '✅ Éxito',
         'Reporte generado exitosamente',
         [{ text: 'OK' }]
       );
     } catch (error: any) {
       console.error('Error generating insight:', error);
-      Alert.alert(
+      showAlert(
         '❌ Error',
         'No se pudo generar el reporte',
         [{ text: 'OK' }]
@@ -101,7 +101,7 @@ export default function InsightsScreen() {
       setHistoryReports(response.data);
     } catch (error: any) {
       console.error('Error loading history:', error);
-      Alert.alert('Error', 'No se pudo cargar el historial');
+      showAlert('Error', 'No se pudo cargar el historial');
     } finally {
       setLoadingHistory(false);
     }
@@ -115,7 +115,7 @@ export default function InsightsScreen() {
   const viewHistoricalReport = (report: any) => {
     setLatestInsight(report);
     setShowHistory(false);
-    Alert.alert(
+    showAlert(
       'Reporte Histórico',
       `Viendo reporte del ${formatDate(report.generated_at)}`
     );
@@ -123,7 +123,7 @@ export default function InsightsScreen() {
 
   const sendToWhatsApp = async () => {
     if (!latestInsight) {
-      Alert.alert('Error', 'No hay reporte disponible para enviar');
+      showAlert('Error', 'No hay reporte disponible para enviar');
       return;
     }
     
@@ -144,7 +144,7 @@ export default function InsightsScreen() {
         
         // Esperar un frame antes de mostrar el Alert
         requestAnimationFrame(() => {
-          Alert.alert(
+          showAlert(
             'Enviado',
             'Tu reporte fue enviado exitosamente a WhatsApp',
             [{ text: 'OK' }]
@@ -153,7 +153,7 @@ export default function InsightsScreen() {
       } catch (error: any) {
         console.error('Error sending to WhatsApp:', error);
         requestAnimationFrame(() => {
-          Alert.alert(
+          showAlert(
             'Error',
             'No se pudo enviar el reporte por WhatsApp',
             [{ text: 'OK' }]
