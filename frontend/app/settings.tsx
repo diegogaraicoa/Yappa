@@ -66,7 +66,7 @@ export default function SettingsScreen() {
 
   const handleSave = async () => {
     if (whatsappNumber && !whatsappNumber.startsWith('+')) {
-      Alert.alert(
+      showAlert(
         'Error',
         'El número de WhatsApp debe incluir el código de país (ej: +593...)'
       );
@@ -85,10 +85,10 @@ export default function SettingsScreen() {
         weekly_summary_enabled: weeklySummaryEnabled,
       });
 
-      Alert.alert('Éxito', 'Tu configuración se guardó correctamente');
+      showAlert('Éxito', 'Tu configuración se guardó correctamente');
     } catch (error: any) {
       console.error('Error saving settings:', error);
-      Alert.alert(
+      showAlert(
         'Error',
         error.response?.data?.detail || 'No se pudo guardar la configuración'
       );
@@ -99,7 +99,7 @@ export default function SettingsScreen() {
 
   const handleTest = async () => {
     if (!whatsappNumber || whatsappNumber.length < 10) {
-      Alert.alert(
+      showAlert(
         'Número requerido',
         'Por favor configura tu número de WhatsApp primero'
       );
@@ -119,7 +119,7 @@ export default function SettingsScreen() {
         
         // Esperar un frame antes de mostrar el Alert
         requestAnimationFrame(() => {
-          Alert.alert(
+          showAlert(
             'Mensaje Enviado',
             'Se ha enviado un mensaje de prueba a tu WhatsApp',
             [{ text: 'OK' }]
@@ -128,7 +128,7 @@ export default function SettingsScreen() {
       } catch (error: any) {
         console.error('Error sending test:', error);
         requestAnimationFrame(() => {
-          Alert.alert(
+          showAlert(
             'Error',
             'No se pudo enviar el mensaje de prueba',
             [{ text: 'OK' }]
