@@ -98,37 +98,39 @@ export default function SettingsScreen() {
   };
 
   const handleTest = async () => {
-    if (!whatsappNumber) {
+    if (!whatsappNumber || whatsappNumber.length < 10) {
       Alert.alert(
-        'Configuración Incompleta',
-        'Por favor configura tu número de WhatsApp antes de enviar una prueba.'
+        'Número requerido',
+        'Por favor configura tu número de WhatsApp primero'
       );
       return;
     }
 
     setTesting(true);
     try {
-      const response = await api.post('/api/alerts/test');
-      const results = response.data.results;
-
-      // Only show WhatsApp result (email is disabled)
-      if (results.whatsapp && results.whatsapp.success) {
+      console.log('Sending test alert to:', whatsappNumber);
+      const response = await api.post('/api/alerts/test', {
+        whatsapp_number: whatsappNumber,
+      });
+      
+      console.log('Test alert response:', response.data);
+      
+      setTimeout(() => {
         Alert.alert(
-          'Prueba Exitosa',
-          '✅ Mensaje enviado por WhatsApp.\n\nRevisa tu WhatsApp en los próximos segundos.'
+          '✅ Mensaje Enviado',
+          'Se ha enviado un mensaje de prueba a tu WhatsApp',
+          [{ text: 'OK' }]
         );
-      } else {
-        Alert.alert(
-          'Error',
-          'No se pudo enviar el WhatsApp. Verifica que tu número esté correcto.'
-        );
-      }
+      }, 100);
     } catch (error: any) {
-      console.error('Error testing alerts:', error);
-      Alert.alert(
-        'Error',
-        'No se pudo enviar la prueba. Verifica tu configuración.'
-      );
+      console.error('Error sending test:', error);
+      setTimeout(() => {
+        Alert.alert(
+          '❌ Error',
+          error.response?.data?.detail || 'No se pudo enviar el mensaje de prueba',
+          [{ text: 'OK' }]
+        );
+      }, 100);
     } finally {
       setTesting(false);
     }
