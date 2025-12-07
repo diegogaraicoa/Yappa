@@ -127,38 +127,41 @@ export default function InsightsScreen() {
     }
     
     setSending(true);
-    try {
-      console.log('Sending report to WhatsApp...');
-      const response = await api.post(
-        '/api/insights/send-whatsapp',
-        {},
-        {
-          timeout: 30000,
-        }
-      );
-      
-      console.log('WhatsApp send response:', response.data);
-      
-      // MENSAJE DE CONFIRMACIÓN
-      setTimeout(() => {
-        Alert.alert(
-          '✅ Reporte Enviado',
-          `Tu reporte fue enviado exitosamente a WhatsApp`,
-          [{ text: 'OK' }]
+    
+    setTimeout(async () => {
+      try {
+        console.log('Sending report to WhatsApp...');
+        const response = await api.post(
+          '/api/insights/send-whatsapp',
+          {},
+          {
+            timeout: 30000,
+          }
         );
-      }, 100);
-    } catch (error: any) {
-      console.error('Error sending to WhatsApp:', error);
-      setTimeout(() => {
-        Alert.alert(
-          '❌ Error',
-          error.response?.data?.detail || 'No se pudo enviar el reporte por WhatsApp',
-          [{ text: 'OK' }]
-        );
-      }, 100);
-    } finally {
-      setSending(false);
-    }
+        
+        console.log('WhatsApp send response:', response.data);
+        
+        // Esperar un frame antes de mostrar el Alert
+        requestAnimationFrame(() => {
+          Alert.alert(
+            'Enviado',
+            'Tu reporte fue enviado exitosamente a WhatsApp',
+            [{ text: 'OK' }]
+          );
+        });
+      } catch (error: any) {
+        console.error('Error sending to WhatsApp:', error);
+        requestAnimationFrame(() => {
+          Alert.alert(
+            'Error',
+            'No se pudo enviar el reporte por WhatsApp',
+            [{ text: 'OK' }]
+          );
+        });
+      } finally {
+        setSending(false);
+      }
+    }, 50);
   };
 
   const navigateToInventory = () => {
