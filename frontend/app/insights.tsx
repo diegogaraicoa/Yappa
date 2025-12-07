@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../utils/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { showAlert } from '../utils/showAlert';
 
 export default function InsightsScreen() {
   const router = useRouter();
