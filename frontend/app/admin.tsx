@@ -2139,7 +2139,7 @@ const styles = StyleSheet.create({
   },
   tutorialModalBody: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 24,
     padding: 20,
   },
   tutorialModalBodyText: {

@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   debtTypeIndicator: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#00D2FF',
-    borderRadius: 12,
+    borderRadius: 24,
     paddingVertical: 12,
     gap: 8,
     shadowColor: '#00D2FF',
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 48,
     padding: 24,
     width: '100%',
     maxWidth: 400,
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
   modalCancelButton: {
     flex: 1,
     backgroundColor: 'transparent',
-    borderRadius: 12,
+    borderRadius: 48,
     paddingVertical: 14,
     alignItems: 'center',
     borderWidth: 2,
@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
   modalConfirmButton: {
     flex: 1,
     backgroundColor: '#00D2FF',
-    borderRadius: 12,
+    borderRadius: 48,
     paddingVertical: 14,
     alignItems: 'center',
     shadowColor: '#00D2FF',

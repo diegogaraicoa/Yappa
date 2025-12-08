@@ -864,7 +864,7 @@ const styles = StyleSheet.create({
   optionIcon: {
     width: 56,
     height: 56,
-    borderRadius: 16,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -909,7 +909,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F5F5F5',
-    borderRadius: 12,
+    borderRadius: 28,
     padding: 16,
     marginBottom: 8,
   },

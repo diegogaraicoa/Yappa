@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   // Alert Card
   alertCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 24,
     padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
@@ -378,13 +378,13 @@ const styles = StyleSheet.create({
   productImage: {
     width: 80,
     height: 80,
-    borderRadius: 12,
+    borderRadius: 40,
     backgroundColor: '#F5F5F5',
   },
   imagePlaceholder: {
     width: 80,
     height: 80,
-    borderRadius: 12,
+    borderRadius: 40,
     backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#00D2FF',
-    borderRadius: 12,
+    borderRadius: 60,
     paddingVertical: 14,
     paddingHorizontal: 24,
     gap: 8,
