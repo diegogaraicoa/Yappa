@@ -2004,6 +2004,16 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
+# Include onboarding routes (new signup/login flow)
+try:
+    from routes.onboarding_routes import router as onboarding_router
+    app.include_router(onboarding_router, prefix="/api")
+    print("✅ Onboarding routes loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading onboarding routes: {e}")
+    import traceback
+    traceback.print_exc()
+
 # Include analytics routes
 try:
     from routes.analytics_routes import router as analytics_router
