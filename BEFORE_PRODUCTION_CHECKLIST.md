@@ -26,16 +26,16 @@
 **Costo:** Gratis hasta 100 emails/día, ~$15 USD/mes (SendGrid Pro)
 
 **Requisitos:**
-- [ ] Crear cuenta en SendGrid (o alternativa)
-- [ ] Verificar dominio de email (@yappa.app)
-- [ ] Obtener API Key de SendGrid
-- [ ] Actualizar código en `/app/backend/routes/onboarding_routes.py`:
+- [x] Crear cuenta en SendGrid (o alternativa)
+- [ ] Verificar dominio de email (@yappa.app) - Usando dgaraicoa@hotmail.com temporalmente
+- [x] Obtener API Key de SendGrid
+- [x] Actualizar código en `/app/backend/routes/onboarding_routes.py`:
   - Reemplazar `print("[EMAIL]...")` con llamada real a SendGrid
-- [ ] Crear plantillas de email:
-  - [ ] Email de bienvenida
-  - [ ] Email con PIN para clerks
-  - [ ] Email de recuperación de contraseña
-  - [ ] Email de resumen diario/semanal
+- [x] Crear plantillas de email:
+  - [x] Email de bienvenida
+  - [x] Email con PIN para clerks
+  - [ ] Email de recuperación de contraseña (pendiente)
+  - [ ] Email de resumen diario/semanal (pendiente)
 
 **Código a actualizar:**
 ```python
