@@ -52,7 +52,7 @@ async def send_daily_stock_alerts():
                 continue
             
             # Send Email
-            if merchant.get("email_alerts_enabled") and merchant.get("email"):
+            if merchant.get("stock_alert_email") and merchant.get("email"):
                 try:
                     from .email_service import send_stock_alert_email
                     send_stock_alert_email(
@@ -65,7 +65,7 @@ async def send_daily_stock_alerts():
                     print(f"⚠️ Error al enviar email a {merchant.get('email')}: {str(e)}")
             
             # Send WhatsApp
-            if merchant.get("whatsapp_alerts_enabled") and merchant.get("whatsapp_number"):
+            if merchant.get("stock_alert_whatsapp") and merchant.get("whatsapp_number"):
                 try:
                     for product in alert_products:
                         if product["stock"] == 0:
