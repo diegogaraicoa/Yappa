@@ -30,7 +30,7 @@ export default function AuthNewScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // Step 2: Number of stores
+  // Step 2: Number of stores (ya no lo usamos, lo hacemos dinámico)
   const [numStores, setNumStores] = useState<number | null>(null);
   
   // Step 3: Store names
