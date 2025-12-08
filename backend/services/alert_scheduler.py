@@ -105,8 +105,8 @@ async def send_daily_sales_summary():
         for merchant in merchants:
             store_id = str(merchant.get("_id"))
             
-            # Verificar si el merchant tiene email alerts habilitado
-            if not merchant.get("email_alerts_enabled", False):
+            # Verificar si el merchant tiene daily email habilitado
+            if not merchant.get("daily_email", False):
                 continue
             
             alert_email = merchant.get("email")
