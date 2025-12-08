@@ -318,10 +318,11 @@ async def login_step1_merchant(username: str, password: str):
     """
     Login Paso 1: Validar credenciales del Merchant
     Retorna lista de clerks disponibles
+    
+    COMPATIBILIDAD: Si el merchant no tiene clerks (cuenta antigua),
+    genera token directamente y permite login sin clerk selection.
     """
     db = await get_database()
-    
-    from services.auth_service import verify_password
     
     # Buscar merchant
     merchant = await db.merchants.find_one({"username": username})
@@ -332,6 +333,29 @@ async def login_step1_merchant(username: str, password: str):
     clerks_cursor = db.clerks.find({"merchant_id": str(merchant["_id"])})
     clerks = await clerks_cursor.to_list(length=100)
     
+    # SI NO HAY CLERKS (cuenta antigua), generar token directamente
+    if len(clerks) == 0:
+        # Sistema antiguo - login directo sin clerks
+        token = create_access_token(
+            data={
+                "admin_id": merchant.get("admin_id"),
+                "merchant_id": str(merchant["_id"]),
+                "username": merchant["username"]
+            }
+        )
+        
+        return {
+            "success": True,
+            "token": token,
+            "legacy_account": True,
+            "user": {
+                "merchant_id": str(merchant["_id"]),
+                "store_name": merchant.get("store_name", merchant.get("nombre")),
+            },
+            "message": "Login exitoso (cuenta antigua)"
+        }
+    
+    # NUEVO SISTEMA - tiene clerks
     clerk_list = [
         {
             "clerk_id": str(clerk["_id"]),
@@ -346,6 +370,7 @@ async def login_step1_merchant(username: str, password: str):
         "merchant_id": str(merchant["_id"]),
         "store_name": merchant.get("store_name", merchant.get("nombre")),
         "clerks": clerk_list,
+        "legacy_account": False,
         "next_step": "select_clerk_and_pin"
     }
 
