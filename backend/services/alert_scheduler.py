@@ -157,27 +157,28 @@ async def send_daily_sales_summary():
                 if p.get("stock", 0) <= p.get("stock_minimo", 0)
             ]
             
-            # Send Email
-            try:
-                from .email_service import send_daily_summary_email
-                
-                summary_data = {
-                    "total_sales": total_sales,
-                    "total_expenses": total_expenses,
-                    "balance": balance,
-                    "top_products": top_products,
-                    "low_stock_alerts": low_stock_alerts,
-                    "date": today.strftime("%d/%m/%Y")
-                }
-                
-                send_daily_summary_email(
-                    admin_email=alert_email,
-                    company_name=merchant.get("store_name", merchant.get("nombre", "Tu Tienda")),
-                    summary_data=summary_data
-                )
-                print(f"✅ Email de resumen diario enviado a {alert_email}")
-            except Exception as e:
-                print(f"⚠️ Error al enviar email a {alert_email}: {str(e)}")
+            # Send Email (only if daily_email is enabled and email exists)
+            if has_daily_email and merchant.get("email"):
+                try:
+                    from .email_service import send_daily_summary_email
+                    
+                    summary_data = {
+                        "total_sales": total_sales,
+                        "total_expenses": total_expenses,
+                        "balance": balance,
+                        "top_products": top_products,
+                        "low_stock_alerts": low_stock_alerts,
+                        "date": today.strftime("%d/%m/%Y")
+                    }
+                    
+                    send_daily_summary_email(
+                        admin_email=merchant["email"],
+                        company_name=merchant.get("store_name", merchant.get("nombre", "Tu Tienda")),
+                        summary_data=summary_data
+                    )
+                    print(f"✅ Email de resumen diario enviado a {merchant['email']}")
+                except Exception as e:
+                    print(f"⚠️ Error al enviar email a {merchant.get('email')}: {str(e)}")
             
             # Send WhatsApp (legacy)
             whatsapp_number = merchant.get("whatsapp_number")
