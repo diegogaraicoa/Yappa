@@ -217,17 +217,23 @@ async def create_clerks_step3(merchant_id: str, clerks: List[ClerkCreateRequest]
             "full_name": f"{clerk_data.first_name} {clerk_data.last_name}",
             "nombre": f"{clerk_data.first_name} {clerk_data.last_name}",  # Compatibilidad
             "pin": hashed_pin,
-            "whatsapp_number": None,
+            "whatsapp_number": clerk_data.phone,
             "created_at": datetime.utcnow(),
             "activated_at": datetime.utcnow(),
             "fully_activated_at": datetime.utcnow(),
         }
         
         result = await db.clerks.insert_one(clerk_doc)
+        
+        # Enviar PIN por email (simulado - integrar SendGrid si es necesario)
+        print(f"[EMAIL] Enviando PIN a {clerk_data.email}: Tu PIN es {clerk_data.pin}")
+        # TODO: Integrar SendGrid o servicio de email para enviar PIN real
+        
         clerk_ids.append({
             "clerk_id": str(result.inserted_id),
             "name": clerk_doc["full_name"],
-            "email": clerk_data.email
+            "email": clerk_data.email,
+            "phone": clerk_data.phone
         })
     
     return {
