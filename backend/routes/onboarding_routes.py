@@ -225,9 +225,22 @@ async def create_clerks_step3(merchant_id: str, clerks: List[ClerkCreateRequest]
         
         result = await db.clerks.insert_one(clerk_doc)
         
-        # Enviar PIN por email (simulado - integrar SendGrid si es necesario)
-        print(f"[EMAIL] Enviando PIN a {clerk_data.email}: Tu PIN es {clerk_data.pin}")
-        # TODO: Integrar SendGrid o servicio de email para enviar PIN real
+        # Enviar PIN por email usando SendGrid
+        try:
+            from services.email_service import send_clerk_pin_email
+            merchant = await db.merchants.find_one({"_id": ObjectId(merchant_id)})
+            store_name = merchant.get("store_name", merchant.get("nombre", "Tu tienda"))
+            
+            send_clerk_pin_email(
+                clerk_email=clerk_data.email,
+                clerk_name=clerk_doc["full_name"],
+                pin=clerk_data.pin,
+                store_name=store_name
+            )
+            print(f"✅ PIN enviado por email a {clerk_data.email}")
+        except Exception as e:
+            print(f"⚠️ Error al enviar email a {clerk_data.email}: {str(e)}")
+            print(f"[FALLBACK] PIN para {clerk_data.email}: {clerk_data.pin}")
         
         clerk_ids.append({
             "clerk_id": str(result.inserted_id),
