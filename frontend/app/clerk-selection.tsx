@@ -51,8 +51,13 @@ export default function ClerkSelectionScreen() {
       });
       
       if (response.data.success) {
-        // Guardar token y navegar
-        await login(response.data.token);
+        // Guardar token con los datos del clerk y la tienda
+        await login(response.data.token, {
+          id: response.data.user.clerk_id,
+          email: selectedClerk?.email || '',
+          store_id: response.data.user.merchant_id,
+          store_name: response.data.user.store_name,
+        });
         
         showAlert(
           'Bienvenido',
