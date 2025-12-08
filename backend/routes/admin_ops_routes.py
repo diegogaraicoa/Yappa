@@ -944,10 +944,16 @@ async def get_alert_settings():
         raise HTTPException(status_code=404, detail="Merchant no encontrado")
     
     return {
-        "email_alerts_enabled": merchant.get("email_alerts_enabled", False),
         "email": merchant.get("email", ""),
-        "whatsapp_alerts_enabled": merchant.get("whatsapp_alerts_enabled", False),
-        "whatsapp_number": merchant.get("whatsapp_number", "")
+        "whatsapp_number": merchant.get("whatsapp_number", ""),
+        "stock_alert_email": merchant.get("stock_alert_email", False),
+        "stock_alert_whatsapp": merchant.get("stock_alert_whatsapp", False),
+        "daily_email": merchant.get("daily_email", False),
+        "daily_whatsapp": merchant.get("daily_whatsapp", False),
+        "weekly_email": merchant.get("weekly_email", False),
+        "weekly_whatsapp": merchant.get("weekly_whatsapp", False),
+        "monthly_email": merchant.get("monthly_email", False),
+        "monthly_whatsapp": merchant.get("monthly_whatsapp", False),
     }
 
 
