@@ -478,3 +478,408 @@ def send_welcome_admin_email(admin_email: str, company_name: str, num_stores: in
     """
     
     return send_email(admin_email, subject, html_content, plain_content)
+
+
+
+def send_password_reset_email(user_email: str, reset_token: str, user_name: str = "Usuario"):
+    """
+    Envía email con link para resetear contraseña
+    
+    Args:
+        user_email: Email del usuario
+        reset_token: Token único para resetear la contraseña
+        user_name: Nombre del usuario
+    """
+    
+    # TODO: Cambiar este URL por el de producción
+    reset_url = f"https://yappa.app/reset-password?token={reset_token}"
+    
+    subject = "Recupera tu contraseña de YAPPA"
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }}
+            .container {{
+                background-color: white;
+                border-radius: 12px;
+                padding: 40px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }}
+            .header {{
+                text-align: center;
+                margin-bottom: 30px;
+            }}
+            .logo {{
+                font-size: 48px;
+                font-weight: 900;
+                color: #00D2FF;
+                margin-bottom: 10px;
+            }}
+            .title {{
+                font-size: 24px;
+                font-weight: 700;
+                color: #212121;
+                margin-bottom: 10px;
+            }}
+            .subtitle {{
+                font-size: 16px;
+                color: #757575;
+            }}
+            .message {{
+                font-size: 16px;
+                color: #424242;
+                margin: 20px 0;
+            }}
+            .button-container {{
+                text-align: center;
+                margin: 30px 0;
+            }}
+            .button {{
+                display: inline-block;
+                background-color: #00D2FF;
+                color: white;
+                padding: 15px 40px;
+                text-decoration: none;
+                border-radius: 12px;
+                font-weight: 700;
+                font-size: 16px;
+            }}
+            .button:hover {{
+                background-color: #00B8E6;
+            }}
+            .warning {{
+                background-color: #FFF3E0;
+                border-left: 4px solid #FF9800;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+                font-size: 14px;
+                color: #424242;
+            }}
+            .footer {{
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #E0E0E0;
+                color: #757575;
+                font-size: 14px;
+            }}
+            .expiry {{
+                background-color: #E8F5E9;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 20px 0;
+                text-align: center;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">YAPPA</div>
+                <div class="title">Recuperación de Contraseña</div>
+            </div>
+            
+            <p class="message">Hola <strong>{user_name}</strong>,</p>
+            
+            <p class="message">
+                Recibimos una solicitud para restablecer la contraseña de tu cuenta en YAPPA. 
+                Si fuiste tú, haz clic en el botón de abajo para crear una nueva contraseña.
+            </p>
+            
+            <div class="button-container">
+                <a href="{reset_url}" class="button">Restablecer Contraseña</a>
+            </div>
+            
+            <div class="expiry">
+                <strong>⏰ Este enlace expirará en 1 hora</strong>
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ ¿No solicitaste esto?</strong><br>
+                Si no solicitaste restablecer tu contraseña, ignora este email. Tu cuenta está segura y no se realizó ningún cambio.
+            </div>
+            
+            <p style="font-size: 14px; color: #757575; margin-top: 20px;">
+                Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+                <a href="{reset_url}" style="color: #00D2FF; word-break: break-all;">{reset_url}</a>
+            </p>
+            
+            <div class="footer">
+                <p>Este es un email automático de YAPPA.<br>
+                Por favor, no respondas a este mensaje.</p>
+                <p style="margin-top: 15px; color: #BDBDBD; font-size: 12px;">
+                    © 2025 YAPPA - Sistema de Gestión para Tiendas
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    plain_content = f"""
+    YAPPA - Recuperación de Contraseña
+    
+    Hola {user_name},
+    
+    Recibimos una solicitud para restablecer la contraseña de tu cuenta en YAPPA.
+    
+    Para crear una nueva contraseña, visita el siguiente enlace:
+    {reset_url}
+    
+    ⏰ Este enlace expirará en 1 hora.
+    
+    ⚠️ ¿No solicitaste esto?
+    Si no solicitaste restablecer tu contraseña, ignora este email. Tu cuenta está segura.
+    
+    © 2025 YAPPA
+    """
+    
+    return send_email(user_email, subject, html_content, plain_content)
+
+
+def send_daily_summary_email(admin_email: str, company_name: str, summary_data: dict):
+    """
+    Envía email con resumen diario de ventas y alertas
+    
+    Args:
+        admin_email: Email del admin
+        company_name: Nombre de la compañía
+        summary_data: Diccionario con datos del resumen {
+            'total_sales': float,
+            'total_expenses': float,
+            'balance': float,
+            'top_products': list,
+            'low_stock_alerts': list,
+            'date': str
+        }
+    """
+    
+    subject = f"Resumen Diario - {company_name} - {summary_data.get('date', 'Hoy')}"
+    
+    # Formatear productos más vendidos
+    top_products_html = ""
+    if summary_data.get('top_products'):
+        for i, prod in enumerate(summary_data['top_products'][:5], 1):
+            top_products_html += f"""
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0;">{i}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0;">{prod.get('name', 'N/A')}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #E0E0E0; text-align: right;">{prod.get('quantity', 0)}</td>
+            </tr>
+            """
+    else:
+        top_products_html = "<tr><td colspan='3' style='padding: 20px; text-align: center; color: #757575;'>No hay ventas hoy</td></tr>"
+    
+    # Formatear alertas de stock bajo
+    low_stock_html = ""
+    if summary_data.get('low_stock_alerts'):
+        for alert in summary_data['low_stock_alerts'][:5]:
+            low_stock_html += f"""
+            <div style="background-color: #FFF3E0; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+                <strong>{alert.get('product', 'N/A')}</strong><br>
+                <span style="color: #757575; font-size: 14px;">
+                    Stock actual: {alert.get('stock', 0)} | Mínimo: {alert.get('min_stock', 0)}
+                </span>
+            </div>
+            """
+    else:
+        low_stock_html = "<p style='color: #757575; text-align: center;'>✅ Todos los productos tienen stock suficiente</p>"
+    
+    balance_color = "#00D2FF" if summary_data.get('balance', 0) >= 0 else "#F44336"
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 700px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }}
+            .container {{
+                background-color: white;
+                border-radius: 12px;
+                padding: 40px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }}
+            .header {{
+                text-align: center;
+                margin-bottom: 30px;
+            }}
+            .logo {{
+                font-size: 40px;
+                font-weight: 900;
+                color: #00D2FF;
+            }}
+            .title {{
+                font-size: 24px;
+                font-weight: 700;
+                color: #212121;
+                margin-top: 10px;
+            }}
+            .date {{
+                font-size: 14px;
+                color: #757575;
+                margin-top: 5px;
+            }}
+            .stats {{
+                display: flex;
+                justify-content: space-around;
+                margin: 30px 0;
+                gap: 15px;
+            }}
+            .stat {{
+                flex: 1;
+                text-align: center;
+                padding: 20px;
+                background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%);
+                border-radius: 12px;
+            }}
+            .stat-value {{
+                font-size: 28px;
+                font-weight: 900;
+                color: #00D2FF;
+                margin-bottom: 5px;
+            }}
+            .stat-label {{
+                font-size: 14px;
+                color: #424242;
+            }}
+            .section {{
+                margin: 30px 0;
+            }}
+            .section-title {{
+                font-size: 18px;
+                font-weight: 700;
+                color: #212121;
+                margin-bottom: 15px;
+                border-bottom: 2px solid #00D2FF;
+                padding-bottom: 10px;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+            }}
+            th {{
+                background-color: #E0F7FA;
+                padding: 12px;
+                text-align: left;
+                font-weight: 600;
+                color: #212121;
+            }}
+            .footer {{
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #E0E0E0;
+                color: #757575;
+                font-size: 14px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">YAPPA</div>
+                <div class="title">Resumen Diario</div>
+                <div class="date">{company_name} - {summary_data.get('date', 'Hoy')}</div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">${summary_data.get('total_sales', 0):.2f}</div>
+                    <div class="stat-label">Ventas</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${summary_data.get('total_expenses', 0):.2f}</div>
+                    <div class="stat-label">Gastos</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" style="color: {balance_color};">${summary_data.get('balance', 0):.2f}</div>
+                    <div class="stat-label">Balance</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">📊 Top 5 Productos Más Vendidos</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Producto</th>
+                            <th style="width: 100px; text-align: right;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {top_products_html}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">⚠️ Alertas de Stock Bajo</div>
+                {low_stock_html}
+            </div>
+            
+            <div class="footer">
+                <p>Este resumen se envía automáticamente todos los días.<br>
+                Para desactivar estas notificaciones, ve a Configuración en la app.</p>
+                <p style="margin-top: 15px; color: #BDBDBD; font-size: 12px;">
+                    © 2025 YAPPA - Sistema de Gestión para Tiendas
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    plain_content = f"""
+    YAPPA - Resumen Diario
+    {company_name} - {summary_data.get('date', 'Hoy')}
+    
+    Resumen del Día:
+    - Ventas: ${summary_data.get('total_sales', 0):.2f}
+    - Gastos: ${summary_data.get('total_expenses', 0):.2f}
+    - Balance: ${summary_data.get('balance', 0):.2f}
+    
+    Top 5 Productos Más Vendidos:
+    """
+    
+    if summary_data.get('top_products'):
+        for i, prod in enumerate(summary_data['top_products'][:5], 1):
+            plain_content += f"\n  {i}. {prod.get('name', 'N/A')} - {prod.get('quantity', 0)} unidades"
+    else:
+        plain_content += "\n  No hay ventas hoy"
+    
+    plain_content += "\n\nAlertas de Stock Bajo:\n"
+    if summary_data.get('low_stock_alerts'):
+        for alert in summary_data['low_stock_alerts'][:5]:
+            plain_content += f"\n  • {alert.get('product', 'N/A')}: Stock actual {alert.get('stock', 0)} (Mín: {alert.get('min_stock', 0)})"
+    else:
+        plain_content += "\n  ✅ Todos los productos tienen stock suficiente"
+    
+    plain_content += "\n\n© 2025 YAPPA"
+    
+    return send_email(admin_email, subject, html_content, plain_content)
+
