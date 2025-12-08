@@ -77,13 +77,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   async function signOut() {
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('user');
-    setUser(null);
+    console.log('🔴 SIGNOUT: Clearing storage and user...');
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+      setUser(null);
+      console.log('✅ SIGNOUT: Complete');
+    } catch (error) {
+      console.error('❌ SIGNOUT ERROR:', error);
+    }
+  }
+
+  async function login(token: string) {
+    console.log('🟢 LOGIN: Saving token...');
+    try {
+      await AsyncStorage.setItem('token', token);
+      // Crear un user básico para que el estado cambie
+      const basicUser = {
+        id: 'temp',
+        email: 'temp',
+        store_id: 'temp',
+        store_name: 'Store'
+      };
+      await AsyncStorage.setItem('user', JSON.stringify(basicUser));
+      setUser(basicUser);
+      console.log('✅ LOGIN: Complete');
+    } catch (error) {
+      console.error('❌ LOGIN ERROR:', error);
+      throw error;
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, login }}>
       {children}
     </AuthContext.Provider>
   );
