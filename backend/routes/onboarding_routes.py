@@ -70,6 +70,7 @@ class ClerkCreateRequest(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
+    phone: str  # Teléfono / WhatsApp
     pin: str  # PIN de 4 dígitos
 
 class OnboardingCompleteRequest(BaseModel):
