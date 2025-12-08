@@ -263,7 +263,7 @@ export default function AuthScreen() {
       if (response.data.success) {
         // Si es cuenta antigua (sin clerks), login directo
         if (response.data.legacy_account) {
-          await login(response.data.token);
+          await login(response.data.token, response.data.user);
           showAlert('Bienvenido', response.data.message || 'Login exitoso');
           setTimeout(() => {
             router.replace('/(tabs)');
