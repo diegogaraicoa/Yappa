@@ -98,18 +98,18 @@ async def send_daily_sales_summary():
         start_of_day = datetime.combine(today, datetime.min.time())
         end_of_day = datetime.combine(today, datetime.max.time())
         
-        # Get all stores
-        stores = await db.users.find({}).to_list(10000)
+        # Get all merchants (nueva estructura)
+        merchants = await db.merchants.find({}).to_list(10000)
         
-        for user in stores:
-            if not user.get("alerts_enabled", True):
+        for merchant in merchants:
+            store_id = str(merchant.get("_id"))
+            
+            # Verificar si el merchant tiene email alerts habilitado
+            if not merchant.get("email_alerts_enabled", False):
                 continue
             
-            if not user.get("daily_summary_enabled", True):
-                continue
-            
-            store_id = str(user.get("store_id"))
-            if not store_id:
+            alert_email = merchant.get("email")
+            if not alert_email:
                 continue
             
             # Get today's sales
@@ -128,36 +128,70 @@ async def send_daily_sales_summary():
             total_expenses = sum(expense.get("amount", 0) for expense in expenses)
             balance = total_sales - total_expenses
             
-            # Send WhatsApp
-            if user.get("whatsapp_number"):
-                twilio_service.send_daily_sales_summary(
-                    user["whatsapp_number"],
-                    total_sales,
-                    len(sales),
-                    total_expenses
-                )
+            # Calcular productos más vendidos
+            product_sales = {}
+            for sale in sales:
+                for item in sale.get("items", []):
+                    product_name = item.get("product_name", "Producto")
+                    quantity = item.get("quantity", 0)
+                    if product_name in product_sales:
+                        product_sales[product_name] += quantity
+                    else:
+                        product_sales[product_name] = quantity
             
-            # Email temporarily disabled
-            # if user.get("alert_email"):
-            #     sendgrid_service.send_daily_sales_email(
-            #         user["alert_email"],
-            #         {
-            #             "date": today.strftime("%Y-%m-%d"),
-            #             "total_sales": total_sales,
-            #             "num_sales": len(sales),
-            #             "total_expenses": total_expenses
-            #         }
-            #     )
+            top_products = [
+                {"name": name, "quantity": qty} 
+                for name, qty in sorted(product_sales.items(), key=lambda x: x[1], reverse=True)
+            ]
             
-            # Send Push
-            if user.get("expo_push_token"):
-                expo_push_service.send_daily_summary_push(
-                    user["expo_push_token"],
-                    total_sales,
-                    balance
+            # Get low stock alerts
+            products = await db.products.find({"store_id": store_id}).to_list(10000)
+            low_stock_alerts = [
+                {
+                    "product": p.get("nombre", "Producto"),
+                    "stock": p.get("stock", 0),
+                    "min_stock": p.get("stock_minimo", 0)
+                }
+                for p in products
+                if p.get("stock", 0) <= p.get("stock_minimo", 0)
+            ]
+            
+            # Send Email
+            try:
+                from .email_service import send_daily_summary_email
+                
+                summary_data = {
+                    "total_sales": total_sales,
+                    "total_expenses": total_expenses,
+                    "balance": balance,
+                    "top_products": top_products,
+                    "low_stock_alerts": low_stock_alerts,
+                    "date": today.strftime("%d/%m/%Y")
+                }
+                
+                send_daily_summary_email(
+                    admin_email=alert_email,
+                    company_name=merchant.get("store_name", merchant.get("nombre", "Tu Tienda")),
+                    summary_data=summary_data
                 )
+                print(f"✅ Email de resumen diario enviado a {alert_email}")
+            except Exception as e:
+                print(f"⚠️ Error al enviar email a {alert_email}: {str(e)}")
+            
+            # Send WhatsApp (legacy)
+            whatsapp_number = merchant.get("whatsapp_number")
+            if whatsapp_number and merchant.get("whatsapp_alerts_enabled", True):
+                try:
+                    twilio_service.send_daily_sales_summary(
+                        whatsapp_number,
+                        total_sales,
+                        len(sales),
+                        total_expenses
+                    )
+                except Exception as e:
+                    print(f"⚠️ Error al enviar WhatsApp a {whatsapp_number}: {str(e)}")
         
-        print(f"[{datetime.now()}] Daily sales summary sent")
+        print(f"[{datetime.now()}] Daily sales summary sent to {len(merchants)} merchants")
     
     except Exception as e:
         print(f"Error in daily sales summary job: {str(e)}")
