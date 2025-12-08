@@ -180,18 +180,18 @@ async def send_daily_sales_summary():
                 except Exception as e:
                     print(f"⚠️ Error al enviar email a {merchant.get('email')}: {str(e)}")
             
-            # Send WhatsApp (legacy)
-            whatsapp_number = merchant.get("whatsapp_number")
-            if whatsapp_number and merchant.get("daily_whatsapp", True):
+            # Send WhatsApp (only if daily_whatsapp is enabled and whatsapp_number exists)
+            if has_daily_whatsapp and merchant.get("whatsapp_number"):
                 try:
                     twilio_service.send_daily_sales_summary(
-                        whatsapp_number,
+                        merchant["whatsapp_number"],
                         total_sales,
                         len(sales),
                         total_expenses
                     )
+                    print(f"✅ WhatsApp de resumen diario enviado a {merchant['whatsapp_number']}")
                 except Exception as e:
-                    print(f"⚠️ Error al enviar WhatsApp a {whatsapp_number}: {str(e)}")
+                    print(f"⚠️ Error al enviar WhatsApp a {merchant.get('whatsapp_number')}: {str(e)}")
         
         print(f"[{datetime.now()}] Daily sales summary sent to {len(merchants)} merchants")
     
