@@ -250,12 +250,13 @@ export default function AuthScreen() {
     
     try {
       console.log('Login step 1...');
-      const response = await api.post('/api/onboarding/login/step1', null, {
-        params: {
-          username: loginUsername,
-          password: loginPassword
-        }
-      });
+      console.log('Username:', loginUsername);
+      console.log('Password:', loginPassword ? '***' : 'empty');
+      
+      const url = `/api/onboarding/login/step1?username=${encodeURIComponent(loginUsername)}&password=${encodeURIComponent(loginPassword)}`;
+      console.log('Request URL:', url.replace(loginPassword, '***'));
+      
+      const response = await api.post(url);
       
       console.log('Login response:', response.data);
       
