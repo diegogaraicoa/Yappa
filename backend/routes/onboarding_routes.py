@@ -8,11 +8,24 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 import sys
+import os
 sys.path.append('/app/backend')
 
-from database import get_database
-from services.auth_service import get_password_hash, create_access_token
+from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
+from dotenv import load_dotenv
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).parent.parent
+load_dotenv(ROOT_DIR / '.env')
+
+# MongoDB connection
+mongo_url = os.environ['MONGO_URL']
+client = AsyncIOMotorClient(mongo_url)
+db_instance = client[os.environ.get('DB_NAME', 'tiendadb')]
+
+async def get_database():
+    return db_instance
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 
