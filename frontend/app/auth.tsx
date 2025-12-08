@@ -260,15 +260,24 @@ export default function AuthScreen() {
       console.log('Login response:', response.data);
       
       if (response.data.success) {
-        // Navegar a pantalla de selección de clerk
-        router.push({
-          pathname: '/clerk-selection',
-          params: {
-            merchant_id: response.data.merchant_id,
-            store_name: response.data.store_name,
-            clerks: JSON.stringify(response.data.clerks)
-          }
-        });
+        // Si es cuenta antigua (sin clerks), login directo
+        if (response.data.legacy_account) {
+          await login(response.data.token);
+          showAlert('Bienvenido', response.data.message || 'Login exitoso');
+          setTimeout(() => {
+            router.replace('/(tabs)');
+          }, 500);
+        } else {
+          // Cuenta nueva - ir a selección de clerk
+          router.push({
+            pathname: '/clerk-selection',
+            params: {
+              merchant_id: response.data.merchant_id,
+              store_name: response.data.store_name,
+              clerks: JSON.stringify(response.data.clerks)
+            }
+          });
+        }
       }
     } catch (error: any) {
       console.error('Error en login:', error);
