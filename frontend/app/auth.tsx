@@ -40,8 +40,8 @@ export default function AuthScreen() {
     0: [{ firstName: '', lastName: '', email: '', phone: '', pin: '' }]
   });
   
-  // State for login
-  const [isLogin, setIsLogin] = useState(false);
+  // State for login (TRUE = mostrar login por defecto)
+  const [isLogin, setIsLogin] = useState(true);
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
