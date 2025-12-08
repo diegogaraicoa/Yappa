@@ -88,20 +88,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  async function login(token: string) {
-    console.log('🟢 LOGIN: Saving token...');
+  async function login(token: string, userData?: Partial<User>) {
+    console.log('🟢 LOGIN: Saving token and user data...');
     try {
       await AsyncStorage.setItem('token', token);
-      // Crear un user básico para que el estado cambie
-      const basicUser = {
-        id: 'temp',
-        email: 'temp',
-        store_id: 'temp',
-        store_name: 'Store'
-      };
-      await AsyncStorage.setItem('user', JSON.stringify(basicUser));
-      setUser(basicUser);
-      console.log('✅ LOGIN: Complete');
+      
+      // Si se proporcionaron datos del usuario, usarlos; de lo contrario, crear básicos
+      const userToSave: User = userData
+        ? {
+            id: userData.id || userData.store_id || userData.merchant_id || 'temp',
+            email: userData.email || 'temp@yappa.com',
+            store_id: userData.store_id || userData.merchant_id || 'temp',
+            store_name: userData.store_name || 'Store',
+          }
+        : {
+            id: 'temp',
+            email: 'temp@yappa.com',
+            store_id: 'temp',
+            store_name: 'Store',
+          };
+      
+      await AsyncStorage.setItem('user', JSON.stringify(userToSave));
+      setUser(userToSave);
+      console.log('✅ LOGIN: Complete. User:', userToSave.store_name);
     } catch (error) {
       console.error('❌ LOGIN ERROR:', error);
       throw error;
