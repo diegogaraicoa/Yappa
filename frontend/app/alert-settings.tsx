@@ -68,19 +68,15 @@ export default function AlertSettingsScreen() {
     try {
       setSaving(true);
 
-      await api.post('/api/admin_ops/alert-settings', {
+      const response = await api.post('/api/admin_ops/alert-settings', {
         email_alerts_enabled: emailAlertsEnabled,
         email: emailAddress.trim().toLowerCase(),
         whatsapp_alerts_enabled: whatsappAlertsEnabled,
         whatsapp_number: whatsappNumber.trim(),
       });
 
+      console.log('✅ Settings saved successfully:', response.data);
       showAlert('Éxito', 'Configuración de alertas guardada correctamente');
-      
-      // Opcional: volver atrás después de guardar
-      setTimeout(() => {
-        router.back();
-      }, 1500);
 
     } catch (error: any) {
       console.error('Error saving settings:', error);
