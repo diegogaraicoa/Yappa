@@ -298,7 +298,7 @@ async def send_weekly_summary_with_insights():
                     if insights.get('success'):
                         message = ai_insights_service.format_insights_for_whatsapp(insights)
                         twilio_service.send_whatsapp(merchant["whatsapp_number"], message)
-                    print(f"✅ Resumen semanal enviado por WhatsApp")
+                    print("✅ Resumen semanal enviado por WhatsApp")
                 except Exception as e:
                     print(f"⚠️ Error al enviar WhatsApp semanal: {str(e)}")
         
@@ -513,7 +513,7 @@ async def send_monthly_ai_insights():
                     try:
                         message = ai_insights_service.format_insights_for_whatsapp(insights)
                         twilio_service.send_whatsapp(merchant["whatsapp_number"], message)
-                        print(f"✅ Insights mensuales enviados por WhatsApp")
+                        print("✅ Insights mensuales enviados por WhatsApp")
                     except Exception as e:
                         print(f"⚠️ Error al enviar WhatsApp mensual: {str(e)}")
         
