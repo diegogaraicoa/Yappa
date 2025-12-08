@@ -415,21 +415,12 @@ def start_scheduler():
         replace_existing=True
     )
     
-    # Weekly summary on Monday at 9:00 AM
+    # Weekly summary + AI insights on Monday at 9:00 AM
     scheduler.add_job(
-        send_weekly_summary,
+        send_weekly_summary_with_insights,
         CronTrigger(day_of_week='mon', hour=9, minute=0),
-        id='weekly_summary',
-        name='Send weekly summary',
-        replace_existing=True
-    )
-    
-    # Weekly AI insights on Monday at 9:30 AM (after weekly summary)
-    scheduler.add_job(
-        send_weekly_ai_insights,
-        CronTrigger(day_of_week='mon', hour=9, minute=30),
-        id='weekly_ai_insights',
-        name='Send weekly AI insights',
+        id='weekly_summary_insights',
+        name='Send weekly summary with AI insights',
         replace_existing=True
     )
     
