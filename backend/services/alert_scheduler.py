@@ -197,7 +197,117 @@ async def send_daily_sales_summary():
     except Exception as e:
         print(f"Error in daily sales summary job: {str(e)}")
 
-async def send_weekly_summary():
+async def send_weekly_summary_with_insights():
+    """Job: Send weekly summary + AI insights on Monday at 9am (COMBINED)"""
+    print(f"[{datetime.now()}] Running weekly summary with AI insights job...")
+    
+    try:
+        from .ai_insights_service import ai_insights_service
+        
+        # Get last 7 days
+        today = datetime.now().date()
+        week_ago = today - timedelta(days=7)
+        start_of_week = datetime.combine(week_ago, datetime.min.time())
+        end_of_week = datetime.combine(today, datetime.max.time())
+        
+        # Get all merchants
+        merchants = await db.merchants.find({}).to_list(10000)
+        
+        for merchant in merchants:
+            store_id = str(merchant.get("_id"))
+            
+            # Get week's data
+            sales = await db.sales.find({
+                "store_id": store_id,
+                "created_at": {"$gte": start_of_week, "$lte": end_of_week}
+            }).to_list(10000)
+            
+            expenses = await db.expenses.find({
+                "store_id": store_id,
+                "created_at": {"$gte": start_of_week, "$lte": end_of_week}
+            }).to_list(10000)
+            
+            products = await db.products.find({"store_id": store_id}).to_list(1000)
+            customers = await db.customers.find({"store_id": store_id}).to_list(1000)
+            
+            # Calculate basic metrics
+            total_sales = sum(sale.get("total", 0) for sale in sales)
+            total_expenses = sum(expense.get("amount", 0) for expense in expenses)
+            balance = total_sales - total_expenses
+            
+            # Get debts
+            customer_debts_cursor = await db.sales.find({
+                "store_id": store_id,
+                "paid": False
+            }).to_list(10000)
+            customer_debts = sum(sale.get("total", 0) - sale.get("paid_amount", 0) for sale in customer_debts_cursor)
+            
+            supplier_debts_cursor = await db.expenses.find({
+                "store_id": store_id,
+                "paid": False
+            }).to_list(10000)
+            supplier_debts = sum(expense.get("amount", 0) - expense.get("paid_amount", 0) for expense in supplier_debts_cursor)
+            
+            # Generate AI insights
+            insights = await ai_insights_service.generate_business_insights(
+                sales, expenses, products, customers
+            )
+            
+            # Save insights to DB
+            if insights.get('success'):
+                await db.insights.insert_one({
+                    "store_id": store_id,
+                    "insights": insights.get('insights'),
+                    "metrics": insights.get('metrics'),
+                    "generated_at": datetime.now(),
+                    "period": "weekly",
+                    "period_days": 7
+                })
+            
+            data = {
+                "total_sales": total_sales,
+                "total_expenses": total_expenses,
+                "balance": balance,
+                "customer_debts": customer_debts,
+                "supplier_debts": supplier_debts,
+                "insights": insights.get('insights', []) if insights.get('success') else []
+            }
+            
+            # Send Email (if enabled)
+            if merchant.get("weekly_email_enabled") and merchant.get("email"):
+                try:
+                    from .email_service import send_weekly_summary_email
+                    send_weekly_summary_email(
+                        merchant_email=merchant["email"],
+                        store_name=merchant.get("store_name", merchant.get("nombre", "Tu Tienda")),
+                        summary_data=data
+                    )
+                    print(f"✅ Resumen semanal enviado por email a {merchant['email']}")
+                except Exception as e:
+                    print(f"⚠️ Error al enviar email semanal: {str(e)}")
+            
+            # Send WhatsApp (if enabled)
+            if merchant.get("weekly_whatsapp_enabled") and merchant.get("whatsapp_number"):
+                try:
+                    twilio_service.send_weekly_summary(
+                        merchant["whatsapp_number"],
+                        data
+                    )
+                    # Also send AI insights via WhatsApp
+                    if insights.get('success'):
+                        message = ai_insights_service.format_insights_for_whatsapp(insights)
+                        twilio_service.send_whatsapp(merchant["whatsapp_number"], message)
+                    print(f"✅ Resumen semanal enviado por WhatsApp")
+                except Exception as e:
+                    print(f"⚠️ Error al enviar WhatsApp semanal: {str(e)}")
+        
+        print(f"[{datetime.now()}] Weekly summary with insights sent")
+    
+    except Exception as e:
+        print(f"Error in weekly summary with insights job: {str(e)}")
+
+
+async def send_weekly_summary_OLD():
     """Job: Send weekly summary on Monday at 9am"""
     print(f"[{datetime.now()}] Running weekly summary job...")
     
