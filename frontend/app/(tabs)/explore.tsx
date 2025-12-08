@@ -60,11 +60,11 @@ export default function ExploreScreen() {
       id: 4,
       title: 'Alertas',
       description: 'Configura notificaciones',
-      icon: 'settings-outline',
-      iconFilled: 'settings',
-      color: '#607D8B',
-      bgColor: '#ECEFF1',
-      route: '/settings',
+      icon: 'notifications-outline',
+      iconFilled: 'notifications',
+      color: '#FF9800',
+      bgColor: '#FFF3E0',
+      route: '/alert-settings',
     },
   ];
 
