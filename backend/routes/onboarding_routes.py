@@ -268,9 +268,14 @@ async def complete_onboarding(request: OnboardingCompleteRequest):
             merchant_id = merchant_info["merchant_id"]
             
             # Obtener clerks para este merchant
-            clerks_for_merchant = request.clerks_per_merchant.get(str(idx), [])
+            clerks_data = request.clerks_per_merchant.get(str(idx), [])
             
-            if clerks_for_merchant:
+            if clerks_data:
+                # Convertir dicts a ClerkCreateRequest objects
+                clerks_for_merchant = [
+                    ClerkCreateRequest(**clerk) if isinstance(clerk, dict) else clerk
+                    for clerk in clerks_data
+                ]
                 clerks_response = await create_clerks_step3(merchant_id, clerks_for_merchant)
                 all_clerks.extend(clerks_response["clerks"])
         
