@@ -181,7 +181,7 @@ async def send_daily_sales_summary():
             
             # Send WhatsApp (legacy)
             whatsapp_number = merchant.get("whatsapp_number")
-            if whatsapp_number and merchant.get("whatsapp_alerts_enabled", True):
+            if whatsapp_number and merchant.get("daily_whatsapp", True):
                 try:
                     twilio_service.send_daily_sales_summary(
                         whatsapp_number,
