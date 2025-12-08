@@ -481,6 +481,211 @@ def send_welcome_admin_email(admin_email: str, company_name: str, num_stores: in
 
 
 
+def send_stock_alert_email(merchant_email: str, store_name: str, low_stock_products: list):
+    """
+    Envía email con alertas de productos con stock bajo
+    
+    Args:
+        merchant_email: Email del merchant
+        store_name: Nombre de la tienda
+        low_stock_products: Lista de productos con stock bajo [{name, stock, min_stock}]
+    """
+    
+    subject = f"⚠️ Alerta de Stock Bajo - {store_name}"
+    
+    # Generar lista de productos en HTML
+    products_html = ""
+    for product in low_stock_products:
+        stock = product.get('stock', product.get('quantity', 0))
+        min_stock = product.get('min_stock', product.get('min_stock_alert', 10))
+        product_name = product.get('name', product.get('nombre', 'Producto'))
+        
+        if stock == 0:
+            alert_color = "#F44336"
+            alert_bg = "#FFEBEE"
+            alert_text = "AGOTADO"
+        else:
+            alert_color = "#FF9800"
+            alert_bg = "#FFF3E0"
+            alert_text = "STOCK BAJO"
+        
+        products_html += f"""
+        <div style="background-color: {alert_bg}; border-left: 4px solid {alert_color}; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="flex: 1;">
+                    <div style="font-size: 16px; font-weight: 700; color: #212121; margin-bottom: 4px;">
+                        {product_name}
+                    </div>
+                    <div style="font-size: 14px; color: #757575;">
+                        Stock actual: <strong style="color: {alert_color};">{stock}</strong> | Mínimo: {min_stock}
+                    </div>
+                </div>
+                <div style="background-color: {alert_color}; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700;">
+                    {alert_text}
+                </div>
+            </div>
+        </div>
+        """
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }}
+            .container {{
+                background-color: white;
+                border-radius: 12px;
+                padding: 40px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }}
+            .header {{
+                text-align: center;
+                margin-bottom: 30px;
+            }}
+            .logo {{
+                font-size: 40px;
+                font-weight: 900;
+                color: #00D2FF;
+            }}
+            .alert-icon {{
+                font-size: 48px;
+                margin: 20px 0;
+            }}
+            .title {{
+                font-size: 24px;
+                font-weight: 700;
+                color: #212121;
+                margin-bottom: 10px;
+            }}
+            .store-name {{
+                font-size: 16px;
+                color: #757575;
+                font-weight: 600;
+            }}
+            .message {{
+                font-size: 16px;
+                color: #424242;
+                margin: 20px 0;
+                line-height: 24px;
+            }}
+            .products-section {{
+                margin: 30px 0;
+            }}
+            .section-title {{
+                font-size: 18px;
+                font-weight: 700;
+                color: #212121;
+                margin-bottom: 16px;
+                border-bottom: 2px solid #FF9800;
+                padding-bottom: 8px;
+            }}
+            .cta {{
+                text-align: center;
+                margin: 30px 0;
+            }}
+            .button {{
+                display: inline-block;
+                background-color: #00D2FF;
+                color: white;
+                padding: 14px 32px;
+                text-decoration: none;
+                border-radius: 12px;
+                font-weight: 700;
+                font-size: 16px;
+            }}
+            .footer {{
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #E0E0E0;
+                color: #757575;
+                font-size: 14px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">YAPPA</div>
+                <div class="alert-icon">⚠️</div>
+                <div class="title">Alerta de Stock Bajo</div>
+                <div class="store-name">{store_name}</div>
+            </div>
+            
+            <p class="message">
+                Tienes <strong>{len(low_stock_products)} producto{'s' if len(low_stock_products) != 1 else ''}</strong> 
+                que {'requieren' if len(low_stock_products) != 1 else 'requiere'} reposición de stock.
+            </p>
+            
+            <div class="products-section">
+                <div class="section-title">Productos Afectados</div>
+                {products_html}
+            </div>
+            
+            <div class="cta">
+                <a href="#" class="button">Gestionar Inventario en YAPPA</a>
+            </div>
+            
+            <div style="background-color: #E3F2FD; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <strong style="color: #1976D2;">💡 Recomendación:</strong>
+                <p style="margin: 8px 0 0 0; color: #424242; font-size: 14px;">
+                    Reabastece estos productos lo antes posible para evitar perder ventas. Puedes configurar alertas automáticas en la app de YAPPA.
+                </p>
+            </div>
+            
+            <div class="footer">
+                <p>Este es un email automático de YAPPA.<br>
+                Para desactivar estas alertas, ve a Configuración en la app.</p>
+                <p style="margin-top: 15px; color: #BDBDBD; font-size: 12px;">
+                    © 2025 YAPPA - Sistema de Gestión para Tiendas
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    plain_content = f"""
+    YAPPA - Alerta de Stock Bajo
+    {store_name}
+    
+    ⚠️ Tienes {len(low_stock_products)} producto(s) que requiere(n) reposición de stock.
+    
+    Productos Afectados:
+    """
+    
+    for product in low_stock_products:
+        stock = product.get('stock', product.get('quantity', 0))
+        min_stock = product.get('min_stock', product.get('min_stock_alert', 10))
+        product_name = product.get('name', product.get('nombre', 'Producto'))
+        status = "AGOTADO" if stock == 0 else "STOCK BAJO"
+        plain_content += f"\n  • {product_name}: {stock} unidades (Mín: {min_stock}) - {status}"
+    
+    plain_content += """
+    
+    💡 Recomendación:
+    Reabastece estos productos lo antes posible para evitar perder ventas.
+    
+    Para desactivar estas alertas, ve a Configuración en la app.
+    
+    © 2025 YAPPA
+    """
+    
+    return send_email(merchant_email, subject, html_content, plain_content)
+
+
+
 def send_password_reset_email(user_email: str, reset_token: str, user_name: str = "Usuario"):
     """
     Envía email con link para resetear contraseña
