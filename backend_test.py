@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Backend URL from environment
-BACKEND_URL = "https://yappa-landing.preview.emergentagent.com/api"
+BACKEND_URL = "https://user-flow.preview.emergentagent.com/api"
 
 class AdminOpsTestSuite:
     def __init__(self):

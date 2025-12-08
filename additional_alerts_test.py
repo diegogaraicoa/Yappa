@@ -7,7 +7,7 @@ import requests
 import json
 from datetime import datetime
 
-BASE_URL = "https://yappa-landing.preview.emergentagent.com/api"
+BASE_URL = "https://user-flow.preview.emergentagent.com/api"
 
 def log(message, level="INFO"):
     timestamp = datetime.now().strftime("%H:%M:%S")

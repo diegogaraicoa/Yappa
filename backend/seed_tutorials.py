@@ -701,7 +701,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://yappa-landing.preview.emergentagent.com/admin
+**URL:** https://user-flow.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet
