@@ -906,3 +906,76 @@ async def delete_kyb(kyb_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# ============================================
+# ALERT SETTINGS (Email & WhatsApp)
+# ============================================
+
+from pydantic import BaseModel
+
+class AlertSettingsRequest(BaseModel):
+    email_alerts_enabled: bool
+    email: str
+    whatsapp_alerts_enabled: bool
+    whatsapp_number: str
+
+@router.get("/alert-settings")
+async def get_alert_settings():
+    """
+    Obtener configuración actual de alertas del usuario
+    """
+    from main import get_database, get_current_user
+    from fastapi import Depends
+    
+    db = get_database()
+    
+    # TODO: Obtener el user actual (por ahora usamos el primer merchant)
+    # En producción, esto debe venir del token de autenticación
+    merchant = await db.merchants.find_one({})
+    
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant no encontrado")
+    
+    return {
+        "email_alerts_enabled": merchant.get("email_alerts_enabled", False),
+        "email": merchant.get("email", ""),
+        "whatsapp_alerts_enabled": merchant.get("whatsapp_alerts_enabled", False),
+        "whatsapp_number": merchant.get("whatsapp_number", "")
+    }
+
+
+@router.post("/alert-settings")
+async def save_alert_settings(settings: AlertSettingsRequest):
+    """
+    Guardar configuración de alertas
+    """
+    from main import get_database
+    
+    db = get_database()
+    
+    # TODO: Obtener el user actual (por ahora usamos el primer merchant)
+    # En producción, esto debe venir del token de autenticación
+    merchant = await db.merchants.find_one({})
+    
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant no encontrado")
+    
+    # Actualizar configuración
+    await db.merchants.update_one(
+        {"_id": merchant["_id"]},
+        {"$set": {
+            "email_alerts_enabled": settings.email_alerts_enabled,
+            "email": settings.email,
+            "whatsapp_alerts_enabled": settings.whatsapp_alerts_enabled,
+            "whatsapp_number": settings.whatsapp_number,
+            "updated_at": datetime.utcnow()
+        }}
+    )
+    
+    return {
+        "success": True,
+        "message": "Configuración de alertas guardada exitosamente"
+    }
+
