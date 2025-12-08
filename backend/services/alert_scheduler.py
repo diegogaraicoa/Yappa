@@ -287,7 +287,7 @@ async def send_weekly_summary_with_insights():
                     print(f"⚠️ Error al enviar email semanal: {str(e)}")
             
             # Send WhatsApp (if enabled)
-            if merchant.get("weekly_whatsapp_enabled") and merchant.get("whatsapp_number"):
+            if merchant.get("weekly_whatsapp") and merchant.get("whatsapp_number"):
                 try:
                     twilio_service.send_weekly_summary(
                         merchant["whatsapp_number"],
