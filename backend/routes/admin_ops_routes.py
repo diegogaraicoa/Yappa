@@ -954,9 +954,9 @@ async def save_alert_settings(settings: AlertSettingsRequest):
     
     db = get_database()
     
-    # TODO: Obtener el user actual (por ahora usamos el primer merchant)
-    # En producción, esto debe venir del token de autenticación
-    merchant = await db.merchants.find_one({})
+    # Por ahora usamos tiendaclave como merchant por defecto
+    # TODO: En producción, obtener del token de autenticación
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
     
     if not merchant:
         raise HTTPException(status_code=404, detail="Merchant no encontrado")
