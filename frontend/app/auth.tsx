@@ -344,6 +344,13 @@ export default function AuthScreen() {
               )}
             </TouchableOpacity>
 
+            <TouchableOpacity 
+              style={styles.forgotPasswordButton} 
+              onPress={() => router.push('/forgot-password')}
+            >
+              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.linkButton} onPress={() => setIsLogin(false)}>
               <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
             </TouchableOpacity>
