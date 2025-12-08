@@ -274,7 +274,7 @@ async def send_weekly_summary_with_insights():
             }
             
             # Send Email (if enabled)
-            if merchant.get("weekly_email_enabled") and merchant.get("email"):
+            if merchant.get("weekly_email") and merchant.get("email"):
                 try:
                     from .email_service import send_weekly_summary_email
                     send_weekly_summary_email(
