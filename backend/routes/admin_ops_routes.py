@@ -977,10 +977,16 @@ async def save_alert_settings(settings: AlertSettingsRequest):
     await db.merchants.update_one(
         {"_id": merchant["_id"]},
         {"$set": {
-            "email_alerts_enabled": settings.email_alerts_enabled,
             "email": settings.email,
-            "whatsapp_alerts_enabled": settings.whatsapp_alerts_enabled,
             "whatsapp_number": settings.whatsapp_number,
+            "stock_alert_email": settings.stock_alert_email,
+            "stock_alert_whatsapp": settings.stock_alert_whatsapp,
+            "daily_email": settings.daily_email,
+            "daily_whatsapp": settings.daily_whatsapp,
+            "weekly_email": settings.weekly_email,
+            "weekly_whatsapp": settings.weekly_whatsapp,
+            "monthly_email": settings.monthly_email,
+            "monthly_whatsapp": settings.monthly_whatsapp,
             "updated_at": datetime.utcnow()
         }}
     )
