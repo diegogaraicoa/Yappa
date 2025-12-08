@@ -15,7 +15,7 @@ interface AuthContextData {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, storeName: string, whatsappNumber: string) => Promise<void>;
   signOut: () => Promise<void>;
-  login: (token: string) => Promise<void>;
+  login: (token: string, userData?: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
