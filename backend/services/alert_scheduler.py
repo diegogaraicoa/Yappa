@@ -456,13 +456,11 @@ async def send_monthly_ai_insights():
     try:
         from .ai_insights_service import ai_insights_service
         
-        # Get all stores
-        stores = await db.users.find({}).to_list(10000)
+        # Get all merchants
+        merchants = await db.merchants.find({}).to_list(10000)
         
-        for user in stores:
-            store_id = str(user.get("store_id"))
-            if not store_id:
-                continue
+        for merchant in merchants:
+            store_id = str(merchant.get("_id"))
             
             # Get last 30 days of data
             thirty_days_ago = datetime.now() - timedelta(days=30)
@@ -489,7 +487,7 @@ async def send_monthly_ai_insights():
                 # Save to DB
                 await db.insights.insert_one({
                     "store_id": store_id,
-                    "user_id": user["_id"],
+                    "merchant_id": merchant["_id"],
                     "insights": insights.get('insights'),
                     "metrics": insights.get('metrics'),
                     "generated_at": datetime.now(),
@@ -497,10 +495,27 @@ async def send_monthly_ai_insights():
                     "period_days": 30
                 })
                 
-                # Send via WhatsApp
-                if user.get("whatsapp_number"):
-                    message = ai_insights_service.format_insights_for_whatsapp(insights)
-                    twilio_service.send_whatsapp(user["whatsapp_number"], message)
+                # Send Email (if enabled)
+                if merchant.get("monthly_email") and merchant.get("email"):
+                    try:
+                        from .email_service import send_monthly_insights_email
+                        send_monthly_insights_email(
+                            merchant_email=merchant["email"],
+                            store_name=merchant.get("store_name", merchant.get("nombre", "Tu Tienda")),
+                            insights=insights
+                        )
+                        print(f"✅ Insights mensuales enviados por email a {merchant['email']}")
+                    except Exception as e:
+                        print(f"⚠️ Error al enviar email mensual: {str(e)}")
+                
+                # Send WhatsApp (if enabled)
+                if merchant.get("monthly_whatsapp") and merchant.get("whatsapp_number"):
+                    try:
+                        message = ai_insights_service.format_insights_for_whatsapp(insights)
+                        twilio_service.send_whatsapp(merchant["whatsapp_number"], message)
+                        print(f"✅ Insights mensuales enviados por WhatsApp")
+                    except Exception as e:
+                        print(f"⚠️ Error al enviar WhatsApp mensual: {str(e)}")
         
         print(f"[{datetime.now()}] Monthly AI insights sent")
     
