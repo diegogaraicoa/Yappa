@@ -37,27 +37,15 @@
   - [ ] Email de recuperación de contraseña (pendiente)
   - [ ] Email de resumen diario/semanal (pendiente)
 
-**Código a actualizar:**
-```python
-# Línea 194 en onboarding_routes.py
-# ANTES:
-print(f"[EMAIL] Enviando PIN a {clerk_data.email}: Tu PIN es {clerk_data.pin}")
+**Código actualizado:** ✅ COMPLETADO
+- Los PINs ahora se envían automáticamente por email
+- Email de bienvenida al admin configurado
+- Plantillas HTML profesionales en español
+- Sistema de fallback en caso de error
 
-# DESPUÉS:
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+**Archivo:** `/app/backend/services/email_service.py`
 
-message = Mail(
-    from_email='noreply@yappa.app',
-    to_emails=clerk_data.email,
-    subject='Tu PIN de acceso a YAPPA',
-    html_content=f'<strong>Tu PIN es: {clerk_data.pin}</strong>'
-)
-sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-response = sg.send(message)
-```
-
-**Consecuencia si no se hace:** Los clerks NO recibirán sus PINs - BLOQUEADOR TOTAL del nuevo flujo de onboarding.
+**Testing:** Ejecuta `python /app/backend/test_email.py` para probar
 
 ---
 
