@@ -214,8 +214,16 @@ export default function AuthScreen() {
       console.log('Response received:', response.data);
       
       if (response.data.success) {
-        // Guardar token
-        await login(response.data.token);
+        // Guardar token con los datos del primer merchant
+        const firstMerchant = response.data.merchants?.[0];
+        const userData = {
+          id: response.data.admin_id,
+          email: email,
+          store_id: firstMerchant?.merchant_id || response.data.admin_id,
+          store_name: firstMerchant?.store_name || companyName,
+        };
+        
+        await login(response.data.token, userData);
         
         showAlert(
           'Registro Exitoso',
