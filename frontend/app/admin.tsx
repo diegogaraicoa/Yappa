@@ -110,7 +110,8 @@ export default function AdminConsoleScreen() {
     { id: 'products', title: 'Productos', icon: 'cube', color: '#00D2FF' },
     { id: 'customers', title: 'Clientes', icon: 'people', color: '#9C27B0' },
     { id: 'suppliers', title: 'Proveedores', icon: 'briefcase', color: '#FF9800' },
-    { id: 'bulk-upload', title: 'Carga Masiva', icon: 'cloud-upload', color: '#00BCD4' },
+    { id: 'admin-ops', title: 'Admin Ops', icon: 'settings', color: '#607D8B' },
+    { id: 'bulk-upload', title: 'Carga Masiva (KYB)', icon: 'cloud-upload', color: '#00BCD4' },
     { id: 'reports', title: 'Reportes IA', icon: 'document-text', color: '#E91E63' },
     { id: 'training', title: 'Capacitación', icon: 'school', color: '#9C27B0' },
   ];
