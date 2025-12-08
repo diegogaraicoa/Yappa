@@ -307,6 +307,7 @@ async def send_weekly_summary_with_insights():
         print(f"Error in weekly summary with insights job: {str(e)}")
 
 
+# DEPRECATED - Replaced by send_weekly_summary_with_insights
 async def send_weekly_summary_OLD():
     """Job: Send weekly summary on Monday at 9am"""
     print(f"[{datetime.now()}] Running weekly summary job...")
