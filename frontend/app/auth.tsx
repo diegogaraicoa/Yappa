@@ -809,6 +809,16 @@ const styles = StyleSheet.create({
     color: '#00D2FF',
     marginLeft: 8,
   },
+  forgotPasswordButton: {
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: '#757575',
+    fontWeight: '500',
+  },
   linkButton: {
     alignItems: 'center',
     marginTop: 20,
