@@ -150,6 +150,11 @@ export default function AuthScreen() {
   };
   
   const handleCompleteOnboarding = async () => {
+    console.log('=== STARTING ONBOARDING ===');
+    
+    // Test alert primero
+    showAlert('Test', 'Si ves esto, los alerts funcionan');
+    
     console.log('Starting onboarding...');
     setLoading(true);
     
