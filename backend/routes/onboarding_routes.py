@@ -298,6 +298,19 @@ async def complete_onboarding(request: OnboardingCompleteRequest):
             {"$set": {"fully_activated_at": datetime.utcnow()}}
         )
         
+        # Enviar email de bienvenida al admin
+        try:
+            from services.email_service import send_welcome_admin_email
+            send_welcome_admin_email(
+                admin_email=request.admin.email,
+                company_name=request.admin.company_name,
+                num_stores=len(merchants_response["merchants"]),
+                num_clerks=len(all_clerks)
+            )
+            print(f"✅ Email de bienvenida enviado a {request.admin.email}")
+        except Exception as e:
+            print(f"⚠️ Error al enviar email de bienvenida: {str(e)}")
+        
         # Generar token para el primer merchant
         first_merchant = merchants_response["merchants"][0]
         token = create_access_token(
