@@ -204,13 +204,12 @@ export default function AlertsScreen() {
           <Ionicons name="arrow-back" size={24} color="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Alertas de Stock</Text>
-        {alerts.length > 0 ? (
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeText}>{alerts.length}</Text>
-          </View>
-        ) : (
-          <View style={{ width: 24 }} />
-        )}
+        <TouchableOpacity
+          onPress={() => router.push('/alert-settings')}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="settings-outline" size={24} color="#212121" />
+        </TouchableOpacity>
       </View>
 
       {alerts.length === 0 ? (
