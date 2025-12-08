@@ -25,63 +25,64 @@ async def send_daily_stock_alerts():
     print(f"[{datetime.now()}] Running daily stock alerts job...")
     
     try:
-        # Get all stores with alert-enabled products
-        products = await db.products.find({
-            "alert_enabled": True
-        }).to_list(10000)
+        # Get all products with low stock
+        products = await db.products.find({}).to_list(10000)
         
         # Group products by store
         stores_alerts = {}
         for product in products:
-            if product["quantity"] <= product.get("min_stock_alert", 10):
+            stock = product.get("stock", product.get("quantity", 0))
+            min_stock = product.get("stock_minimo", product.get("min_stock_alert", 10))
+            
+            if stock <= min_stock:
                 store_id = str(product["store_id"])
                 if store_id not in stores_alerts:
                     stores_alerts[store_id] = []
-                stores_alerts[store_id].append(product)
+                stores_alerts[store_id].append({
+                    "name": product.get("nombre", product.get("name", "Producto")),
+                    "stock": stock,
+                    "min_stock": min_stock
+                })
         
-        # Send alerts to each store owner
+        # Send alerts to each merchant
         for store_id, alert_products in stores_alerts.items():
-            # Get store owner/user
-            users = await db.users.find({"store_id": store_id}).to_list(100)
+            # Get merchant
+            merchant = await db.merchants.find_one({"_id": ObjectId(store_id)})
+            if not merchant:
+                continue
             
-            for user in users:
-                if not user.get("alerts_enabled", True):
-                    continue
-                
-                if not user.get("stock_alerts_enabled", True):
-                    continue
-                
-                # Send WhatsApp
-                if user.get("whatsapp_number"):
+            # Send Email
+            if merchant.get("email_alerts_enabled") and merchant.get("email"):
+                try:
+                    from .email_service import send_stock_alert_email
+                    send_stock_alert_email(
+                        merchant_email=merchant["email"],
+                        store_name=merchant.get("store_name", merchant.get("nombre", "Tu Tienda")),
+                        low_stock_products=alert_products
+                    )
+                    print(f"✅ Alerta de stock enviada por email a {merchant['email']}")
+                except Exception as e:
+                    print(f"⚠️ Error al enviar email a {merchant.get('email')}: {str(e)}")
+            
+            # Send WhatsApp
+            if merchant.get("whatsapp_alerts_enabled") and merchant.get("whatsapp_number"):
+                try:
                     for product in alert_products:
-                        if product["quantity"] == 0:
+                        if product["stock"] == 0:
                             twilio_service.send_critical_stock_alert(
-                                user["whatsapp_number"],
+                                merchant["whatsapp_number"],
                                 product["name"]
                             )
                         else:
                             twilio_service.send_stock_alert(
-                                user["whatsapp_number"],
+                                merchant["whatsapp_number"],
                                 product["name"],
-                                product["quantity"],
-                                product.get("min_stock_alert", 10)
+                                product["stock"],
+                                product["min_stock"]
                             )
-                
-                # Email temporarily disabled
-                # if user.get("alert_email"):
-                #     sendgrid_service.send_stock_alert_email(
-                #         user["alert_email"],
-                #         alert_products
-                #     )
-                
-                # Send Push Notifications
-                if user.get("expo_push_token"):
-                    for product in alert_products:
-                        expo_push_service.send_stock_alert_push(
-                            user["expo_push_token"],
-                            product["name"],
-                            product["quantity"]
-                        )
+                    print(f"✅ Alerta de stock enviada por WhatsApp a {merchant['whatsapp_number']}")
+                except Exception as e:
+                    print(f"⚠️ Error al enviar WhatsApp: {str(e)}")
         
         print(f"[{datetime.now()}] Daily stock alerts sent to {len(stores_alerts)} stores")
     
