@@ -223,7 +223,7 @@ export default function BalanceScreen() {
         {/* Resumen Ingresos */}
         <View style={styles.summaryCard}>
           <View style={styles.summaryHeader}>
-            <View style={styles.summaryIconContainer} style={{ backgroundColor: '#E8F5E9' }}>
+            <View style={[styles.summaryIconContainer, { backgroundColor: '#E8F5E9' }]}>
               <Ionicons name="arrow-up" size={20} color="#00D2FF" />
             </View>
             <Text style={styles.summaryTitle}>Ingresos</Text>
