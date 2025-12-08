@@ -15,6 +15,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 from dotenv import load_dotenv
 from pathlib import Path
+from passlib.context import CryptContext
+from jose import jwt
 
 ROOT_DIR = Path(__file__).parent.parent
 load_dotenv(ROOT_DIR / '.env')
@@ -24,8 +26,28 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db_instance = client[os.environ.get('DB_NAME', 'tiendadb')]
 
+# Security
+SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production-tienda-app-2025')
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 43200  # 30 días
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 async def get_database():
     return db_instance
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_access_token(data: dict):
+    from datetime import timedelta
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 
