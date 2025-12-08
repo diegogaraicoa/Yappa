@@ -286,8 +286,8 @@ export default function InventoryScreen() {
         {/* Stats KPIs */}
         <View style={styles.statsSection}>
           <View style={styles.statCard}>
-            <View style={styles.statIconContainer} style={{ backgroundColor: '#E3F2FD' }}>
-              <Ionicons name="cube" size={20} color="#2196F3" />
+            <View style={[styles.statIconContainer, { backgroundColor: '#E0F7FA' }]}>
+              <Ionicons name="cube" size={20} color="#00D2FF" />
             </View>
             <View style={styles.statInfo}>
               <Text style={styles.statValue}>{products.length}</Text>
