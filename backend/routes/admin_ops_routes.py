@@ -926,14 +926,13 @@ async def get_alert_settings():
     """
     Obtener configuración actual de alertas del usuario
     """
-    from main import get_database, get_current_user
-    from fastapi import Depends
+    from main import get_database
     
     db = get_database()
     
-    # TODO: Obtener el user actual (por ahora usamos el primer merchant)
-    # En producción, esto debe venir del token de autenticación
-    merchant = await db.merchants.find_one({})
+    # Por ahora usamos tiendaclave como merchant por defecto
+    # TODO: En producción, obtener del token de autenticación
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
     
     if not merchant:
         raise HTTPException(status_code=404, detail="Merchant no encontrado")
