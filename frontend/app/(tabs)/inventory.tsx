@@ -386,7 +386,7 @@ export default function InventoryScreen() {
                   <View style={styles.productContent}>
                     <View style={styles.productHeader}>
                       <View style={styles.productTitleSection}>
-                        <Text style={styles.productName}>{product.name}</Text>
+                        <Text style={styles.productName}>{product.name || 'Sin nombre'}</Text>
                         {isLowStock && (
                           <View style={styles.lowStockBadge}>
                             <Text style={styles.lowStockText}>Stock bajo</Text>
