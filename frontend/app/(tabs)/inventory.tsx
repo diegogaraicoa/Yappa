@@ -376,8 +376,11 @@ export default function InventoryScreen() {
         ) : (
           <View style={styles.productsList}>
             {filteredProducts.map((product) => {
-              const isLowStock = product.alert_enabled && (product.quantity || 0) <= (product.min_stock_alert || 10);
-              // El highlight es PERMANENTE si el producto tiene stock bajo o crítico
+              const qty = product.quantity ?? 0;
+              const minStock = product.min_stock_alert ?? 10;
+              // Stock bajo si cantidad <= mínimo (alert_enabled por defecto es true si no existe)
+              const isLowStock = qty <= minStock;
+              // El highlight es PERMANENTE si el producto tiene stock bajo
               const needsAttention = isLowStock;
               
               return (
