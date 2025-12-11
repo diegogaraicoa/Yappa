@@ -813,4 +813,24 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  // Attention Banner for highlighted customers
+  attentionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F44336',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    marginBottom: 8,
+    marginHorizontal: -16,
+    marginTop: -16,
+  },
+  attentionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFF',
+    marginLeft: 6,
+  },
 });
