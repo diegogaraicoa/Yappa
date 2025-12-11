@@ -216,7 +216,14 @@ export default function CustomersScreen() {
           </View>
         ) : (
           filteredCustomers.map((customer) => {
-            const hasDebt = (customer.balance || 0) < 0;
+            // Soportar ambos esquemas de campos
+            const nombre = customer.nombre || customer.name || '';
+            const apellido = customer.apellido || customer.lastname || '';
+            const telefono = customer.telefono || customer.phone || '';
+            const correo = customer.email || '';
+            const deuda = customer.deuda_total ?? customer.balance ?? 0;
+            
+            const hasDebt = deuda < 0;
             // El highlight es PERMANENTE si el cliente tiene deuda pendiente
             const needsAttention = hasDebt;
             
@@ -238,31 +245,31 @@ export default function CustomersScreen() {
                 {/* Avatar Circle */}
                 <View style={[styles.avatarContainer, needsAttention && styles.avatarHighlighted]}>
                   <Text style={styles.avatarText}>
-                    {(customer.name || '?').charAt(0).toUpperCase()}
-                    {(customer.lastname || '?').charAt(0).toUpperCase()}
+                    {(nombre || '?').charAt(0).toUpperCase()}
+                    {(apellido || nombre.split(' ')[1] || '?').charAt(0).toUpperCase()}
                   </Text>
                 </View>
 
                 {/* Customer Info */}
                 <View style={styles.customerInfo}>
                   <Text style={styles.customerName}>
-                    {customer.name || ''} {customer.lastname || ''}
+                    {nombre} {apellido}
                   </Text>
 
-                  {customer.phone && (
+                  {telefono && (
                     <View style={styles.customerDetail}>
                       <Ionicons name="call-outline" size={14} color="#757575" />
                       <Text style={styles.customerDetailText}>
-                        {customer.phone}
+                        {telefono}
                       </Text>
                     </View>
                   )}
 
-                  {customer.email && (
+                  {correo && (
                     <View style={styles.customerDetail}>
                       <Ionicons name="mail-outline" size={14} color="#757575" />
                       <Text style={styles.customerDetailText}>
-                        {customer.email}
+                        {correo}
                       </Text>
                     </View>
                   )}
@@ -272,7 +279,7 @@ export default function CustomersScreen() {
                     <View style={[styles.customerDetail, { marginTop: 4 }]}>
                       <Ionicons name="cash-outline" size={14} color="#F44336" />
                       <Text style={[styles.customerDetailText, { color: '#F44336', fontWeight: '600' }]}>
-                        Deuda: ${Math.abs(customer.balance || 0).toFixed(2)}
+                        Deuda: ${Math.abs(deuda).toFixed(2)}
                       </Text>
                     </View>
                   )}
