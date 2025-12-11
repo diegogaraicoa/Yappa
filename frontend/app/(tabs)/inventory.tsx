@@ -253,12 +253,12 @@ export default function InventoryScreen() {
   );
 
   const totalInventoryValue = products.reduce(
-    (sum, p) => sum + p.quantity * p.cost,
+    (sum, p) => sum + (p.quantity || 0) * (p.cost || 0),
     0
   );
 
   const lowStockProducts = products.filter(
-    (p) => p.alert_enabled && p.quantity <= (p.min_stock_alert || 10)
+    (p) => p.alert_enabled && (p.quantity || 0) <= (p.min_stock_alert || 10)
   );
 
   return (
