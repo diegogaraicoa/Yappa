@@ -376,26 +376,53 @@ export default function InventoryScreen() {
         ) : (
           <View style={styles.productsList}>
             {filteredProducts.map((product) => {
-              const qty = product.quantity ?? 0;
-              const minStock = product.min_stock_alert ?? 10;
-              // Stock bajo si cantidad <= mínimo (alert_enabled por defecto es true si no existe)
-              const isLowStock = qty <= minStock;
-              // El highlight es PERMANENTE si el producto tiene stock bajo
-              const needsAttention = isLowStock;
+              // Usar los campos correctos del backend
+              const qty = product.stock ?? product.quantity ?? 0;
+              const minStock = product.stock_minimo ?? product.min_stock_alert ?? 10;
+              const productName = product.nombre || product.name || 'Sin nombre';
+              
+              // Lógica consistente con AI Insights:
+              // ROJO: Stock agotado (stock = 0)
+              // AMARILLO: Stock bajo (0 < stock <= min_stock)
+              // Sin highlight: Stock OK (stock > min_stock)
+              const isCriticalStock = qty === 0;
+              const isLowStock = qty > 0 && qty <= minStock;
+              const needsAttention = isCriticalStock || isLowStock;
+              
+              // Determinar colores según el tipo
+              const highlightStyle = isCriticalStock 
+                ? styles.productCardCritical 
+                : isLowStock 
+                  ? styles.productCardLowStock 
+                  : null;
+              
+              const bannerStyle = isCriticalStock
+                ? styles.attentionBannerCritical
+                : styles.attentionBannerLow;
+              
+              const bannerText = isCriticalStock 
+                ? '🚨 Stock Agotado' 
+                : '⚡ Stock Bajo';
+              
+              const badgeStyle = isCriticalStock
+                ? styles.criticalStockBadge
+                : styles.lowStockBadge;
+              
+              const badgeText = isCriticalStock ? 'Agotado' : 'Stock bajo';
               
               return (
                 <View 
                   key={product._id} 
                   style={[
                     styles.productCard,
-                    needsAttention && styles.productCardHighlighted
+                    highlightStyle
                   ]}
                 >
-                  {/* Banner de atención para productos con stock bajo */}
+                  {/* Banner de atención para productos con problemas de stock */}
                   {needsAttention && (
-                    <View style={styles.attentionBanner}>
+                    <View style={bannerStyle}>
                       <Ionicons name="alert-circle" size={16} color="#FFF" />
-                      <Text style={styles.attentionText}>⚡ Requiere reposición</Text>
+                      <Text style={styles.attentionText}>{bannerText}</Text>
                     </View>
                   )}
                   {product.image && (
@@ -404,10 +431,10 @@ export default function InventoryScreen() {
                   <View style={styles.productContent}>
                     <View style={styles.productHeader}>
                       <View style={styles.productTitleSection}>
-                        <Text style={styles.productName}>{product.name || 'Sin nombre'}</Text>
-                        {isLowStock && (
-                          <View style={styles.lowStockBadge}>
-                            <Text style={styles.lowStockText}>Stock bajo</Text>
+                        <Text style={styles.productName}>{productName}</Text>
+                        {needsAttention && (
+                          <View style={badgeStyle}>
+                            <Text style={styles.badgeText}>{badgeText}</Text>
                           </View>
                         )}
                       </View>
