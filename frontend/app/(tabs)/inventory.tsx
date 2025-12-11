@@ -34,8 +34,6 @@ export default function InventoryScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [highlightedProduct, setHighlightedProduct] = useState<string | null>(null);
-  const highlightAnim = useRef(new Animated.Value(0)).current;
   const [newProduct, setNewProduct] = useState({
     name: '',
     quantity: '',
@@ -49,21 +47,6 @@ export default function InventoryScreen() {
   });
   const [newCategoryName, setNewCategoryName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Efecto para resaltar producto cuando viene de AI Insights
-  useEffect(() => {
-    if (highlight) {
-      setHighlightedProduct(highlight);
-      // Animar el highlight
-      Animated.sequence([
-        Animated.timing(highlightAnim, { toValue: 1, duration: 300, useNativeDriver: false }),
-        Animated.delay(2000),
-        Animated.timing(highlightAnim, { toValue: 0, duration: 500, useNativeDriver: false }),
-      ]).start(() => {
-        setHighlightedProduct(null);
-      });
-    }
-  }, [highlight]);
 
   useEffect(() => {
     loadData();
