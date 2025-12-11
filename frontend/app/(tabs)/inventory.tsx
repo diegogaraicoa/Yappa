@@ -249,7 +249,7 @@ export default function InventoryScreen() {
   };
 
   const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (product.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalInventoryValue = products.reduce(
