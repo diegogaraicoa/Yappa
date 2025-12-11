@@ -209,41 +209,27 @@ export default function CustomersScreen() {
           </View>
         ) : (
           filteredCustomers.map((customer) => {
-            const isHighlighted = highlightedCustomer === customer._id;
-            const hasDebt = customer.balance < 0;
-            
-            // Color de fondo animado para el highlight
-            const backgroundColor = isHighlighted 
-              ? highlightAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['#FFFFFF', '#FFEBEE']
-                })
-              : '#FFFFFF';
-            
-            const borderColor = isHighlighted
-              ? highlightAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['#E0E0E0', '#F44336']
-                })
-              : '#E0E0E0';
+            const hasDebt = (customer.balance || 0) < 0;
+            // El highlight es PERMANENTE si el cliente tiene deuda pendiente
+            const needsAttention = hasDebt;
             
             return (
-              <Animated.View 
+              <View 
                 key={customer._id} 
                 style={[
                   styles.customerCard,
-                  { backgroundColor, borderColor, borderWidth: isHighlighted ? 2 : 1 }
+                  needsAttention && styles.customerCardHighlighted
                 ]}
               >
-                {/* Banner de atención para clientes resaltados */}
-                {isHighlighted && (
+                {/* Banner de atención para clientes con deuda */}
+                {needsAttention && (
                   <View style={styles.attentionBanner}>
                     <Ionicons name="alert-circle" size={16} color="#FFF" />
-                    <Text style={styles.attentionText}>💰 Deuda pendiente - Requiere cobro</Text>
+                    <Text style={styles.attentionText}>💰 Requiere cobro</Text>
                   </View>
                 )}
                 {/* Avatar Circle */}
-                <View style={[styles.avatarContainer, isHighlighted && { borderColor: '#F44336', borderWidth: 2 }]}>
+                <View style={[styles.avatarContainer, needsAttention && styles.avatarHighlighted]}>
                   <Text style={styles.avatarText}>
                     {(customer.name || '?').charAt(0).toUpperCase()}
                     {(customer.lastname || '?').charAt(0).toUpperCase()}
