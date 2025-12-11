@@ -1315,4 +1315,22 @@ const styles = StyleSheet.create({
     color: '#9E9E9E',
     textAlign: 'center',
   },
+  // Attention Banner for highlighted products
+  attentionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF9800',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    marginBottom: -1,
+  },
+  attentionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFF',
+    marginLeft: 6,
+  },
 });
