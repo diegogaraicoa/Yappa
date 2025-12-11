@@ -32,7 +32,7 @@ export default function QuickActions({ onActionsChange }: QuickActionsProps) {
   }, []);
 
   const fetchActions = async () => {
-    try:
+    try {
       setLoading(true);
       const response = await api.get('/api/ai/quick-actions');
       const fetchedActions = response.data.actions || [];
