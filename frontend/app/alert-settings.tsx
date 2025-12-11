@@ -69,12 +69,12 @@ export default function AlertSettingsScreen() {
     const hasWhatsappAlerts = stockAlertWhatsapp || dailyWhatsapp || weeklyWhatsapp || monthlyWhatsapp;
 
     if (hasEmailAlerts && (!emailAddress || !emailAddress.includes('@'))) {
-      showAlert('Error', 'Por favor ingresa un email válido');
+      Alert.alert('Error', 'Por favor ingresa un email válido');
       return;
     }
 
     if (hasWhatsappAlerts && !whatsappNumber) {
-      showAlert('Error', 'Por favor ingresa un número de WhatsApp');
+      Alert.alert('Error', 'Por favor ingresa un número de WhatsApp');
       return;
     }
 
