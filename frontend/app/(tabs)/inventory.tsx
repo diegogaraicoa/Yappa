@@ -396,10 +396,39 @@ export default function InventoryScreen() {
         ) : (
           <View style={styles.productsList}>
             {filteredProducts.map((product) => {
-              const isLowStock = product.alert_enabled && product.quantity <= (product.min_stock_alert || 10);
+              const isLowStock = product.alert_enabled && (product.quantity || 0) <= (product.min_stock_alert || 10);
+              const isHighlighted = highlightedProduct === product._id;
+              
+              // Color de fondo animado para el highlight
+              const backgroundColor = isHighlighted 
+                ? highlightAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['#FFFFFF', '#FFF3E0']
+                  })
+                : '#FFFFFF';
+              
+              const borderColor = isHighlighted
+                ? highlightAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['#E0E0E0', '#FF9800']
+                  })
+                : '#E0E0E0';
               
               return (
-                <View key={product._id} style={styles.productCard}>
+                <Animated.View 
+                  key={product._id} 
+                  style={[
+                    styles.productCard,
+                    { backgroundColor, borderColor, borderWidth: isHighlighted ? 2 : 1 }
+                  ]}
+                >
+                  {/* Banner de atención para productos resaltados */}
+                  {isHighlighted && (
+                    <View style={styles.attentionBanner}>
+                      <Ionicons name="alert-circle" size={16} color="#FFF" />
+                      <Text style={styles.attentionText}>⚡ Requiere atención</Text>
+                    </View>
+                  )}
                   {product.image && (
                     <Image source={{ uri: product.image }} style={styles.productImage} />
                   )}
