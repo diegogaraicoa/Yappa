@@ -229,14 +229,8 @@ async def get_quick_actions():
             "action": "navigate_to_customers"
         })
     
-    # 3. Ver balance (siempre disponible)
-    actions.append({
-        "id": "view_balance",
-        "icon": "📊",
-        "label": "Ver Balance del Día",
-        "color": "#00D2FF",
-        "action": "navigate_to_balance"
-    })
+    # Solo devolver si hay acciones reales (no incluir "Ver Balance" como default)
+    # El usuario solo debería ver Quick Actions si HAY ALGO que necesite acción
     
     # Limitar a máximo 3 acciones
     return {
