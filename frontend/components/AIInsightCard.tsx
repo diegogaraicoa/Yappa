@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api from '../utils/api';
+import { useInsights } from '../contexts/InsightsContext';
 
 interface AIInsight {
   type: string;
@@ -25,6 +26,7 @@ interface AIInsight {
 
 export default function AIInsightCard() {
   const router = useRouter();
+  const { insightsCount, criticalCount, lowStockCount, debtCount } = useInsights();
   const [insight, setInsight] = useState<AIInsight | null>(null);
   const [loading, setLoading] = useState(true);
 
