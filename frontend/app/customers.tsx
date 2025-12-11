@@ -213,15 +213,15 @@ export default function CustomersScreen() {
               {/* Avatar Circle */}
               <View style={styles.avatarContainer}>
                 <Text style={styles.avatarText}>
-                  {customer.name.charAt(0).toUpperCase()}
-                  {customer.lastname.charAt(0).toUpperCase()}
+                  {(customer.name || '?').charAt(0).toUpperCase()}
+                  {(customer.lastname || '?').charAt(0).toUpperCase()}
                 </Text>
               </View>
 
               {/* Customer Info */}
               <View style={styles.customerInfo}>
                 <Text style={styles.customerName}>
-                  {customer.name} {customer.lastname}
+                  {customer.name || ''} {customer.lastname || ''}
                 </Text>
 
                 {customer.phone && (
