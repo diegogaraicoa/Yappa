@@ -566,8 +566,13 @@ async def create_product(product: ProductCreate, current_user: dict = Depends(ge
     return product_dict
 
 @api_router.get("/products")
-async def get_products(current_user: dict = Depends(get_current_user)):
-    products = await db.products.find({"store_id": current_user["store_id"]}).to_list(1000)
+async def get_products():
+    # Temporary: Use tiendaclave merchant
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
+    if not merchant:
+        return []
+    
+    products = await db.products.find({"store_id": str(merchant["_id"])}).to_list(1000)
     for product in products:
         product["_id"] = str(product["_id"])
     return products
