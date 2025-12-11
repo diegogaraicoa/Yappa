@@ -18,7 +18,11 @@ interface QuickAction {
   action: string;
 }
 
-export default function QuickActions() {
+interface QuickActionsProps {
+  onActionsChange?: (hasActions: boolean) => void;
+}
+
+export default function QuickActions({ onActionsChange }: QuickActionsProps) {
   const router = useRouter();
   const [actions, setActions] = useState<QuickAction[]>([]);
   const [loading, setLoading] = useState(true);
