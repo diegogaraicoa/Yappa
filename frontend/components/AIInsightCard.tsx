@@ -106,14 +106,43 @@ export default function AIInsightCard() {
             <Text style={styles.title}>{insight.title}</Text>
           </View>
         </View>
-        <View style={[styles.badge, { backgroundColor: insight.color }]}>
-          <Ionicons name="sparkles" size={12} color="#FFF" />
-          <Text style={styles.badgeText}>IA</Text>
+        <View style={styles.badgeRow}>
+          {/* Badge de contador total */}
+          {insightsCount > 0 && (
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{insightsCount}</Text>
+            </View>
+          )}
+          <View style={[styles.badge, { backgroundColor: insight.color }]}>
+            <Ionicons name="sparkles" size={12} color="#FFF" />
+            <Text style={styles.badgeText}>IA</Text>
+          </View>
         </View>
       </View>
 
       {/* Message */}
       <Text style={styles.message}>{insight.message}</Text>
+
+      {/* Stats Row */}
+      {(criticalCount > 0 || lowStockCount > 0 || debtCount > 0) && (
+        <View style={styles.statsRow}>
+          {criticalCount > 0 && (
+            <View style={[styles.statBadge, { backgroundColor: '#FFEBEE' }]}>
+              <Text style={[styles.statText, { color: '#FF4A4A' }]}>🚨 {criticalCount} agotados</Text>
+            </View>
+          )}
+          {lowStockCount > 0 && (
+            <View style={[styles.statBadge, { backgroundColor: '#FFF8E1' }]}>
+              <Text style={[styles.statText, { color: '#FFB800' }]}>⚠️ {lowStockCount} stock bajo</Text>
+            </View>
+          )}
+          {debtCount > 0 && (
+            <View style={[styles.statBadge, { backgroundColor: '#FFEBEE' }]}>
+              <Text style={[styles.statText, { color: '#F44336' }]}>💰 {debtCount} deudores</Text>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* CTA Button */}
       <TouchableOpacity
