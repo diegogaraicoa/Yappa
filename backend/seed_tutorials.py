@@ -701,7 +701,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://user-flow.preview.emergentagent.com/admin
+**URL:** https://yappa-ai.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet

@@ -91,7 +91,7 @@ python3 check_my_sales.py
 ```
 
 O desde la Admin Console web:
-https://user-flow.preview.emergentagent.com/admin
+https://yappa-ai.preview.emergentagent.com/admin
 
 ---
 

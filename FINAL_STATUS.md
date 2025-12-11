@@ -277,7 +277,7 @@ yarn add expo-notifications
 
 ## 📱 URLs de Acceso
 
-- **Frontend:** https://user-flow.preview.emergentagent.com
+- **Frontend:** https://yappa-ai.preview.emergentagent.com
 - **Backend:** Puerto 8001 (interno)
 - **Database:** MongoDB localhost:27017
 
