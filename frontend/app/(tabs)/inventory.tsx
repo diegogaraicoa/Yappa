@@ -22,7 +22,6 @@ import api from '../../utils/api';
 
 export default function InventoryScreen() {
   const { user } = useAuth();
-  const { highlight } = useLocalSearchParams<{ highlight?: string }>();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
