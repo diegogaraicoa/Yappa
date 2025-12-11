@@ -199,9 +199,12 @@ export default function HomeScreen() {
         {/* AI Insight Card */}
         <AIInsightCard />
 
+        {/* Quick Actions */}
+        <QuickActions />
+
         {/* Actions Label */}
         <View style={styles.actionsLabel}>
-          <Text style={styles.actionsLabelText}>Acciones rápidas</Text>
+          <Text style={styles.actionsLabelText}>Más acciones</Text>
         </View>
 
         {/* Alert Banner - Minimalista */}
