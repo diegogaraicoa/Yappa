@@ -195,6 +195,9 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* AI Insight Card */}
+        <AIInsightCard />
+
         {/* Actions Label */}
         <View style={styles.actionsLabel}>
           <Text style={styles.actionsLabelText}>Acciones rápidas</Text>
