@@ -216,10 +216,44 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 4,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  countBadge: {
+    backgroundColor: '#FF4A4A',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  countBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFF',
+  },
   badgeText: {
     fontSize: 11,
     fontWeight: '700',
     color: '#FFF',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  statBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   message: {
     fontSize: 15,
