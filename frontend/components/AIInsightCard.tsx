@@ -53,6 +53,7 @@ export default function AIInsightCard() {
         router.push(`/inventory`);
         break;
       case 'navigate_to_insights':
+      case 'view_insight_details':
         router.push('/insights');
         break;
       case 'navigate_to_balance':
