@@ -57,7 +57,7 @@ export default function AlertSettingsScreen() {
       }
     } catch (error: any) {
       console.error('Error loading settings:', error);
-      showAlert('Error', 'No se pudieron cargar las configuraciones');
+      Alert.alert('Error', 'No se pudieron cargar las configuraciones');
     } finally {
       setLoading(false);
     }
