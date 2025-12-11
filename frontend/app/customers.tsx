@@ -227,60 +227,103 @@ export default function CustomersScreen() {
             )}
           </View>
         ) : (
-          filteredCustomers.map((customer) => (
-            <View key={customer._id} style={styles.customerCard}>
-              {/* Avatar Circle */}
-              <View style={styles.avatarContainer}>
-                <Text style={styles.avatarText}>
-                  {(customer.name || '?').charAt(0).toUpperCase()}
-                  {(customer.lastname || '?').charAt(0).toUpperCase()}
-                </Text>
-              </View>
-
-              {/* Customer Info */}
-              <View style={styles.customerInfo}>
-                <Text style={styles.customerName}>
-                  {customer.name || ''} {customer.lastname || ''}
-                </Text>
-
-                {customer.phone && (
-                  <View style={styles.customerDetail}>
-                    <Ionicons name="call-outline" size={14} color="#757575" />
-                    <Text style={styles.customerDetailText}>
-                      {customer.phone}
-                    </Text>
+          filteredCustomers.map((customer) => {
+            const isHighlighted = highlightedCustomer === customer._id;
+            const hasDebt = customer.balance < 0;
+            
+            // Color de fondo animado para el highlight
+            const backgroundColor = isHighlighted 
+              ? highlightAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['#FFFFFF', '#FFEBEE']
+                })
+              : '#FFFFFF';
+            
+            const borderColor = isHighlighted
+              ? highlightAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['#E0E0E0', '#F44336']
+                })
+              : '#E0E0E0';
+            
+            return (
+              <Animated.View 
+                key={customer._id} 
+                style={[
+                  styles.customerCard,
+                  { backgroundColor, borderColor, borderWidth: isHighlighted ? 2 : 1 }
+                ]}
+              >
+                {/* Banner de atención para clientes resaltados */}
+                {isHighlighted && (
+                  <View style={styles.attentionBanner}>
+                    <Ionicons name="alert-circle" size={16} color="#FFF" />
+                    <Text style={styles.attentionText}>💰 Deuda pendiente - Requiere cobro</Text>
                   </View>
                 )}
+                {/* Avatar Circle */}
+                <View style={[styles.avatarContainer, isHighlighted && { borderColor: '#F44336', borderWidth: 2 }]}>
+                  <Text style={styles.avatarText}>
+                    {(customer.name || '?').charAt(0).toUpperCase()}
+                    {(customer.lastname || '?').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
 
-                {customer.email && (
-                  <View style={styles.customerDetail}>
-                    <Ionicons name="mail-outline" size={14} color="#757575" />
-                    <Text style={styles.customerDetailText}>
-                      {customer.email}
-                    </Text>
-                  </View>
-                )}
-              </View>
+                {/* Customer Info */}
+                <View style={styles.customerInfo}>
+                  <Text style={styles.customerName}>
+                    {customer.name || ''} {customer.lastname || ''}
+                  </Text>
 
-              {/* Action Buttons */}
-              <View style={styles.actionsContainer}>
-                <TouchableOpacity
-                  onPress={() => openEditModal(customer)}
-                  style={styles.actionButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="pencil" size={20} color="#2196F3" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => confirmDelete(customer)}
-                  style={styles.actionButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Ionicons name="trash-outline" size={20} color="#F44336" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
+                  {customer.phone && (
+                    <View style={styles.customerDetail}>
+                      <Ionicons name="call-outline" size={14} color="#757575" />
+                      <Text style={styles.customerDetailText}>
+                        {customer.phone}
+                      </Text>
+                    </View>
+                  )}
+
+                  {customer.email && (
+                    <View style={styles.customerDetail}>
+                      <Ionicons name="mail-outline" size={14} color="#757575" />
+                      <Text style={styles.customerDetailText}>
+                        {customer.email}
+                      </Text>
+                    </View>
+                  )}
+                  
+                  {/* Mostrar deuda si existe */}
+                  {hasDebt && (
+                    <View style={[styles.customerDetail, { marginTop: 4 }]}>
+                      <Ionicons name="cash-outline" size={14} color="#F44336" />
+                      <Text style={[styles.customerDetailText, { color: '#F44336', fontWeight: '600' }]}>
+                        Deuda: ${Math.abs(customer.balance || 0).toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Action Buttons */}
+                <View style={styles.actionsContainer}>
+                  <TouchableOpacity
+                    onPress={() => openEditModal(customer)}
+                    style={styles.actionButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="pencil" size={20} color="#2196F3" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => confirmDelete(customer)}
+                    style={styles.actionButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#F44336" />
+                  </TouchableOpacity>
+                </View>
+              </Animated.View>
+            );
+          })
         )}
 
         <View style={{ height: 40 }} />
