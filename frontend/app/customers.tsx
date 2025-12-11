@@ -793,16 +793,17 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   // Attention Banner for highlighted customers
+  attentionBannerWrapper: {
+    marginBottom: 12,
+  },
   attentionBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F44336',
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
-    marginBottom: 12,
-    alignSelf: 'stretch',
   },
   attentionText: {
     fontSize: 12,
