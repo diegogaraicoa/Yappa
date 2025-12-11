@@ -424,11 +424,11 @@ export default function InventoryScreen() {
                       </View>
                       <View style={styles.productDetailItem}>
                         <Text style={styles.productDetailLabel}>Precio</Text>
-                        <Text style={styles.productDetailValue}>${product.price.toFixed(2)}</Text>
+                        <Text style={styles.productDetailValue}>${(product.price || 0).toFixed(2)}</Text>
                       </View>
                       <View style={styles.productDetailItem}>
                         <Text style={styles.productDetailLabel}>Costo</Text>
-                        <Text style={styles.productDetailValue}>${product.cost.toFixed(2)}</Text>
+                        <Text style={styles.productDetailValue}>${(product.cost || 0).toFixed(2)}</Text>
                       </View>
                     </View>
                   </View>
