@@ -804,12 +804,15 @@ async def get_low_stock_alerts():
     for product in products:
         # Only include if alert_enabled is True or not set (default True)
         alert_enabled = product.get("alert_enabled", True)
-        min_stock_alert = product.get("min_stock_alert", 10)
-        if alert_enabled and product["quantity"] <= min_stock_alert:
+        min_stock_alert = product.get("min_stock_alert", product.get("stock_minimo", 10))
+        stock = product.get("stock", product.get("quantity", 0))
+        
+        if alert_enabled and stock <= min_stock_alert:
             product["_id"] = str(product["_id"])
-            product["alert_level"] = "critical" if product["quantity"] == 0 else "warning"
+            product["alert_level"] = "critical" if stock == 0 else "warning"
             # Ensure min_stock_alert is always present in response
             product["min_stock_alert"] = min_stock_alert
+            product["stock"] = stock  # Normalize field name
             low_stock_products.append(product)
     
     return low_stock_products
