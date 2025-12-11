@@ -380,36 +380,22 @@ export default function InventoryScreen() {
           <View style={styles.productsList}>
             {filteredProducts.map((product) => {
               const isLowStock = product.alert_enabled && (product.quantity || 0) <= (product.min_stock_alert || 10);
-              const isHighlighted = highlightedProduct === product._id;
-              
-              // Color de fondo animado para el highlight
-              const backgroundColor = isHighlighted 
-                ? highlightAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['#FFFFFF', '#FFF3E0']
-                  })
-                : '#FFFFFF';
-              
-              const borderColor = isHighlighted
-                ? highlightAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['#E0E0E0', '#FF9800']
-                  })
-                : '#E0E0E0';
+              // El highlight es PERMANENTE si el producto tiene stock bajo o crítico
+              const needsAttention = isLowStock;
               
               return (
-                <Animated.View 
+                <View 
                   key={product._id} 
                   style={[
                     styles.productCard,
-                    { backgroundColor, borderColor, borderWidth: isHighlighted ? 2 : 1 }
+                    needsAttention && styles.productCardHighlighted
                   ]}
                 >
-                  {/* Banner de atención para productos resaltados */}
-                  {isHighlighted && (
+                  {/* Banner de atención para productos con stock bajo */}
+                  {needsAttention && (
                     <View style={styles.attentionBanner}>
                       <Ionicons name="alert-circle" size={16} color="#FFF" />
-                      <Text style={styles.attentionText}>⚡ Requiere atención</Text>
+                      <Text style={styles.attentionText}>⚡ Requiere reposición</Text>
                     </View>
                   )}
                   {product.image && (
