@@ -1,7 +1,45 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useInsights } from '../../contexts/InsightsContext';
+
+// Componente Badge
+const InsightsBadge = ({ count }: { count: number }) => {
+  if (count === 0) return null;
+  
+  return (
+    <View style={styles.badge}>
+      <Text style={styles.badgeText}>{count > 99 ? '99+' : count}</Text>
+    </View>
+  );
+};
+
+// Componente del icono con badge
+const TabIconWithBadge = ({ 
+  name, 
+  color, 
+  size, 
+  badgeCount 
+}: { 
+  name: keyof typeof Ionicons.glyphMap; 
+  color: string; 
+  size: number;
+  badgeCount?: number;
+}) => {
+  return (
+    <View style={styles.iconContainer}>
+      <Ionicons name={name} size={size} color={color} />
+      {badgeCount !== undefined && badgeCount > 0 && (
+        <InsightsBadge count={badgeCount} />
+      )}
+    </View>
+  );
+};
 
 export default function TabLayout() {
+  const { insightsCount } = useInsights();
+  
   return (
     <Tabs
       screenOptions={{
@@ -28,7 +66,7 @@ export default function TabLayout() {
         tabBarIconStyle: {
           marginTop: 0,
         },
-        headerShown: false, // Quitar el header verde grande
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -36,7 +74,12 @@ export default function TabLayout() {
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+            <TabIconWithBadge 
+              name="home" 
+              size={size} 
+              color={color} 
+              badgeCount={insightsCount}
+            />
           ),
         }}
       />
@@ -70,3 +113,32 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    position: 'relative',
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    backgroundColor: '#FF4A4A',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+});
