@@ -1033,17 +1033,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#212121',
   },
-  lowStockBadge: {
-    backgroundColor: '#FFF3E0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  lowStockText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#FF9800',
-  },
   productActions: {
     flexDirection: 'row',
     gap: 12,
