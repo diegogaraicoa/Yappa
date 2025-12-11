@@ -32,13 +32,22 @@ export default function QuickActions({ onActionsChange }: QuickActionsProps) {
   }, []);
 
   const fetchActions = async () => {
-    try {
+    try:
       setLoading(true);
       const response = await api.get('/api/ai/quick-actions');
-      setActions(response.data.actions || []);
+      const fetchedActions = response.data.actions || [];
+      setActions(fetchedActions);
+      
+      // Notificar al padre si hay acciones
+      if (onActionsChange) {
+        onActionsChange(fetchedActions.length > 0);
+      }
     } catch (error) {
       console.error('Error fetching quick actions:', error);
       setActions([]);
+      if (onActionsChange) {
+        onActionsChange(false);
+      }
     } finally {
       setLoading(false);
     }
