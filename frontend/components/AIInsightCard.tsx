@@ -48,38 +48,30 @@ export default function AIInsightCard() {
   const handleAction = () => {
     if (!insight) return;
 
-    // Si es stock crítico o bajo, ir a /insights para ver todos
-    if (insight.type === 'critical_stock' || insight.type === 'low_stock') {
-      router.push('/insights');
-      return;
-    }
+    try {
+      // Todas las acciones de stock/deuda llevan a insights
+      if (insight.type === 'critical_stock' || insight.type === 'low_stock' || insight.type === 'overdue_debt') {
+        router.push('/insights');
+        return;
+      }
 
-    // Si es deuda pendiente, ir a /insights
-    if (insight.type === 'overdue_debt') {
-      router.push('/insights');
-      return;
-    }
-
-    switch (insight.cta_action) {
-      case 'navigate_to_product':
-      case 'navigate_to_inventory':
-        router.push('/insights');
-        break;
-      case 'navigate_to_insights':
-      case 'view_insight_details':
-        router.push('/insights');
-        break;
-      case 'navigate_to_balance':
-        router.push('/balance');
-        break;
-      case 'navigate_to_customers':
-        router.push('/insights');
-        break;
-      case 'send_payment_reminder':
-        router.push('/insights');
-        break;
-      default:
-        router.push('/insights');
+      switch (insight.cta_action) {
+        case 'navigate_to_product':
+        case 'navigate_to_inventory':
+        case 'navigate_to_customers':
+        case 'send_payment_reminder':
+        case 'navigate_to_insights':
+        case 'view_insight_details':
+          router.push('/insights');
+          break;
+        case 'navigate_to_balance':
+          router.push('/(tabs)/balance');
+          break;
+        default:
+          router.push('/insights');
+      }
+    } catch (error) {
+      console.error('Error en navegación:', error);
     }
   };
 
