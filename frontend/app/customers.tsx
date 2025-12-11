@@ -235,72 +235,68 @@ export default function CustomersScreen() {
                   needsAttention && styles.customerCardHighlighted
                 ]}
               >
-                {/* Banner de atención para clientes con deuda */}
+                {/* Banner de atención para clientes con deuda - FUERA del row */}
                 {needsAttention && (
-                  <View style={styles.attentionBanner}>
-                    <Ionicons name="alert-circle" size={16} color="#FFF" />
-                    <Text style={styles.attentionText}>💰 Requiere cobro</Text>
+                  <View style={styles.attentionBannerWrapper}>
+                    <View style={styles.attentionBanner}>
+                      <Ionicons name="alert-circle" size={14} color="#FFF" />
+                      <Text style={styles.attentionText}>💰 Requiere cobro - Deuda: ${Math.abs(deuda).toFixed(2)}</Text>
+                    </View>
                   </View>
                 )}
-                {/* Avatar Circle */}
-                <View style={[styles.avatarContainer, needsAttention && styles.avatarHighlighted]}>
-                  <Text style={styles.avatarText}>
-                    {(nombre || '?').charAt(0).toUpperCase()}
-                    {(apellido || nombre.split(' ')[1] || '?').charAt(0).toUpperCase()}
-                  </Text>
-                </View>
+                
+                {/* Contenido principal en row */}
+                <View style={styles.customerRow}>
+                  {/* Avatar Circle */}
+                  <View style={[styles.avatarContainer, needsAttention && styles.avatarHighlighted]}>
+                    <Text style={styles.avatarText}>
+                      {(nombre || '?').charAt(0).toUpperCase()}
+                      {(apellido || nombre.split(' ')[1] || '?').charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
 
-                {/* Customer Info */}
-                <View style={styles.customerInfo}>
-                  <Text style={styles.customerName}>
-                    {nombre} {apellido}
-                  </Text>
+                  {/* Customer Info */}
+                  <View style={styles.customerInfo}>
+                    <Text style={styles.customerName}>
+                      {nombre} {apellido}
+                    </Text>
 
-                  {telefono && (
-                    <View style={styles.customerDetail}>
-                      <Ionicons name="call-outline" size={14} color="#757575" />
-                      <Text style={styles.customerDetailText}>
-                        {telefono}
-                      </Text>
-                    </View>
-                  )}
+                    {telefono && (
+                      <View style={styles.customerDetail}>
+                        <Ionicons name="call-outline" size={14} color="#757575" />
+                        <Text style={styles.customerDetailText}>
+                          {telefono}
+                        </Text>
+                      </View>
+                    )}
 
-                  {correo && (
-                    <View style={styles.customerDetail}>
-                      <Ionicons name="mail-outline" size={14} color="#757575" />
-                      <Text style={styles.customerDetailText}>
-                        {correo}
-                      </Text>
-                    </View>
-                  )}
-                  
-                  {/* Mostrar deuda si existe */}
-                  {hasDebt && (
-                    <View style={[styles.customerDetail, { marginTop: 4 }]}>
-                      <Ionicons name="cash-outline" size={14} color="#F44336" />
-                      <Text style={[styles.customerDetailText, { color: '#F44336', fontWeight: '600' }]}>
-                        Deuda: ${Math.abs(deuda).toFixed(2)}
-                      </Text>
-                    </View>
-                  )}
-                </View>
+                    {correo && (
+                      <View style={styles.customerDetail}>
+                        <Ionicons name="mail-outline" size={14} color="#757575" />
+                        <Text style={styles.customerDetailText}>
+                          {correo}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
 
-                {/* Action Buttons */}
-                <View style={styles.actionsContainer}>
-                  <TouchableOpacity
-                    onPress={() => openEditModal(customer)}
-                    style={styles.actionButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="pencil" size={20} color="#2196F3" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => confirmDelete(customer)}
-                    style={styles.actionButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="trash-outline" size={20} color="#F44336" />
-                  </TouchableOpacity>
+                  {/* Action Buttons */}
+                  <View style={styles.actionsContainer}>
+                    <TouchableOpacity
+                      onPress={() => openEditModal(customer)}
+                      style={styles.actionButton}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Ionicons name="pencil" size={20} color="#2196F3" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => confirmDelete(customer)}
+                      style={styles.actionButton}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#F44336" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             );
