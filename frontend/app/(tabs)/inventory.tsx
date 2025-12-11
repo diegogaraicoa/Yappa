@@ -463,13 +463,17 @@ export default function InventoryScreen() {
                     <View style={styles.productDetails}>
                       <View style={styles.productDetailItem}>
                         <Text style={styles.productDetailLabel}>Stock</Text>
-                        <Text style={[styles.productDetailValue, isLowStock && { color: '#FF9800' }]}>
-                          {product.quantity || 0}
+                        <Text style={[
+                          styles.productDetailValue, 
+                          isCriticalStock && { color: '#FF4A4A', fontWeight: '700' },
+                          isLowStock && { color: '#FFB800', fontWeight: '600' }
+                        ]}>
+                          {qty}
                         </Text>
                       </View>
                       <View style={styles.productDetailItem}>
                         <Text style={styles.productDetailLabel}>Precio</Text>
-                        <Text style={styles.productDetailValue}>${(product.price || 0).toFixed(2)}</Text>
+                        <Text style={styles.productDetailValue}>${(product.precio || product.price || 0).toFixed(2)}</Text>
                       </View>
                       <View style={styles.productDetailItem}>
                         <Text style={styles.productDetailLabel}>Costo</Text>
