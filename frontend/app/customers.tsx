@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,15 +12,13 @@ import {
   Platform,
   RefreshControl,
   ActivityIndicator,
-  Animated,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../utils/api';
 
 export default function CustomersScreen() {
   const router = useRouter();
-  const { highlight } = useLocalSearchParams<{ highlight?: string }>();
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -28,29 +26,12 @@ export default function CustomersScreen() {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [highlightedCustomer, setHighlightedCustomer] = useState<string | null>(null);
-  const highlightAnim = useRef(new Animated.Value(0)).current;
   const [formData, setFormData] = useState({
     name: '',
     lastname: '',
     phone: '',
     email: '',
   });
-
-  // Efecto para resaltar cliente cuando viene de AI Insights
-  useEffect(() => {
-    if (highlight) {
-      setHighlightedCustomer(highlight);
-      // Animar el highlight
-      Animated.sequence([
-        Animated.timing(highlightAnim, { toValue: 1, duration: 300, useNativeDriver: false }),
-        Animated.delay(2000),
-        Animated.timing(highlightAnim, { toValue: 0, duration: 500, useNativeDriver: false }),
-      ]).start(() => {
-        setHighlightedCustomer(null);
-      });
-    }
-  }, [highlight]);
 
   useEffect(() => {
     loadCustomers();
