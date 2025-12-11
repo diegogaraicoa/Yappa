@@ -1316,18 +1316,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   // Attention Banner for highlighted products
-  attentionBanner: {
+  attentionBannerLow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF9800',
+    backgroundColor: '#FFB800',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    marginBottom: 8,
-    marginHorizontal: -16,
-    marginTop: -16,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  attentionBannerCritical: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF4A4A',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 12,
   },
   attentionText: {
     fontSize: 13,
@@ -1335,9 +1342,33 @@ const styles = StyleSheet.create({
     color: '#FFF',
     marginLeft: 6,
   },
-  productCardHighlighted: {
-    backgroundColor: '#FFF8E1',
-    borderColor: '#FF9800',
+  productCardLowStock: {
+    backgroundColor: '#FFFDE7',
+    borderColor: '#FFB800',
     borderWidth: 2,
+  },
+  productCardCritical: {
+    backgroundColor: '#FFEBEE',
+    borderColor: '#FF4A4A',
+    borderWidth: 2,
+  },
+  lowStockBadge: {
+    backgroundColor: '#FFB800',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  criticalStockBadge: {
+    backgroundColor: '#FF4A4A',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFF',
   },
 });
