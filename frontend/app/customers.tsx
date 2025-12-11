@@ -117,10 +117,17 @@ export default function CustomersScreen() {
   };
 
   const filteredCustomers = customers.filter(
-    (customer) =>
-      (customer.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (customer.lastname || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (customer.phone || '').includes(searchQuery)
+    (customer) => {
+      // Soportar ambos esquemas de nombres de campos
+      const nombre = customer.nombre || customer.name || '';
+      const apellido = customer.apellido || customer.lastname || '';
+      const telefono = customer.telefono || customer.phone || '';
+      return (
+        nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        apellido.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        telefono.includes(searchQuery)
+      );
+    }
   );
 
   return (
