@@ -271,6 +271,142 @@ async def get_new_insights_count():
     }
 
 
+@router.get("/all-insights")
+async def get_all_insights():
+    """
+    Obtiene todos los insights organizados por categoría
+    
+    Devuelve insights de:
+    - Stock crítico/bajo
+    - Deudas pendientes
+    - Insights del scheduler (semanales/mensuales)
+    - Recomendaciones generales
+    """
+    from main import get_database
+    from bson import ObjectId
+    
+    db = get_database()
+    
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant no encontrado")
+    
+    store_id = str(merchant.get("_id"))
+    
+    all_insights = []
+    
+    # 1. Stock crítico y bajo
+    products = await db.products.find({"store_id": store_id}).to_list(1000)
+    
+    for product in products:
+        stock = product.get("stock", 0)
+        min_stock = product.get("stock_minimo", 10)
+        
+        if stock == 0:
+            all_insights.append({
+                "id": f"critical_stock_{product.get('_id')}",
+                "type": "critical_stock",
+                "category": "Stock",
+                "icon": "⚠️",
+                "color": "#FF4A4A",
+                "title": "Stock Agotado",
+                "message": f"{product.get('nombre')} está completamente agotado.",
+                "cta_text": "Reponer",
+                "cta_action": "navigate_to_product",
+                "cta_data": {"product_id": str(product.get("_id"))},
+                "priority": 10,
+                "timestamp": datetime.now().isoformat()
+            })
+        elif stock <= min_stock:
+            all_insights.append({
+                "id": f"low_stock_{product.get('_id')}",
+                "type": "low_stock",
+                "category": "Stock",
+                "icon": "📦",
+                "color": "#FFD447",
+                "title": "Stock Bajo",
+                "message": f"{product.get('nombre')} tiene {stock} unidades (mínimo: {min_stock}).",
+                "cta_text": "Ver Producto",
+                "cta_action": "navigate_to_product",
+                "cta_data": {"product_id": str(product.get("_id"))},
+                "priority": 8,
+                "timestamp": datetime.now().isoformat()
+            })
+    
+    # 2. Deudas pendientes
+    unpaid_sales = await db.sales.find({
+        "store_id": store_id,
+        "paid": False
+    }).to_list(100)
+    
+    debts_by_customer = {}
+    for sale in unpaid_sales:
+        customer_id = sale.get("customer_id")
+        if customer_id:
+            if customer_id not in debts_by_customer:
+                debts_by_customer[customer_id] = {
+                    "customer_name": sale.get("customer_name", "Cliente"),
+                    "total_debt": 0,
+                    "oldest_date": sale.get("created_at")
+                }
+            
+            debt = sale.get("total", 0) - sale.get("paid_amount", 0)
+            debts_by_customer[customer_id]["total_debt"] += debt
+            
+            if sale.get("created_at") < debts_by_customer[customer_id]["oldest_date"]:
+                debts_by_customer[customer_id]["oldest_date"] = sale.get("created_at")
+    
+    for customer_id, debt_info in debts_by_customer.items():
+        days_old = (datetime.now() - debt_info["oldest_date"]).days
+        if days_old >= 7:
+            all_insights.append({
+                "id": f"debt_{customer_id}",
+                "type": "overdue_debt",
+                "category": "Cobranza",
+                "icon": "💰",
+                "color": "#FF9800",
+                "title": "Deuda Pendiente",
+                "message": f"{debt_info['customer_name']} debe ${debt_info['total_debt']:.2f} desde hace {days_old} días.",
+                "cta_text": "Cobrar",
+                "cta_action": "send_payment_reminder",
+                "cta_data": {"customer_id": customer_id},
+                "priority": 7,
+                "timestamp": debt_info["oldest_date"].isoformat()
+            })
+    
+    # 3. Insights del scheduler (últimos 7 días)
+    seven_days_ago = datetime.now() - timedelta(days=7)
+    scheduler_insights = await db.insights.find({
+        "store_id": store_id,
+        "generated_at": {"$gte": seven_days_ago}
+    }).sort("generated_at", -1).to_list(10)
+    
+    for doc in scheduler_insights:
+        for idx, insight_text in enumerate(doc.get("insights", [])):
+            all_insights.append({
+                "id": f"scheduler_{doc.get('_id')}_{idx}",
+                "type": "ai_recommendation",
+                "category": "Insights IA",
+                "icon": "🤖",
+                "color": "#A66BFF",
+                "title": "Recomendación IA",
+                "message": insight_text,
+                "cta_text": "Ver Detalles",
+                "cta_action": "view_insight_details",
+                "cta_data": {"insight_id": str(doc.get("_id"))},
+                "priority": 5,
+                "timestamp": doc.get("generated_at").isoformat()
+            })
+    
+    # Ordenar por prioridad (mayor a menor) y luego por timestamp
+    all_insights.sort(key=lambda x: (-x["priority"], x["timestamp"]), reverse=True)
+    
+    return {
+        "insights": all_insights,
+        "total_count": len(all_insights)
+    }
+
+
 @router.post("/mark-insights-as-read")
 async def mark_insights_as_read():
     """
