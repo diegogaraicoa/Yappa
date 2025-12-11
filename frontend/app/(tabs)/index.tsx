@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../utils/api';
 import { useFocusEffect } from '@react-navigation/native';
 import FloatingHelpButton from '../../components/FloatingHelpButton';
+import AIInsightCard from '../../components/AIInsightCard';
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
