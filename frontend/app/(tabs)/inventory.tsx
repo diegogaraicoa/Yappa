@@ -1291,12 +1291,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
-    marginBottom: -1,
+    marginBottom: 8,
+    marginHorizontal: -16,
+    marginTop: -16,
   },
   attentionText: {
     fontSize: 13,
     fontWeight: '700',
     color: '#FFF',
     marginLeft: 6,
+  },
+  productCardHighlighted: {
+    backgroundColor: '#FFF8E1',
+    borderColor: '#FF9800',
+    borderWidth: 2,
   },
 });
