@@ -95,11 +95,11 @@ export default function AlertSettingsScreen() {
       });
 
       console.log('✅ Settings saved successfully:', response.data);
-      showAlert('Éxito', 'Configuración de alertas guardada correctamente');
+      Alert.alert('Éxito', 'Configuración de alertas guardada correctamente');
 
     } catch (error: any) {
       console.error('Error saving settings:', error);
-      showAlert(
+      Alert.alert(
         'Error',
         error.response?.data?.detail || 'No se pudo guardar la configuración'
       );
