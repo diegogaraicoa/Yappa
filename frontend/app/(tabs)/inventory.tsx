@@ -468,7 +468,7 @@ export default function InventoryScreen() {
                       <View style={styles.productDetailItem}>
                         <Text style={styles.productDetailLabel}>Stock</Text>
                         <Text style={[styles.productDetailValue, isLowStock && { color: '#FF9800' }]}>
-                          {product.quantity}
+                          {product.quantity || 0}
                         </Text>
                       </View>
                       <View style={styles.productDetailItem}>
@@ -481,7 +481,7 @@ export default function InventoryScreen() {
                       </View>
                     </View>
                   </View>
-                </View>
+                </Animated.View>
               );
             })}
           </View>
