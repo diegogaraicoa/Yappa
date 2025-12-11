@@ -60,13 +60,21 @@ export default function InsightsScreen() {
       switch (insight.cta_action) {
         case 'navigate_to_product':
         case 'navigate_to_inventory':
-          // Navegar a inventario (tab)
-          router.push('/(tabs)/inventory');
+          // Navegar a inventario con el producto resaltado
+          if (insight.cta_data?.product_id) {
+            router.push(`/(tabs)/inventory?highlight=${insight.cta_data.product_id}`);
+          } else {
+            router.push('/(tabs)/inventory');
+          }
           break;
         case 'navigate_to_customers':
         case 'send_payment_reminder':
-          // Navegar a clientes
-          router.push('/customers');
+          // Navegar a clientes con el cliente resaltado
+          if (insight.cta_data?.customer_id) {
+            router.push(`/customers?highlight=${insight.cta_data.customer_id}`);
+          } else {
+            router.push('/customers');
+          }
           break;
         case 'navigate_to_balance':
           router.push('/(tabs)/balance');
