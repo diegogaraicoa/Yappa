@@ -58,17 +58,49 @@ export default function InsightsScreen() {
   const handleAction = (insight: Insight) => {
     switch (insight.cta_action) {
       case 'navigate_to_product':
+        // Navegar a inventario con el producto específico
+        if (insight.cta_data?.product_id) {
+          router.push({
+            pathname: '/inventory',
+            params: { highlightProduct: insight.cta_data.product_id }
+          });
+        } else {
+          router.push('/inventory');
+        }
+        break;
       case 'navigate_to_inventory':
         router.push('/inventory');
         break;
       case 'navigate_to_customers':
-        router.push('/customers');
+        // Navegar a clientes con el cliente específico
+        if (insight.cta_data?.customer_id) {
+          router.push({
+            pathname: '/customers',
+            params: { highlightCustomer: insight.cta_data.customer_id }
+          });
+        } else {
+          router.push('/customers');
+        }
         break;
       case 'send_payment_reminder':
-        alert('Funcionalidad próximamente');
+        // Navegar a clientes para cobrar
+        if (insight.cta_data?.customer_id) {
+          router.push({
+            pathname: '/customers',
+            params: { highlightCustomer: insight.cta_data.customer_id }
+          });
+        } else {
+          router.push('/customers');
+        }
+        break;
+      case 'navigate_to_balance':
+        router.push('/balance');
+        break;
+      case 'navigate_to_insights':
+        // Ya estamos en insights, no hacer nada
         break;
       case 'view_insight_details':
-        // TODO: Mostrar detalles del insight
+        // TODO: Mostrar detalles del insight en modal
         break;
       default:
         console.log('Acción no reconocida:', insight.cta_action);
