@@ -48,9 +48,22 @@ export default function AIInsightCard() {
   const handleAction = () => {
     if (!insight) return;
 
+    // Si es stock crítico o bajo, ir a /insights para ver todos
+    if (insight.type === 'critical_stock' || insight.type === 'low_stock') {
+      router.push('/insights');
+      return;
+    }
+
+    // Si es deuda pendiente, ir a /insights
+    if (insight.type === 'overdue_debt') {
+      router.push('/insights');
+      return;
+    }
+
     switch (insight.cta_action) {
       case 'navigate_to_product':
-        router.push(`/inventory`);
+      case 'navigate_to_inventory':
+        router.push('/insights');
         break;
       case 'navigate_to_insights':
       case 'view_insight_details':
@@ -59,18 +72,14 @@ export default function AIInsightCard() {
       case 'navigate_to_balance':
         router.push('/balance');
         break;
-      case 'navigate_to_inventory':
-        router.push('/inventory');
-        break;
       case 'navigate_to_customers':
-        router.push('/customers');
+        router.push('/insights');
         break;
       case 'send_payment_reminder':
-        // TODO: Implementar envío de recordatorio
-        alert('Funcionalidad próximamente');
+        router.push('/insights');
         break;
       default:
-        console.log('Acción no reconocida:', insight.cta_action);
+        router.push('/insights');
     }
   };
 
