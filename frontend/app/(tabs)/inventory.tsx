@@ -450,7 +450,7 @@ export default function InventoryScreen() {
                       </View>
                     </View>
                   </View>
-                </Animated.View>
+                </View>
               );
             })}
           </View>
