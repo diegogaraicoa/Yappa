@@ -17,6 +17,7 @@ import api from '../../utils/api';
 import { useFocusEffect } from '@react-navigation/native';
 import FloatingHelpButton from '../../components/FloatingHelpButton';
 import AIInsightCard from '../../components/AIInsightCard';
+import QuickActions from '../../components/QuickActions';
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
