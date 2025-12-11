@@ -288,7 +288,7 @@ export default function CustomersScreen() {
                     <Ionicons name="trash-outline" size={20} color="#F44336" />
                   </TouchableOpacity>
                 </View>
-              </Animated.View>
+              </View>
             );
           })
         )}
