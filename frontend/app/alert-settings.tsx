@@ -9,11 +9,11 @@ import {
   ActivityIndicator,
   TextInput,
   Platform,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../utils/api';
-import { showAlert } from '../utils/showAlert';
 
 export default function AlertSettingsScreen() {
   const router = useRouter();
