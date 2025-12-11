@@ -201,15 +201,17 @@ export default function HomeScreen() {
         <AIInsightCard />
 
         {/* Quick Actions */}
-        <QuickActions />
+        <QuickActions onActionsChange={setHasQuickActions} />
 
-        {/* Actions Label */}
-        <View style={styles.actionsLabel}>
-          <Text style={styles.actionsLabelText}>Más acciones</Text>
-        </View>
+        {/* Actions Label - Solo si NO hay Quick Actions */}
+        {!hasQuickActions && (
+          <View style={styles.actionsLabel}>
+            <Text style={styles.actionsLabelText}>Más acciones</Text>
+          </View>
+        )}
 
-        {/* Alert Banner - Minimalista */}
-        {alertCount > 0 && (
+        {/* Alert Banner - Solo si NO hay Quick Actions */}
+        {!hasQuickActions && alertCount > 0 && (
           <TouchableOpacity 
             style={styles.alertBanner}
             onPress={() => router.push('/alerts')}
