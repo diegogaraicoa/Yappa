@@ -2143,6 +2143,16 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
+# Include Notification routes
+try:
+    from routes.notification_routes import router as notification_router
+    app.include_router(notification_router, prefix="/api")
+    print("✅ Notification routes loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading notification routes: {e}")
+    import traceback
+    traceback.print_exc()
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
