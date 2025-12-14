@@ -111,6 +111,26 @@ export default function AlertSettingsScreen() {
     }
   };
 
+  const handleTestPush = async () => {
+    setTestingPush(true);
+    try {
+      const granted = await requestPermissions();
+      
+      if (!granted) {
+        Alert.alert('Permisos Requeridos', 'Debes permitir las notificaciones para recibir alertas.');
+        return;
+      }
+      
+      await sendTestNotification();
+      Alert.alert('¡Listo!', 'Se envió una notificación de prueba. Debería aparecer en tu dispositivo.');
+    } catch (error) {
+      console.error('Error testing push:', error);
+      Alert.alert('Error', 'No se pudo enviar la notificación de prueba. Las notificaciones push solo funcionan en dispositivos móviles.');
+    } finally {
+      setTestingPush(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
