@@ -241,6 +241,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFF',
   },
+  historyButton: {
+    padding: 4,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
