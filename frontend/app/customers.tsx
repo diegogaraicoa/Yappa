@@ -13,12 +13,13 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../utils/api';
 
 export default function CustomersScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
