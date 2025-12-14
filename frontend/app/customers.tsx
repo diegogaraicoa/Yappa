@@ -16,6 +16,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../utils/api';
+import ContextualInsightBanner from '../components/ContextualInsightBanner';
 
 export default function CustomersScreen() {
   const router = useRouter();
