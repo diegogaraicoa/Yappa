@@ -701,7 +701,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://yappa-ai.preview.emergentagent.com/admin
+**URL:** https://ai-frontend-revamp.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet

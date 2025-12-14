@@ -14,7 +14,7 @@ import sys
 import os
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://yappa-ai.preview.emergentagent.com/api"
+BACKEND_URL = "https://ai-frontend-revamp.preview.emergentagent.com/api"
 
 # Test credentials
 USERNAME = "tiendaclave"
