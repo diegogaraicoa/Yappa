@@ -30,14 +30,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   async function loadStoredUser() {
     try {
+      console.log('🔄 AUTH: Checking for stored session...');
       const storedUser = await AsyncStorage.getItem('user');
       const storedToken = await AsyncStorage.getItem('token');
 
+      console.log('🔍 AUTH: Token exists:', !!storedToken);
+      console.log('🔍 AUTH: User exists:', !!storedUser);
+
       if (storedUser && storedToken) {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        console.log('✅ AUTH: Restoring session for:', parsedUser.store_name || parsedUser.email);
+        setUser(parsedUser);
+      } else {
+        console.log('ℹ️ AUTH: No stored session found');
       }
     } catch (error) {
-      console.log('Error loading user:', error);
+      console.log('❌ AUTH: Error loading user:', error);
     } finally {
       setLoading(false);
     }
