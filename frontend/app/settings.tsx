@@ -143,6 +143,28 @@ export default function SettingsScreen() {
     }, 50);
   };
 
+  const handleTestPush = async () => {
+    setTestingPush(true);
+    try {
+      // Primero solicitar permisos si no los tenemos
+      const granted = await requestPermissions();
+      
+      if (!granted) {
+        showAlert('Permisos Requeridos', 'Debes permitir las notificaciones para recibir alertas.');
+        return;
+      }
+      
+      // Enviar notificación de prueba
+      await sendTestNotification();
+      showAlert('¡Listo!', 'Se envió una notificación de prueba. Debería aparecer en tu dispositivo.');
+    } catch (error) {
+      console.error('Error testing push:', error);
+      showAlert('Error', 'No se pudo enviar la notificación de prueba.');
+    } finally {
+      setTestingPush(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
