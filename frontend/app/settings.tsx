@@ -27,7 +27,7 @@ Notifications.setNotificationHandler({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { sendTestNotification, requestPermissions, expoPushToken } = useNotifications();
+  const { sendTestNotification, requestPermissions, expoPushToken: contextPushToken } = useNotifications();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -36,7 +36,7 @@ export default function SettingsScreen() {
   // Form state
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [alertEmail, setAlertEmail] = useState('');
-  const [expoPushToken, setExpoPushToken] = useState('');
+  const [savedPushToken, setSavedPushToken] = useState('');
 
   // Toggle states
   const [alertsEnabled, setAlertsEnabled] = useState(true);
