@@ -14,6 +14,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../utils/api';
+import { useNotifications } from '../contexts/NotificationContext';
 
 export default function AlertSettingsScreen() {
   const router = useRouter();
