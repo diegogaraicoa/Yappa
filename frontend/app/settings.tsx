@@ -27,9 +27,11 @@ Notifications.setNotificationHandler({
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { sendTestNotification, requestPermissions, expoPushToken } = useNotifications();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [testingPush, setTestingPush] = useState(false);
 
   // Form state
   const [whatsappNumber, setWhatsappNumber] = useState('');
