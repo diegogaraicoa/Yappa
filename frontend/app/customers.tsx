@@ -121,6 +121,53 @@ export default function CustomersScreen() {
     setShowDeleteModal(true);
   };
 
+  // Abrir modal de pago
+  const openPaymentModal = (customer: any) => {
+    const deuda = Math.abs(customer.deuda_total ?? customer.balance ?? 0);
+    setPaymentCustomer(customer);
+    setPaymentAmount(deuda.toFixed(2)); // Pre-llenar con la deuda total
+    setShowPaymentModal(true);
+  };
+
+  // Confirmar registro de pago
+  const confirmPayment = async () => {
+    if (!paymentCustomer || !paymentAmount) {
+      Alert.alert('Error', 'Ingresa el monto del pago');
+      return;
+    }
+
+    const amount = parseFloat(paymentAmount);
+    if (isNaN(amount) || amount <= 0) {
+      Alert.alert('Error', 'Ingresa un monto válido mayor a 0');
+      return;
+    }
+
+    try {
+      setProcessingPayment(true);
+      const currentDebt = paymentCustomer.deuda_total ?? paymentCustomer.balance ?? 0;
+      const newDebt = currentDebt + amount; // Sumar porque deuda es negativa
+      
+      await api.put(`/api/customers/${paymentCustomer._id}`, {
+        deuda_total: newDebt > 0 ? 0 : newDebt // No puede quedar con saldo a favor
+      });
+      
+      const nombre = paymentCustomer.nombre || paymentCustomer.name || 'Cliente';
+      Alert.alert(
+        '✅ Pago Registrado',
+        `${nombre}: Pago de $${amount.toFixed(2)} registrado.\nDeuda anterior: $${Math.abs(currentDebt).toFixed(2)}\nDeuda actual: $${Math.abs(newDebt > 0 ? 0 : newDebt).toFixed(2)}`
+      );
+      
+      setShowPaymentModal(false);
+      setPaymentCustomer(null);
+      setPaymentAmount('');
+      await loadCustomers();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'No se pudo registrar el pago');
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
   const filteredCustomers = customers.filter(
     (customer) => {
       // Soportar ambos esquemas de nombres de campos
