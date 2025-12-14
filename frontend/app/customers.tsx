@@ -350,6 +350,18 @@ export default function CustomersScreen() {
                     </TouchableOpacity>
                   </View>
                 </View>
+                
+                {/* Botón de Registrar Pago para clientes con deuda */}
+                {needsAttention && (
+                  <TouchableOpacity
+                    style={styles.paymentButton}
+                    onPress={() => openPaymentModal(customer)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="cash" size={18} color="#FFF" />
+                    <Text style={styles.paymentButtonText}>Registrar Pago</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             );
           })
