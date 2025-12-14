@@ -9,7 +9,7 @@ class SendGridService:
     def __init__(self):
         self.api_key = os.getenv('SENDGRID_API_KEY')
         self.from_email = os.getenv('SENDGRID_FROM_EMAIL')
-        self.from_name = os.getenv('SENDGRID_FROM_NAME', 'BarrioShop')
+        self.from_name = os.getenv('SENDGRID_FROM_NAME', 'Yappa')
         self.client = SendGridAPIClient(self.api_key)
     
     def send_email(self, to_email: str, subject: str, html_content: str) -> dict:
@@ -47,7 +47,7 @@ class SendGridService:
     
     def send_stock_alert_email(self, to_email: str, products: list) -> dict:
         """Send stock alert email with list of low stock products"""
-        subject = "⚠️ Alerta de Stock Bajo - BarrioShop"
+        subject = "⚠️ Alerta de Stock Bajo - Yappa"
         
         html_content = f"""
         <html>
@@ -92,7 +92,7 @@ class SendGridService:
                     </p>
                     <div style="margin-top: 30px; padding: 15px; background-color: #e3f2fd; border-left: 4px solid #2196F3; border-radius: 4px;">
                         <p style="margin: 0; color: #1976D2;">
-                            📱 Accede a BarrioShop desde tu celular para gestionar tu inventario.
+                            📱 Accede a Yappa desde tu celular para gestionar tu inventario.
                         </p>
                     </div>
                 </div>
@@ -155,7 +155,7 @@ class SendGridService:
     
     def send_weekly_summary_email(self, to_email: str, data: dict) -> dict:
         """Send weekly summary email"""
-        subject = f"📈 Resumen Semanal - BarrioShop"
+        subject = f"📈 Resumen Semanal - Yappa"
         
         html_content = f"""
         <html>

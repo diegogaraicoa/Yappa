@@ -74,7 +74,7 @@ class WhatsAppTestInterface:
     async def test_conversation(self):
         """Prueba conversación interactiva"""
         print("\n" + "="*60)
-        print("🤖 SIMULADOR DE WHATSAPP - BarrioShop")
+        print("🤖 SIMULADOR DE WHATSAPP - Yappa")
         print("="*60)
         print(f"📱 Usuario: {self.user_phone}")
         print(f"🏪 Tienda: {self.store_id}")

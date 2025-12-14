@@ -1,5 +1,5 @@
 """
-BarrioShop Data Models
+Yappa Data Models
 Nueva arquitectura: Admin → Merchant → Clerk
 """
 
