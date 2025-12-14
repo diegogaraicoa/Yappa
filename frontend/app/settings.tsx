@@ -635,6 +635,29 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
+  // Push Notifications
+  pushInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  pushTestButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3E5F5',
+    borderRadius: 12,
+    paddingVertical: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#CE93D8',
+  },
+  pushTestButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#9C27B0',
+  },
+
   // Buttons
   buttonContainer: {
     gap: 12,
