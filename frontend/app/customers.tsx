@@ -526,6 +526,65 @@ export default function CustomersScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Payment Modal */}
+      <Modal visible={showPaymentModal} animationType="fade" transparent>
+        <KeyboardAvoidingView
+          style={styles.deleteModalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={[styles.deleteModalContent, { maxHeight: 400 }]}>
+            <View style={styles.paymentModalHeader}>
+              <View style={styles.paymentIconCircle}>
+                <Ionicons name="cash" size={32} color="#4CAF50" />
+              </View>
+            </View>
+            <Text style={styles.paymentModalTitle}>Registrar Pago</Text>
+            <Text style={styles.paymentModalCustomer}>
+              {paymentCustomer?.nombre || paymentCustomer?.name || 'Cliente'}
+            </Text>
+            <Text style={styles.paymentModalDebt}>
+              Deuda actual: ${Math.abs(paymentCustomer?.deuda_total ?? paymentCustomer?.balance ?? 0).toFixed(2)}
+            </Text>
+            
+            <View style={styles.paymentInputContainer}>
+              <Text style={styles.paymentInputLabel}>Monto recibido ($)</Text>
+              <TextInput
+                style={styles.paymentInput}
+                value={paymentAmount}
+                onChangeText={setPaymentAmount}
+                placeholder="0.00"
+                keyboardType="decimal-pad"
+                autoFocus
+              />
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowPaymentModal(false);
+                  setPaymentCustomer(null);
+                  setPaymentAmount('');
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.deleteModalConfirmButton, { backgroundColor: '#4CAF50' }]}
+                onPress={confirmPayment}
+                disabled={processingPayment}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalSaveText}>
+                  {processingPayment ? 'Procesando...' : 'Confirmar Pago'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
