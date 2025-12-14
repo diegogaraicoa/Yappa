@@ -188,7 +188,14 @@ export default function CustomersScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => {
+            // Si vino de insights, volver a insights
+            if (params.from === 'insights') {
+              router.push('/insights');
+            } else {
+              router.back();
+            }
+          }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Ionicons name="arrow-back" size={24} color="#212121" />
