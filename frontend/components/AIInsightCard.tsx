@@ -149,7 +149,7 @@ export default function AIInsightCard() {
         style={[styles.ctaButton, { backgroundColor: insight.color }]}
         onPress={handleAction}
       >
-        <Text style={styles.ctaText}>{insight.cta_text}</Text>
+        <Text style={styles.ctaText}>Tomar Acción</Text>
         <Ionicons name="arrow-forward" size={16} color="#FFF" />
       </TouchableOpacity>
     </TouchableOpacity>
