@@ -361,7 +361,7 @@ export default function SettingsScreen() {
                 <Text style={styles.toggleSubtitle}>
                   Recibe alertas inmediatas cuando haya stock crítico o deudas pendientes.
                 </Text>
-                {expoPushToken && (
+                {contextPushToken && (
                   <Text style={[styles.toggleSubtitle, { color: '#4CAF50', marginTop: 4 }]}>
                     ✓ Dispositivo registrado
                   </Text>
