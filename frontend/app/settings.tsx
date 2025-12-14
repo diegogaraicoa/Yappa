@@ -81,7 +81,7 @@ export default function SettingsScreen() {
       await api.post('/api/user/notification-settings', {
         whatsapp_number: whatsappNumber || null,
         alert_email: alertEmail || null,
-        expo_push_token: expoPushToken || null,
+        expo_push_token: contextPushToken || savedPushToken || null,
         alerts_enabled: alertsEnabled,
         stock_alerts_enabled: stockAlertsEnabled,
         daily_summary_enabled: dailySummaryEnabled,
