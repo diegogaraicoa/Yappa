@@ -215,7 +215,7 @@ function SupportModal({ visible, onClose }: { visible: boolean; onClose: () => v
 
   const openWhatsAppSupport = () => {
     const phone = '+593992913093'; // Tu número de soporte
-    const text = 'Hola, necesito ayuda con BarrioShop Admin Console';
+    const text = 'Hola, necesito ayuda con Yappa Admin Console';
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -1132,7 +1132,7 @@ function TrainingView({ data }: any) {
   return (
     <ScrollView style={styles.scrollContent}>
       <Text style={styles.pageTitle}>📚 Capacitación</Text>
-      <Text style={styles.sectionTitle}>Aprende a usar BarrioShop</Text>
+      <Text style={styles.sectionTitle}>Aprende a usar Yappa</Text>
 
       {tutorials.length === 0 ? (
         <View style={styles.emptyState}>

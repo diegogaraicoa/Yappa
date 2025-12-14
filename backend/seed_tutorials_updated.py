@@ -137,12 +137,12 @@ Una vez configuradas las alertas, aprende "Cómo Registrar una Venta".""",
         
         # BÁSICO
         {
-            "title": "Bienvenido a BarrioShop",
+            "title": "Bienvenido a Yappa",
             "description": "Aprende los conceptos básicos de la aplicación y cómo comenzar",
             "category": "basic",
-            "content": """# Bienvenido a BarrioShop 🎉
+            "content": """# Bienvenido a Yappa 🎉
 
-## ¿Qué es BarrioShop?
+## ¿Qué es Yappa?
 
 Tu asistente digital para gestionar tu negocio de barrio.
 

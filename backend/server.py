@@ -1016,7 +1016,7 @@ async def test_alerts(current_user: dict = Depends(get_current_user)):
     if user.get("whatsapp_number"):
         whatsapp_result = twilio_service.send_whatsapp(
             user["whatsapp_number"],
-            "🎉 ¡Prueba exitosa! Tu número de WhatsApp está configurado correctamente en BarrioShop."
+            "🎉 ¡Prueba exitosa! Tu número de WhatsApp está configurado correctamente en Yappa."
         )
         results["whatsapp"] = whatsapp_result
     
@@ -1024,12 +1024,12 @@ async def test_alerts(current_user: dict = Depends(get_current_user)):
     # if user.get("alert_email"):
     #     email_result = sendgrid_service.send_email(
     #         user["alert_email"],
-    #         "✅ Prueba de Alertas - BarrioShop",
+    #         "✅ Prueba de Alertas - Yappa",
     #         """
     #         <html>
     #             <body style="font-family: Arial, sans-serif; padding: 20px;">
     #                 <h2 style="color: #4CAF50;">¡Prueba Exitosa! ✅</h2>
-    #                 <p>Tu email está configurado correctamente para recibir alertas de BarrioShop.</p>
+    #                 <p>Tu email está configurado correctamente para recibir alertas de Yappa.</p>
     #                 <p>Recibirás notificaciones sobre:</p>
     #                 <ul>
     #                     <li>📦 Stock bajo</li>
@@ -1918,7 +1918,7 @@ async def whatsapp_webhook(
             # Send error message
             twilio_service.send_whatsapp(
                 user_phone,
-                "❌ Tu número no está registrado en BarrioShop. Por favor regístrate primero en el app."
+                "❌ Tu número no está registrado en Yappa. Por favor regístrate primero en el app."
             )
             return Response(content="", media_type="application/xml")
         

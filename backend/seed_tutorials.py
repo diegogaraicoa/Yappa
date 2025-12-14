@@ -284,14 +284,14 @@ Una vez configuradas las alertas:
         
         # BÁSICO
         {
-            "title": "Bienvenido a BarrioShop",
+            "title": "Bienvenido a Yappa",
             "description": "Aprende los conceptos básicos de la aplicación y cómo comenzar",
             "category": "basic",
-            "content": """# Bienvenido a BarrioShop 🎉
+            "content": """# Bienvenido a Yappa 🎉
 
-## ¿Qué es BarrioShop?
+## ¿Qué es Yappa?
 
-BarrioShop es tu asistente digital para gestionar tu negocio de barrio. Te ayuda a:
+Yappa es tu asistente digital para gestionar tu negocio de barrio. Te ayuda a:
 
 - 📊 Registrar ventas y gastos
 - 📦 Controlar tu inventario
