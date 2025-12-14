@@ -23,6 +23,7 @@ import api from '../../utils/api';
 
 export default function InventoryScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { user } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
