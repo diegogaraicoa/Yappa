@@ -420,6 +420,28 @@ export default function CustomersScreen() {
               style={styles.modalForm}
               showsVerticalScrollIndicator={false}
             >
+              {/* Contextual AI Insight Banner for editing customers */}
+              {isEditing && selectedCustomer && (() => {
+                const deuda = selectedCustomer.deuda_total ?? selectedCustomer.balance ?? 0;
+                const hasDebt = deuda < 0;
+                
+                if (hasDebt) {
+                  return (
+                    <ContextualInsightBanner
+                      type="debt"
+                      title="💰 Deuda Pendiente"
+                      message={`Este cliente tiene una deuda de $${Math.abs(deuda).toFixed(2)}. Considera contactarlo para gestionar el cobro.`}
+                      actionLabel="Registrar pago"
+                      onAction={() => {
+                        setShowModal(false);
+                        openPaymentModal(selectedCustomer);
+                      }}
+                    />
+                  );
+                }
+                return null;
+              })()}
+
               {/* Name */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Nombre *</Text>
