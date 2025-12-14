@@ -198,30 +198,10 @@ export default function HomeScreen() {
         {/* AI Insight Card */}
         <AIInsightCard />
 
-        {/* Actions Label */}
+        {/* Actions Section */}
         <View style={styles.actionsLabel}>
-          <Text style={styles.actionsLabelText}>Acciones Rápidas</Text>
+          <Text style={styles.actionsLabelText}>Menú Principal</Text>
         </View>
-
-        {/* Alert Banner */}
-        {alertCount > 0 && (
-          <TouchableOpacity 
-            style={styles.alertBanner}
-            onPress={() => router.push('/alerts')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.alertIconContainer}>
-              <Ionicons name="alert-circle" size={24} color="#FF9800" />
-            </View>
-            <View style={styles.alertContent}>
-              <Text style={styles.alertTitle}>Stock bajo</Text>
-              <Text style={styles.alertSubtitle}>
-                {alertCount} producto{alertCount !== 1 ? 's' : ''} requiere{alertCount !== 1 ? 'n' : ''} atención
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#FF9800" />
-          </TouchableOpacity>
-        )}
 
         {/* Action Cards - Grandes y legibles */}
         <View style={styles.actionsSection}>
