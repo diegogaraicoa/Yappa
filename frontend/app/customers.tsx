@@ -147,20 +147,35 @@ export default function CustomersScreen() {
       setProcessingPayment(true);
       const currentDebt = paymentCustomer.deuda_total ?? paymentCustomer.balance ?? 0;
       const newDebt = currentDebt + amount; // Sumar porque deuda es negativa
+      const finalDebt = newDebt > 0 ? 0 : newDebt; // No puede quedar con saldo a favor
       
+      // Actualizar en el backend
       await api.put(`/api/customers/${paymentCustomer._id}`, {
-        deuda_total: newDebt > 0 ? 0 : newDebt // No puede quedar con saldo a favor
+        deuda_total: finalDebt,
+        balance: finalDebt // También actualizar balance para consistencia
       });
       
-      const nombre = paymentCustomer.nombre || paymentCustomer.name || 'Cliente';
-      Alert.alert(
-        '✅ Pago Registrado',
-        `${nombre}: Pago de $${amount.toFixed(2)} registrado.\nDeuda anterior: $${Math.abs(currentDebt).toFixed(2)}\nDeuda actual: $${Math.abs(newDebt > 0 ? 0 : newDebt).toFixed(2)}`
-      );
-      
+      // Cerrar modal primero
       setShowPaymentModal(false);
       setPaymentCustomer(null);
       setPaymentAmount('');
+      
+      // Actualizar lista local inmediatamente con los datos actualizados
+      setCustomers(prev => prev.map(c => 
+        c._id === paymentCustomer._id 
+          ? { ...c, deuda_total: finalDebt, balance: finalDebt }
+          : c
+      ));
+      
+      const nombre = paymentCustomer.nombre || paymentCustomer.name || 'Cliente';
+      const debtResolved = finalDebt >= 0;
+      
+      Alert.alert(
+        '✅ Pago Registrado',
+        `${nombre}: Pago de $${amount.toFixed(2)} registrado.\nDeuda anterior: $${Math.abs(currentDebt).toFixed(2)}\nDeuda actual: $${Math.abs(finalDebt).toFixed(2)}${debtResolved ? '\n\n🎉 ¡Deuda saldada!' : ''}`
+      );
+      
+      // Recargar datos del servidor para asegurar sincronización
       await loadCustomers();
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.detail || 'No se pudo registrar el pago');
