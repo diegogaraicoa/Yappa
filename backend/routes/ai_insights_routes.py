@@ -432,3 +432,240 @@ async def mark_insights_as_read():
         "success": True,
         "marked_count": result.modified_count
     }
+
+
+
+@router.get("/insights-timeline")
+async def get_insights_timeline(
+    days: int = 30,
+    status: str = "all"  # all, resolved, pending
+):
+    """
+    Obtiene el historial/timeline de insights con su estado
+    
+    Parámetros:
+    - days: Número de días hacia atrás (default: 30)
+    - status: Filtrar por estado (all, resolved, pending)
+    
+    Devuelve insights con información de:
+    - Cuándo se generó
+    - Cuándo se resolvió (si aplica)
+    - Estado actual
+    """
+    from main import get_database
+    from bson import ObjectId
+    
+    db = get_database()
+    
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant no encontrado")
+    
+    store_id = str(merchant.get("_id"))
+    
+    # Fecha límite para buscar
+    start_date = datetime.now() - timedelta(days=days)
+    
+    timeline = []
+    
+    # 1. Obtener historial de insights guardados en la colección insights_history
+    history_query = {
+        "store_id": store_id,
+        "created_at": {"$gte": start_date}
+    }
+    
+    if status == "resolved":
+        history_query["resolved"] = True
+    elif status == "pending":
+        history_query["resolved"] = {"$ne": True}
+    
+    saved_history = await db.insights_history.find(history_query).sort("created_at", -1).to_list(100)
+    
+    for item in saved_history:
+        timeline.append({
+            "id": str(item.get("_id")),
+            "type": item.get("type"),
+            "category": item.get("category"),
+            "icon": item.get("icon", "📋"),
+            "color": item.get("color", "#9E9E9E"),
+            "title": item.get("title"),
+            "message": item.get("message"),
+            "created_at": item.get("created_at").isoformat() if item.get("created_at") else None,
+            "resolved": item.get("resolved", False),
+            "resolved_at": item.get("resolved_at").isoformat() if item.get("resolved_at") else None,
+            "resolved_action": item.get("resolved_action"),
+            "entity_id": item.get("entity_id"),
+            "entity_type": item.get("entity_type")
+        })
+    
+    # 2. Obtener insights actuales (pendientes) y marcarlos como pendientes
+    if status in ["all", "pending"]:
+        # Productos con stock bajo/agotado
+        products = await db.products.find({"store_id": store_id}).to_list(1000)
+        
+        for product in products:
+            stock = product.get("stock", 0)
+            min_stock = product.get("stock_minimo", 10)
+            product_id = str(product.get("_id"))
+            
+            # Verificar si ya está en el historial como pendiente
+            existing = next((t for t in timeline if t.get("entity_id") == product_id and not t.get("resolved")), None)
+            
+            if not existing:
+                if stock == 0:
+                    timeline.append({
+                        "id": f"current_critical_{product_id}",
+                        "type": "critical_stock",
+                        "category": "Stock",
+                        "icon": "⚠️",
+                        "color": "#FF4A4A",
+                        "title": "Stock Agotado",
+                        "message": f"{product.get('nombre')} está agotado.",
+                        "created_at": datetime.now().isoformat(),
+                        "resolved": False,
+                        "resolved_at": None,
+                        "entity_id": product_id,
+                        "entity_type": "product"
+                    })
+                elif stock <= min_stock:
+                    timeline.append({
+                        "id": f"current_low_{product_id}",
+                        "type": "low_stock",
+                        "category": "Stock",
+                        "icon": "📦",
+                        "color": "#FFD447",
+                        "title": "Stock Bajo",
+                        "message": f"{product.get('nombre')} tiene {stock} unidades (mínimo: {min_stock}).",
+                        "created_at": datetime.now().isoformat(),
+                        "resolved": False,
+                        "resolved_at": None,
+                        "entity_id": product_id,
+                        "entity_type": "product"
+                    })
+        
+        # Clientes con deuda
+        customers = await db.customers.find({"store_id": store_id}).to_list(1000)
+        
+        for customer in customers:
+            deuda = customer.get("deuda_total", 0)
+            customer_id = str(customer.get("_id"))
+            
+            existing = next((t for t in timeline if t.get("entity_id") == customer_id and not t.get("resolved")), None)
+            
+            if not existing and deuda < 0:
+                nombre = customer.get("nombre", customer.get("name", "Cliente"))
+                apellido = customer.get("apellido", customer.get("lastname", ""))
+                timeline.append({
+                    "id": f"current_debt_{customer_id}",
+                    "type": "customer_debt",
+                    "category": "Cobranza",
+                    "icon": "💰",
+                    "color": "#FF9800",
+                    "title": "Deuda Pendiente",
+                    "message": f"{nombre} {apellido} debe ${abs(deuda):.2f}.",
+                    "created_at": datetime.now().isoformat(),
+                    "resolved": False,
+                    "resolved_at": None,
+                    "entity_id": customer_id,
+                    "entity_type": "customer"
+                })
+    
+    # Filtrar por status si es necesario
+    if status == "resolved":
+        timeline = [t for t in timeline if t.get("resolved")]
+    elif status == "pending":
+        timeline = [t for t in timeline if not t.get("resolved")]
+    
+    # Ordenar por fecha (más reciente primero)
+    timeline.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    
+    # Estadísticas
+    total = len(timeline)
+    resolved_count = len([t for t in timeline if t.get("resolved")])
+    pending_count = total - resolved_count
+    
+    return {
+        "timeline": timeline,
+        "stats": {
+            "total": total,
+            "resolved": resolved_count,
+            "pending": pending_count
+        }
+    }
+
+
+@router.post("/resolve-insight")
+async def resolve_insight(
+    entity_type: str,  # "product" or "customer"
+    entity_id: str,
+    action: str  # "replenished", "paid", "dismissed"
+):
+    """
+    Marca un insight como resuelto y lo guarda en el historial
+    
+    Esto se llama automáticamente cuando:
+    - Se repone stock de un producto
+    - Se registra un pago de un cliente
+    - El usuario descarta manualmente un insight
+    """
+    from main import get_database
+    from bson import ObjectId
+    
+    db = get_database()
+    
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant no encontrado")
+    
+    store_id = str(merchant.get("_id"))
+    
+    # Obtener información de la entidad
+    entity_info = {}
+    insight_type = ""
+    
+    if entity_type == "product":
+        product = await db.products.find_one({"_id": ObjectId(entity_id), "store_id": store_id})
+        if product:
+            stock = product.get("stock", 0)
+            min_stock = product.get("stock_minimo", 10)
+            entity_info = {
+                "name": product.get("nombre", "Producto"),
+                "stock_before": stock,
+                "min_stock": min_stock
+            }
+            insight_type = "critical_stock" if stock == 0 else "low_stock"
+    
+    elif entity_type == "customer":
+        customer = await db.customers.find_one({"_id": ObjectId(entity_id), "store_id": store_id})
+        if customer:
+            entity_info = {
+                "name": f"{customer.get('nombre', '')} {customer.get('apellido', '')}".strip(),
+                "debt_before": customer.get("deuda_total", 0)
+            }
+            insight_type = "customer_debt"
+    
+    # Guardar en historial
+    history_doc = {
+        "store_id": store_id,
+        "entity_type": entity_type,
+        "entity_id": entity_id,
+        "type": insight_type,
+        "category": "Stock" if entity_type == "product" else "Cobranza",
+        "icon": "📦" if entity_type == "product" else "💰",
+        "color": "#4CAF50",  # Verde para resuelto
+        "title": f"{'Stock Repuesto' if entity_type == 'product' else 'Pago Registrado'}",
+        "message": f"{entity_info.get('name', 'Item')} - {action}",
+        "created_at": datetime.now(),
+        "resolved": True,
+        "resolved_at": datetime.now(),
+        "resolved_action": action,
+        "entity_info": entity_info
+    }
+    
+    result = await db.insights_history.insert_one(history_doc)
+    
+    return {
+        "success": True,
+        "history_id": str(result.inserted_id),
+        "message": f"Insight marcado como resuelto: {action}"
+    }
