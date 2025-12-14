@@ -606,6 +606,43 @@ export default function InventoryScreen() {
             </View>
 
             <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+              {/* Contextual AI Insight Banner for editing products */}
+              {editingProduct && (() => {
+                const qty = editingProduct.stock ?? editingProduct.quantity ?? 0;
+                const minStock = editingProduct.stock_minimo ?? editingProduct.min_stock_alert ?? 10;
+                const isOutOfStock = qty <= 0;
+                const isLowStock = qty > 0 && qty <= minStock;
+                
+                if (isOutOfStock) {
+                  return (
+                    <ContextualInsightBanner
+                      type="out_of_stock"
+                      title="🚨 Stock Agotado"
+                      message={`Este producto no tiene unidades disponibles. Considera reponerlo pronto para no perder ventas.`}
+                      actionLabel="Reponer ahora"
+                      onAction={() => {
+                        closeProductModal();
+                        openReplenishModal(editingProduct);
+                      }}
+                    />
+                  );
+                } else if (isLowStock) {
+                  return (
+                    <ContextualInsightBanner
+                      type="low_stock"
+                      title="⚠️ Stock Bajo"
+                      message={`Solo quedan ${qty} unidades (mínimo recomendado: ${minStock}). Repón el inventario para evitar quedarte sin stock.`}
+                      actionLabel="Reponer ahora"
+                      onAction={() => {
+                        closeProductModal();
+                        openReplenishModal(editingProduct);
+                      }}
+                    />
+                  );
+                }
+                return null;
+              })()}
+
               {/* Image */}
               <TouchableOpacity style={styles.imagePickerButton} onPress={showImagePicker}>
                 {newProduct.image ? (
