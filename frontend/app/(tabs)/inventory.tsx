@@ -483,11 +483,6 @@ export default function InventoryScreen() {
                     <View style={styles.productHeader}>
                       <View style={styles.productTitleSection}>
                         <Text style={styles.productName}>{productName}</Text>
-                        {needsAttention && (
-                          <View style={badgeStyle}>
-                            <Text style={styles.badgeText}>{badgeText}</Text>
-                          </View>
-                        )}
                       </View>
                       <View style={styles.productActions}>
                         <TouchableOpacity 
@@ -524,7 +519,7 @@ export default function InventoryScreen() {
                       </View>
                       <View style={styles.productDetailItem}>
                         <Text style={styles.productDetailLabel}>Precio</Text>
-                        <Text style={styles.productDetailValue}>${(product.precio || product.price || 0).toFixed(2)}</Text>
+                        <Text style={styles.productDetailValue}>${((product.precio || product.price || 0) || 0).toFixed(2)}</Text>
                       </View>
                       <View style={styles.productDetailItem}>
                         <Text style={styles.productDetailLabel}>Costo</Text>
