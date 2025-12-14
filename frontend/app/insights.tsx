@@ -60,11 +60,13 @@ export default function InsightsScreen() {
       switch (insight.cta_action) {
         case 'navigate_to_product':
         case 'navigate_to_inventory':
-          router.push('/(tabs)/inventory');
+          // Pasar parámetro para que el back vuelva aquí
+          router.push('/(tabs)/inventory?from=insights');
           break;
         case 'navigate_to_customers':
         case 'send_payment_reminder':
-          router.push('/customers');
+          // Pasar parámetro para que el back vuelva aquí
+          router.push('/customers?from=insights');
           break;
         case 'navigate_to_balance':
           router.push('/(tabs)/balance');
