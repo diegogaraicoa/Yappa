@@ -190,12 +190,17 @@ class ProductCreate(BaseModel):
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
+    nombre: Optional[str] = None
     image: Optional[str] = None
     quantity: Optional[float] = None
+    stock: Optional[float] = None
     price: Optional[float] = None
+    precio: Optional[float] = None
     cost: Optional[float] = None
     category_id: Optional[str] = None
     description: Optional[str] = None
+    stock_minimo: Optional[float] = None
+    min_stock_alert: Optional[float] = None
 
 # Sale Models
 class SaleProduct(BaseModel):
