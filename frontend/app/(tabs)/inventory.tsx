@@ -20,6 +20,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../utils/api';
+import ContextualInsightBanner from '../../components/ContextualInsightBanner';
 
 export default function InventoryScreen() {
   const router = useRouter();
