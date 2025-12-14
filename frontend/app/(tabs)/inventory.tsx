@@ -1486,4 +1486,79 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFF',
   },
+  // Replenish Button
+  replenishButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginTop: 12,
+    gap: 8,
+  },
+  replenishButtonLow: {
+    backgroundColor: '#FFB800',
+  },
+  replenishButtonCritical: {
+    backgroundColor: '#FF4A4A',
+  },
+  replenishButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  // Replenish Modal
+  replenishModalHeader: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  replenishIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  replenishModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  replenishModalProduct: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4CAF50',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  replenishModalCurrentStock: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#757575',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  replenishInputContainer: {
+    marginBottom: 20,
+  },
+  replenishInputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#212121',
+    marginBottom: 8,
+  },
+  replenishInput: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#212121',
+    textAlign: 'center',
+  },
 });
