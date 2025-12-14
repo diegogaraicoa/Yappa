@@ -155,15 +155,22 @@ export default function InventoryScreen() {
 
   const openEditModal = (product: any) => {
     setEditingProduct(product);
+    // Soportar ambos esquemas de nombres de campos (inglés y español)
+    const qty = product.quantity ?? product.stock ?? 0;
+    const price = product.price ?? product.precio ?? 0;
+    const cost = product.cost ?? product.costo ?? 0;
+    const name = product.name ?? product.nombre ?? '';
+    const minStock = product.min_stock_alert ?? product.stock_minimo ?? 10;
+    
     setNewProduct({
-      name: product.name,
-      quantity: product.quantity.toString(),
-      price: product.price.toString(),
-      cost: product.cost.toString(),
-      description: product.description || '',
-      category_id: product.category_id || '',
-      image: product.image || '',
-      min_stock_alert: (product.min_stock_alert || 10).toString(),
+      name: name,
+      quantity: qty.toString(),
+      price: price.toString(),
+      cost: cost.toString(),
+      description: product.description ?? product.descripcion ?? '',
+      category_id: product.category_id ?? product.categoria_id ?? '',
+      image: product.image ?? product.imagen ?? '',
+      min_stock_alert: minStock.toString(),
       alert_enabled: product.alert_enabled !== false,
     });
     setShowProductModal(true);
