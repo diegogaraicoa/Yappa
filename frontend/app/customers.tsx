@@ -26,6 +26,11 @@ export default function CustomersScreen() {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  // Modal de registrar pago
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentCustomer, setPaymentCustomer] = useState<any>(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [processingPayment, setProcessingPayment] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     lastname: '',
