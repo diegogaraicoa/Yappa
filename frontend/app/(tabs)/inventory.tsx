@@ -279,20 +279,35 @@ export default function InventoryScreen() {
     try {
       setReplenishing(true);
       const currentStock = replenishProduct.stock ?? replenishProduct.quantity ?? 0;
+      const minStock = replenishProduct.stock_minimo ?? replenishProduct.min_stock_alert ?? 10;
       const newStock = currentStock + quantity;
       
-      await api.put(`/api/products/${replenishProduct._id}`, {
-        stock: newStock
+      // Actualizar en el backend
+      const response = await api.put(`/api/products/${replenishProduct._id}`, {
+        stock: newStock,
+        quantity: newStock // También actualizar quantity para consistencia
       });
       
-      Alert.alert(
-        '✅ Stock Actualizado',
-        `${replenishProduct.nombre || replenishProduct.name}: ${currentStock} → ${newStock} unidades`
-      );
-      
+      // Cerrar modal primero
       setShowReplenishModal(false);
       setReplenishProduct(null);
       setReplenishQuantity('');
+      
+      // Actualizar lista local inmediatamente con los datos actualizados
+      setProducts(prev => prev.map(p => 
+        p._id === replenishProduct._id 
+          ? { ...p, stock: newStock, quantity: newStock }
+          : p
+      ));
+      
+      // Mostrar mensaje según si se resolvió la alerta o no
+      const alertResolved = newStock > minStock;
+      Alert.alert(
+        '✅ Stock Actualizado',
+        `${replenishProduct.nombre || replenishProduct.name}: ${currentStock} → ${newStock} unidades${alertResolved ? '\n\n🎉 ¡Alerta resuelta!' : `\n\n⚠️ Aún ${newStock - minStock < 0 ? 'faltan ' + Math.abs(newStock - minStock) : 'hay'} unidades bajo el mínimo (${minStock})`}`
+      );
+      
+      // Recargar datos del servidor para asegurar sincronización
       await loadProducts();
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.detail || 'No se pudo actualizar el stock');
