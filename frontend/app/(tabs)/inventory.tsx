@@ -31,6 +31,11 @@ export default function InventoryScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  // Modal de reposición de stock
+  const [showReplenishModal, setShowReplenishModal] = useState(false);
+  const [replenishProduct, setReplenishProduct] = useState<any>(null);
+  const [replenishQuantity, setReplenishQuantity] = useState('');
+  const [replenishing, setReplenishing] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: '',
     quantity: '',
