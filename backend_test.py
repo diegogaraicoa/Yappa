@@ -1,357 +1,322 @@
 #!/usr/bin/env python3
 """
-Backend API Testing Script
-Tests the endpoints requested in the review:
-1. AI Insights endpoints
-2. Admin Ops Alert Settings
-3. Customers endpoint
-4. Products endpoint
+Backend API Testing for PUT Endpoints - Actionable Modals
+Testing critical PUT endpoints for product stock updates and customer debt updates
 """
 
 import requests
 import json
 import sys
-import os
+from datetime import datetime
 
-# Get backend URL from frontend .env
-BACKEND_URL = "https://ai-frontend-revamp.preview.emergentagent.com/api"
-
-# Test credentials
-USERNAME = "tiendaclave"
-PASSWORD = "Chifle98."
+# Configuration
+BASE_URL = "https://ai-frontend-revamp.preview.emergentagent.com/api"
+LOGIN_CREDENTIALS = {
+    "username": "tiendaclave", 
+    "password": "Chifle98."
+}
 
 class BackendTester:
     def __init__(self):
-        self.base_url = BACKEND_URL
-        self.token = None
+        self.base_url = BASE_URL
         self.session = requests.Session()
+        self.auth_token = None
+        self.test_results = []
         
-    def login(self):
-        """Login with provided credentials"""
-        print("🔐 Logging in...")
-        
-        # Use the onboarding login endpoint as specified
-        url = f"{self.base_url}/onboarding/login/step1"
-        params = {
-            "username": USERNAME,
-            "password": PASSWORD
+    def log_test(self, test_name, success, details="", error=""):
+        """Log test results"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "details": details,
+            "error": error,
+            "timestamp": datetime.now().isoformat()
         }
-        
+        self.test_results.append(result)
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status}: {test_name}")
+        if details:
+            print(f"   Details: {details}")
+        if error:
+            print(f"   Error: {error}")
+        print()
+
+    def authenticate(self):
+        """Authenticate with the backend using tiendaclave credentials"""
         try:
-            response = self.session.post(url, params=params)
-            print(f"Login response status: {response.status_code}")
+            login_url = f"{self.base_url}/onboarding/login/step1"
+            response = self.session.post(login_url, params=LOGIN_CREDENTIALS)
             
             if response.status_code == 200:
                 data = response.json()
-                print(f"Login response: {json.dumps(data, indent=2)}")
-                
-                # Check if it's a legacy account (no clerks)
-                if data.get("legacy_account"):
-                    self.token = data.get("token")
-                    print("✅ Login successful (legacy account)")
+                self.auth_token = data.get("token")
+                if self.auth_token:
+                    self.session.headers.update({
+                        "Authorization": f"Bearer {self.auth_token}"
+                    })
+                    self.log_test("Authentication", True, f"Successfully logged in as {LOGIN_CREDENTIALS['username']}")
                     return True
                 else:
-                    print("❌ New account with clerks - need step 2")
+                    self.log_test("Authentication", False, error="No access token in response")
                     return False
             else:
-                print(f"❌ Login failed: {response.status_code}")
-                print(f"Response: {response.text}")
+                self.log_test("Authentication", False, error=f"Login failed with status {response.status_code}: {response.text}")
                 return False
                 
         except Exception as e:
-            print(f"❌ Login error: {str(e)}")
+            self.log_test("Authentication", False, error=f"Authentication error: {str(e)}")
             return False
-    
-    def get_headers(self):
-        """Get headers with authorization token"""
-        if not self.token:
-            return {}
-        return {"Authorization": f"Bearer {self.token}"}
-    
-    def test_ai_insights_endpoints(self):
-        """Test AI Insights endpoints"""
-        print("\n🤖 Testing AI Insights endpoints...")
-        
-        endpoints = [
-            "/ai/all-insights",
-            "/ai/insight-of-the-day", 
-            "/ai/quick-actions"
-        ]
-        
-        results = {}
-        
-        for endpoint in endpoints:
-            print(f"\n📍 Testing GET {endpoint}")
-            url = f"{self.base_url}{endpoint}"
-            
-            try:
-                response = self.session.get(url, headers=self.get_headers())
-                print(f"Status: {response.status_code}")
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    print(f"✅ Success - Response keys: {list(data.keys())}")
-                    
-                    # Validate expected fields for each endpoint
-                    if endpoint == "/ai/all-insights":
-                        if "insights" in data and isinstance(data["insights"], list):
-                            print(f"   Found {len(data['insights'])} insights")
-                            if data["insights"]:
-                                insight = data["insights"][0]
-                                expected_fields = ["id", "type", "category", "icon", "color", "title", "message", "cta_text", "cta_action", "cta_data", "priority", "timestamp"]
-                                missing_fields = [f for f in expected_fields if f not in insight]
-                                if missing_fields:
-                                    print(f"   ⚠️ Missing fields in insight: {missing_fields}")
-                                else:
-                                    print("   ✅ All expected fields present")
-                        
-                    elif endpoint == "/ai/insight-of-the-day":
-                        expected_fields = ["type", "category", "icon", "color", "title", "message", "cta_text", "cta_action", "cta_data", "priority"]
-                        missing_fields = [f for f in expected_fields if f not in data]
-                        if missing_fields:
-                            print(f"   ⚠️ Missing fields: {missing_fields}")
-                        else:
-                            print("   ✅ All expected fields present")
-                    
-                    elif endpoint == "/ai/quick-actions":
-                        if "actions" in data and isinstance(data["actions"], list):
-                            print(f"   Found {len(data['actions'])} quick actions")
-                        
-                    results[endpoint] = {"status": "success", "data": data}
-                    
-                elif response.status_code == 401:
-                    print("❌ Unauthorized - token may be invalid")
-                    results[endpoint] = {"status": "unauthorized", "error": "401"}
-                elif response.status_code == 403:
-                    print("❌ Forbidden")
-                    results[endpoint] = {"status": "forbidden", "error": "403"}
-                elif response.status_code == 500:
-                    print("❌ Internal Server Error")
-                    print(f"Error: {response.text}")
-                    results[endpoint] = {"status": "server_error", "error": response.text}
-                else:
-                    print(f"❌ Unexpected status: {response.status_code}")
-                    print(f"Response: {response.text}")
-                    results[endpoint] = {"status": "error", "code": response.status_code, "error": response.text}
-                    
-            except Exception as e:
-                print(f"❌ Request error: {str(e)}")
-                results[endpoint] = {"status": "exception", "error": str(e)}
-        
-        return results
-    
-    def test_admin_ops_alert_settings(self):
-        """Test Admin Ops Alert Settings endpoints"""
-        print("\n⚙️ Testing Admin Ops Alert Settings...")
-        
-        results = {}
-        
-        # Test GET alert-settings
-        print(f"\n📍 Testing GET /admin_ops/alert-settings")
-        url = f"{self.base_url}/admin_ops/alert-settings"
-        
+
+    def test_get_products(self):
+        """Test GET /api/products to get available products"""
         try:
-            response = self.session.get(url, headers=self.get_headers())
-            print(f"Status: {response.status_code}")
+            url = f"{self.base_url}/products"
+            response = self.session.get(url)
             
             if response.status_code == 200:
-                data = response.json()
-                print(f"✅ Success - Response keys: {list(data.keys())}")
-                expected_fields = ["email", "whatsapp_number", "stock_alert_email", "daily_email"]
-                missing_fields = [f for f in expected_fields if f not in data]
-                if missing_fields:
-                    print(f"   ⚠️ Missing fields: {missing_fields}")
+                products = response.json()
+                if isinstance(products, list) and len(products) > 0:
+                    self.log_test("GET /api/products", True, f"Retrieved {len(products)} products")
+                    return products
                 else:
-                    print("   ✅ All expected fields present")
-                results["GET_alert_settings"] = {"status": "success", "data": data}
+                    self.log_test("GET /api/products", False, error="No products found or invalid response format")
+                    return []
             else:
-                print(f"❌ Failed: {response.status_code}")
-                print(f"Response: {response.text}")
-                results["GET_alert_settings"] = {"status": "error", "code": response.status_code, "error": response.text}
+                self.log_test("GET /api/products", False, error=f"Status {response.status_code}: {response.text}")
+                return []
                 
         except Exception as e:
-            print(f"❌ Request error: {str(e)}")
-            results["GET_alert_settings"] = {"status": "exception", "error": str(e)}
-        
-        # Test POST alert-settings
-        print(f"\n📍 Testing POST /admin_ops/alert-settings")
-        
-        test_settings = {
-            "email": "test@example.com",
-            "whatsapp_number": "+593999123456",
-            "stock_alert_email": True,
-            "stock_alert_whatsapp": True,
-            "daily_email": False,
-            "daily_whatsapp": True,
-            "weekly_email": True,
-            "weekly_whatsapp": False,
-            "monthly_email": True,
-            "monthly_whatsapp": True
-        }
-        
+            self.log_test("GET /api/products", False, error=f"Exception: {str(e)}")
+            return []
+
+    def test_put_product_stock(self, product_id, original_stock):
+        """Test PUT /api/products/{product_id} to update stock"""
         try:
-            response = self.session.post(url, json=test_settings, headers=self.get_headers())
-            print(f"Status: {response.status_code}")
+            url = f"{self.base_url}/products/{product_id}"
+            
+            # Calculate new stock value (add 10 to original)
+            new_stock = float(original_stock) + 10.0
+            
+            # Test data - using both 'stock' and 'quantity' fields for compatibility
+            update_data = {
+                "stock": new_stock,
+                "quantity": new_stock
+            }
+            
+            # Make PUT request (no auth required as per instructions)
+            response = requests.put(url, json=update_data)
             
             if response.status_code == 200:
-                data = response.json()
-                print(f"✅ Success - Response: {data}")
-                if data.get("success"):
-                    print("   ✅ Settings saved successfully")
-                results["POST_alert_settings"] = {"status": "success", "data": data}
+                updated_product = response.json()
+                
+                # Check if stock was updated correctly
+                updated_stock = updated_product.get("stock", updated_product.get("quantity", 0))
+                
+                if float(updated_stock) == new_stock:
+                    self.log_test(
+                        f"PUT /api/products/{product_id}", 
+                        True, 
+                        f"Stock updated successfully: {original_stock} → {updated_stock}"
+                    )
+                    return True
+                else:
+                    self.log_test(
+                        f"PUT /api/products/{product_id}", 
+                        False, 
+                        error=f"Stock not updated correctly. Expected: {new_stock}, Got: {updated_stock}"
+                    )
+                    return False
             else:
-                print(f"❌ Failed: {response.status_code}")
-                print(f"Response: {response.text}")
-                results["POST_alert_settings"] = {"status": "error", "code": response.status_code, "error": response.text}
+                self.log_test(
+                    f"PUT /api/products/{product_id}", 
+                    False, 
+                    error=f"Status {response.status_code}: {response.text}"
+                )
+                return False
                 
         except Exception as e:
-            print(f"❌ Request error: {str(e)}")
-            results["POST_alert_settings"] = {"status": "exception", "error": str(e)}
-        
-        return results
-    
-    def test_customers_endpoint(self):
-        """Test Customers endpoint"""
-        print("\n👥 Testing Customers endpoint...")
-        
-        print(f"\n📍 Testing GET /customers")
-        url = f"{self.base_url}/customers"
-        
+            self.log_test(f"PUT /api/products/{product_id}", False, error=f"Exception: {str(e)}")
+            return False
+
+    def test_get_customers(self):
+        """Test GET /api/customers to get available customers"""
         try:
-            response = self.session.get(url, headers=self.get_headers())
-            print(f"Status: {response.status_code}")
+            url = f"{self.base_url}/customers"
+            response = self.session.get(url)
             
             if response.status_code == 200:
-                data = response.json()
-                print(f"✅ Success - Found {len(data)} customers")
-                
-                if data:
-                    customer = data[0]
-                    print(f"   Sample customer keys: {list(customer.keys())}")
-                    expected_fields = ["_id", "name", "lastname"]
-                    missing_fields = [f for f in expected_fields if f not in customer]
-                    if missing_fields:
-                        print(f"   ⚠️ Missing fields in customer: {missing_fields}")
-                    else:
-                        print("   ✅ Basic customer fields present")
+                customers = response.json()
+                if isinstance(customers, list) and len(customers) > 0:
+                    self.log_test("GET /api/customers", True, f"Retrieved {len(customers)} customers")
+                    return customers
                 else:
-                    print("   ℹ️ No customers found (empty list)")
-                
-                return {"status": "success", "data": data}
+                    self.log_test("GET /api/customers", False, error="No customers found or invalid response format")
+                    return []
             else:
-                print(f"❌ Failed: {response.status_code}")
-                print(f"Response: {response.text}")
-                return {"status": "error", "code": response.status_code, "error": response.text}
+                self.log_test("GET /api/customers", False, error=f"Status {response.status_code}: {response.text}")
+                return []
                 
         except Exception as e:
-            print(f"❌ Request error: {str(e)}")
-            return {"status": "exception", "error": str(e)}
-    
-    def test_products_endpoint(self):
-        """Test Products endpoint"""
-        print("\n📦 Testing Products endpoint...")
-        
-        print(f"\n📍 Testing GET /products")
-        url = f"{self.base_url}/products"
-        
+            self.log_test("GET /api/customers", False, error=f"Exception: {str(e)}")
+            return []
+
+    def test_put_customer_debt(self, customer_id, original_debt):
+        """Test PUT /api/customers/{customer_id} to update debt"""
         try:
-            response = self.session.get(url, headers=self.get_headers())
-            print(f"Status: {response.status_code}")
+            url = f"{self.base_url}/customers/{customer_id}"
+            
+            # Calculate new debt value (add 50 to original, or set to 50 if no original debt)
+            new_debt = float(original_debt or 0) + 50.0
+            
+            # Test data - using 'deuda_total' field as specified
+            update_data = {
+                "deuda_total": new_debt
+            }
+            
+            # Make PUT request (no auth required as per instructions)
+            response = requests.put(url, json=update_data)
             
             if response.status_code == 200:
-                data = response.json()
-                print(f"✅ Success - Found {len(data)} products")
+                updated_customer = response.json()
                 
-                if data:
-                    product = data[0]
-                    print(f"   Sample product keys: {list(product.keys())}")
-                    expected_fields = ["_id", "name", "price", "quantity"]
-                    missing_fields = [f for f in expected_fields if f not in product]
-                    if missing_fields:
-                        print(f"   ⚠️ Missing fields in product: {missing_fields}")
-                    else:
-                        print("   ✅ Basic product fields present")
+                # Check if debt was updated correctly
+                updated_debt = updated_customer.get("deuda_total", 0)
+                
+                if float(updated_debt) == new_debt:
+                    self.log_test(
+                        f"PUT /api/customers/{customer_id}", 
+                        True, 
+                        f"Debt updated successfully: {original_debt or 0} → {updated_debt}"
+                    )
+                    return True
                 else:
-                    print("   ℹ️ No products found (empty list)")
-                
-                return {"status": "success", "data": data}
+                    self.log_test(
+                        f"PUT /api/customers/{customer_id}", 
+                        False, 
+                        error=f"Debt not updated correctly. Expected: {new_debt}, Got: {updated_debt}"
+                    )
+                    return False
             else:
-                print(f"❌ Failed: {response.status_code}")
-                print(f"Response: {response.text}")
-                return {"status": "error", "code": response.status_code, "error": response.text}
+                self.log_test(
+                    f"PUT /api/customers/{customer_id}", 
+                    False, 
+                    error=f"Status {response.status_code}: {response.text}"
+                )
+                return False
                 
         except Exception as e:
-            print(f"❌ Request error: {str(e)}")
-            return {"status": "exception", "error": str(e)}
-    
-    def run_all_tests(self):
-        """Run all tests"""
-        print("🚀 Starting Backend API Tests")
-        print(f"Backend URL: {self.base_url}")
-        print(f"Username: {USERNAME}")
+            self.log_test(f"PUT /api/customers/{customer_id}", False, error=f"Exception: {str(e)}")
+            return False
+
+    def run_actionable_modals_tests(self):
+        """Run comprehensive tests for actionable modals PUT endpoints"""
+        print("🚀 STARTING ACTIONABLE MODALS PUT ENDPOINTS TESTING")
+        print("=" * 60)
+        print()
         
-        # Login first
-        if not self.login():
-            print("❌ Cannot proceed without authentication")
+        # Step 1: Authenticate
+        if not self.authenticate():
+            print("❌ Authentication failed. Cannot proceed with tests.")
             return False
         
-        print(f"✅ Authentication successful, token: {self.token[:20]}...")
+        # Step 2: Test Products Flow
+        print("📦 TESTING PRODUCTS STOCK UPDATE FLOW")
+        print("-" * 40)
         
-        # Run all tests
-        results = {
-            "ai_insights": self.test_ai_insights_endpoints(),
-            "admin_ops_alert_settings": self.test_admin_ops_alert_settings(),
-            "customers": self.test_customers_endpoint(),
-            "products": self.test_products_endpoint()
-        }
+        products = self.test_get_products()
+        if products:
+            # Test with first available product
+            test_product = products[0]
+            product_id = test_product.get("_id")
+            original_stock = test_product.get("stock", test_product.get("quantity", 0))
+            
+            print(f"Testing with product: {test_product.get('name', test_product.get('nombre', 'Unknown'))}")
+            print(f"Product ID: {product_id}")
+            print(f"Original stock: {original_stock}")
+            print()
+            
+            self.test_put_product_stock(product_id, original_stock)
+        else:
+            print("❌ No products available for testing")
+        
+        print()
+        
+        # Step 3: Test Customers Flow
+        print("👥 TESTING CUSTOMERS DEBT UPDATE FLOW")
+        print("-" * 40)
+        
+        customers = self.test_get_customers()
+        if customers:
+            # Test with first available customer
+            test_customer = customers[0]
+            customer_id = test_customer.get("_id")
+            original_debt = test_customer.get("deuda_total", 0)
+            
+            print(f"Testing with customer: {test_customer.get('name', test_customer.get('nombre', 'Unknown'))} {test_customer.get('lastname', test_customer.get('apellido', ''))}")
+            print(f"Customer ID: {customer_id}")
+            print(f"Original debt: {original_debt}")
+            print()
+            
+            self.test_put_customer_debt(customer_id, original_debt)
+        else:
+            print("❌ No customers available for testing")
+        
+        print()
         
         # Summary
-        print("\n" + "="*60)
+        self.print_summary()
+        
+        # Return overall success
+        failed_tests = [t for t in self.test_results if not t["success"]]
+        return len(failed_tests) == 0
+
+    def print_summary(self):
+        """Print test summary"""
         print("📊 TEST SUMMARY")
-        print("="*60)
+        print("=" * 60)
         
-        total_tests = 0
-        passed_tests = 0
-        failed_tests = 0
+        total_tests = len(self.test_results)
+        passed_tests = len([t for t in self.test_results if t["success"]])
+        failed_tests = total_tests - passed_tests
         
-        for category, category_results in results.items():
-            print(f"\n{category.upper()}:")
-            
-            if isinstance(category_results, dict):
-                if "status" in category_results:
-                    # Single test result
-                    total_tests += 1
-                    if category_results["status"] == "success":
-                        print(f"  ✅ PASSED")
-                        passed_tests += 1
-                    else:
-                        print(f"  ❌ FAILED - {category_results.get('error', 'Unknown error')}")
-                        failed_tests += 1
-                else:
-                    # Multiple test results
-                    for test_name, test_result in category_results.items():
-                        total_tests += 1
-                        if test_result["status"] == "success":
-                            print(f"  ✅ {test_name} - PASSED")
-                            passed_tests += 1
-                        else:
-                            print(f"  ❌ {test_name} - FAILED - {test_result.get('error', 'Unknown error')}")
-                            failed_tests += 1
-        
-        print(f"\n📈 OVERALL RESULTS:")
-        print(f"   Total Tests: {total_tests}")
-        print(f"   Passed: {passed_tests}")
-        print(f"   Failed: {failed_tests}")
-        print(f"   Success Rate: {(passed_tests/total_tests*100):.1f}%" if total_tests > 0 else "   Success Rate: 0%")
+        print(f"Total Tests: {total_tests}")
+        print(f"Passed: {passed_tests} ✅")
+        print(f"Failed: {failed_tests} ❌")
+        print(f"Success Rate: {(passed_tests/total_tests*100):.1f}%" if total_tests > 0 else "0%")
+        print()
         
         if failed_tests > 0:
-            print(f"\n⚠️ {failed_tests} tests failed. Check the detailed output above for specific errors.")
-        else:
-            print(f"\n🎉 All tests passed!")
+            print("❌ FAILED TESTS:")
+            for test in self.test_results:
+                if not test["success"]:
+                    print(f"  - {test['test']}: {test['error']}")
+            print()
         
-        return failed_tests == 0
+        print("🎯 CRITICAL ENDPOINTS STATUS:")
+        product_tests = [t for t in self.test_results if "PUT /api/products/" in t["test"]]
+        customer_tests = [t for t in self.test_results if "PUT /api/customers/" in t["test"]]
+        
+        if product_tests:
+            product_status = "✅ WORKING" if product_tests[0]["success"] else "❌ FAILING"
+            print(f"  - Product Stock Updates: {product_status}")
+        
+        if customer_tests:
+            customer_status = "✅ WORKING" if customer_tests[0]["success"] else "❌ FAILING"
+            print(f"  - Customer Debt Updates: {customer_status}")
+        
+        print()
+
+def main():
+    """Main test execution"""
+    tester = BackendTester()
+    success = tester.run_actionable_modals_tests()
+    
+    if success:
+        print("🎉 ALL TESTS PASSED! Actionable modals PUT endpoints are working correctly.")
+        sys.exit(0)
+    else:
+        print("⚠️  SOME TESTS FAILED! Check the summary above for details.")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    tester = BackendTester()
-    success = tester.run_all_tests()
-    sys.exit(0 if success else 1)
+    main()
