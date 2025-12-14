@@ -66,11 +66,12 @@ export default function CustomersScreen() {
   const openEditModal = (customer: any) => {
     setIsEditing(true);
     setSelectedCustomer(customer);
+    // Soportar ambos esquemas de nombres de campos (inglés y español)
     setFormData({
-      name: customer.name,
-      lastname: customer.lastname,
-      phone: customer.phone || '',
-      email: customer.email || '',
+      name: customer.nombre ?? customer.name ?? '',
+      lastname: customer.apellido ?? customer.lastname ?? '',
+      phone: customer.telefono ?? customer.phone ?? '',
+      email: customer.email ?? '',
     });
     setShowModal(true);
   };
