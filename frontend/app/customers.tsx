@@ -529,61 +529,69 @@ export default function CustomersScreen() {
 
       {/* Payment Modal */}
       <Modal visible={showPaymentModal} animationType="fade" transparent>
-        <KeyboardAvoidingView
-          style={styles.deleteModalOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <View style={[styles.deleteModalContent, { maxHeight: 400 }]}>
-            <View style={styles.paymentModalHeader}>
-              <View style={styles.paymentIconCircle}>
-                <Ionicons name="cash" size={32} color="#4CAF50" />
+        <View style={styles.actionModalOverlay}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.actionModalKeyboard}
+          >
+            <View style={styles.actionModalContent}>
+              {/* Icon */}
+              <View style={[styles.actionModalIcon, { backgroundColor: '#E8F5E9' }]}>
+                <Ionicons name="cash" size={28} color="#4CAF50" />
+              </View>
+              
+              {/* Title */}
+              <Text style={styles.actionModalTitle}>Registrar Pago</Text>
+              
+              {/* Customer name */}
+              <Text style={styles.actionModalSubtitle}>
+                {paymentCustomer?.nombre || paymentCustomer?.name || 'Cliente'}
+              </Text>
+              
+              {/* Current debt */}
+              <Text style={[styles.actionModalInfo, { color: '#F44336' }]}>
+                Deuda: <Text style={[styles.actionModalInfoBold, { color: '#F44336' }]}>${Math.abs(paymentCustomer?.deuda_total ?? paymentCustomer?.balance ?? 0).toFixed(2)}</Text>
+              </Text>
+              
+              {/* Input */}
+              <View style={styles.actionModalInputWrapper}>
+                <Text style={styles.actionModalInputLabel}>Monto recibido ($)</Text>
+                <TextInput
+                  style={[styles.actionModalInput, { color: '#4CAF50' }]}
+                  value={paymentAmount}
+                  onChangeText={setPaymentAmount}
+                  placeholder="0.00"
+                  placeholderTextColor="#BDBDBD"
+                  keyboardType="decimal-pad"
+                  autoFocus
+                />
+              </View>
+
+              {/* Buttons */}
+              <View style={styles.actionModalButtons}>
+                <TouchableOpacity
+                  style={styles.actionModalCancelBtn}
+                  onPress={() => {
+                    setShowPaymentModal(false);
+                    setPaymentCustomer(null);
+                    setPaymentAmount('');
+                  }}
+                >
+                  <Text style={styles.actionModalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionModalConfirmBtn, { backgroundColor: '#4CAF50' }]}
+                  onPress={confirmPayment}
+                  disabled={processingPayment}
+                >
+                  <Text style={styles.actionModalConfirmText}>
+                    {processingPayment ? 'Procesando...' : 'Confirmar'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
-            <Text style={styles.paymentModalTitle}>Registrar Pago</Text>
-            <Text style={styles.paymentModalCustomer}>
-              {paymentCustomer?.nombre || paymentCustomer?.name || 'Cliente'}
-            </Text>
-            <Text style={styles.paymentModalDebt}>
-              Deuda actual: ${Math.abs(paymentCustomer?.deuda_total ?? paymentCustomer?.balance ?? 0).toFixed(2)}
-            </Text>
-            
-            <View style={styles.paymentInputContainer}>
-              <Text style={styles.paymentInputLabel}>Monto recibido ($)</Text>
-              <TextInput
-                style={styles.paymentInput}
-                value={paymentAmount}
-                onChangeText={setPaymentAmount}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-                autoFocus
-              />
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => {
-                  setShowPaymentModal(false);
-                  setPaymentCustomer(null);
-                  setPaymentAmount('');
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modalCancelText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.deleteModalConfirmButton, { backgroundColor: '#4CAF50' }]}
-                onPress={confirmPayment}
-                disabled={processingPayment}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modalSaveText}>
-                  {processingPayment ? 'Procesando...' : 'Confirmar Pago'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </View>
   );
