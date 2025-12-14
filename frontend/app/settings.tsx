@@ -348,6 +348,44 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
+        {/* Push Notifications Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>NOTIFICACIONES PUSH</Text>
+          <View style={styles.card}>
+            <View style={styles.pushInfoRow}>
+              <View style={[styles.toggleIcon, { backgroundColor: '#F3E5F5' }]}>
+                <Ionicons name="notifications" size={22} color="#9C27B0" />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.toggleTitle}>Notificaciones en Tiempo Real</Text>
+                <Text style={styles.toggleSubtitle}>
+                  Recibe alertas inmediatas cuando haya stock crítico o deudas pendientes.
+                </Text>
+                {expoPushToken && (
+                  <Text style={[styles.toggleSubtitle, { color: '#4CAF50', marginTop: 4 }]}>
+                    ✓ Dispositivo registrado
+                  </Text>
+                )}
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[styles.pushTestButton, testingPush && styles.buttonDisabled]}
+              onPress={handleTestPush}
+              disabled={testingPush}
+              activeOpacity={0.8}
+            >
+              {testingPush ? (
+                <ActivityIndicator size="small" color="#9C27B0" />
+              ) : (
+                <>
+                  <Ionicons name="notifications-outline" size={18} color="#9C27B0" />
+                  <Text style={styles.pushTestButtonText}>Probar Push</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
