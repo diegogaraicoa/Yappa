@@ -253,9 +253,55 @@ export default function InventoryScreen() {
     }
   };
 
-  const filteredProducts = products.filter((product) =>
-    (product.name || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Abrir modal de reposición
+  const openReplenishModal = (product: any) => {
+    setReplenishProduct(product);
+    setReplenishQuantity('');
+    setShowReplenishModal(true);
+  };
+
+  // Confirmar reposición de stock
+  const confirmReplenish = async () => {
+    if (!replenishProduct || !replenishQuantity) {
+      Alert.alert('Error', 'Ingresa la cantidad a reponer');
+      return;
+    }
+
+    const quantity = parseInt(replenishQuantity, 10);
+    if (isNaN(quantity) || quantity <= 0) {
+      Alert.alert('Error', 'Ingresa una cantidad válida mayor a 0');
+      return;
+    }
+
+    try {
+      setReplenishing(true);
+      const currentStock = replenishProduct.stock ?? replenishProduct.quantity ?? 0;
+      const newStock = currentStock + quantity;
+      
+      await api.put(`/api/products/${replenishProduct._id}`, {
+        stock: newStock
+      });
+      
+      Alert.alert(
+        '✅ Stock Actualizado',
+        `${replenishProduct.nombre || replenishProduct.name}: ${currentStock} → ${newStock} unidades`
+      );
+      
+      setShowReplenishModal(false);
+      setReplenishProduct(null);
+      setReplenishQuantity('');
+      await loadProducts();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'No se pudo actualizar el stock');
+    } finally {
+      setReplenishing(false);
+    }
+  };
+
+  const filteredProducts = products.filter((product) => {
+    const name = product.nombre || product.name || '';
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const totalInventoryValue = products.reduce(
     (sum, p) => sum + (p.quantity || 0) * (p.cost || 0),
