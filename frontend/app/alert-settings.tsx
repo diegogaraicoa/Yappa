@@ -30,12 +30,14 @@ export default function AlertSettingsScreen() {
   // Individual alert preferences
   const [stockAlertEmail, setStockAlertEmail] = useState(false);
   const [stockAlertWhatsapp, setStockAlertWhatsapp] = useState(false);
+  const [stockAlertPush, setStockAlertPush] = useState(true);
   const [dailyEmail, setDailyEmail] = useState(false);
   const [dailyWhatsapp, setDailyWhatsapp] = useState(false);
   const [weeklyEmail, setWeeklyEmail] = useState(false);
   const [weeklyWhatsapp, setWeeklyWhatsapp] = useState(false);
   const [monthlyEmail, setMonthlyEmail] = useState(false);
   const [monthlyWhatsapp, setMonthlyWhatsapp] = useState(false);
+  const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(true);
 
   useEffect(() => {
     loadSettings();
