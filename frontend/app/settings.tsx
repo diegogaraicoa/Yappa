@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import api from '../utils/api';
 import { showAlert } from '../utils/showAlert';
+import { useNotifications } from '../contexts/NotificationContext';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
