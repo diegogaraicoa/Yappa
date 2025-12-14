@@ -968,57 +968,100 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFF',
   },
-  // Payment Modal
-  paymentModalHeader: {
+  // Action Modal (shared styles)
+  actionModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    padding: 20,
   },
-  paymentIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#E8F5E9',
+  actionModalKeyboard: {
+    width: '100%',
+    maxWidth: 340,
+  },
+  actionModalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+  },
+  actionModalIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 16,
   },
-  paymentModalTitle: {
+  actionModalTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#212121',
-    textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  paymentModalCustomer: {
+  actionModalSubtitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#4CAF50',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  paymentModalDebt: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#F44336',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  paymentInputContainer: {
-    marginBottom: 20,
-  },
-  paymentInputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#212121',
     marginBottom: 8,
   },
-  paymentInput: {
+  actionModalInfo: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 20,
+  },
+  actionModalInfoBold: {
+    fontWeight: '700',
+    color: '#212121',
+  },
+  actionModalInputWrapper: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  actionModalInputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#757575',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  actionModalInput: {
     backgroundColor: '#F5F5F5',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 24,
     fontWeight: '700',
-    color: '#4CAF50',
+    color: '#212121',
     textAlign: 'center',
+  },
+  actionModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  actionModalCancelBtn: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  actionModalCancelText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#757575',
+  },
+  actionModalConfirmBtn: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  actionModalConfirmText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
