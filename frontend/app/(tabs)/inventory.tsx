@@ -972,8 +972,20 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    marginBottom: 24,
+    paddingTop: 60,
+    paddingBottom: 16,
+    marginBottom: 8,
+  },
+  backButton: {
+    padding: 4,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    marginLeft: 12,
   },
   appName: {
     fontSize: 12,
