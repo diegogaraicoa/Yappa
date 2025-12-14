@@ -356,6 +356,48 @@ export default function AlertSettingsScreen() {
           </View>
         </View>
 
+        {/* Push Notifications Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📲 Notificaciones Push</Text>
+          <Text style={styles.sectionDesc}>
+            Recibe alertas instantáneas en tu dispositivo móvil
+          </Text>
+          
+          <View style={styles.alertTypeCard}>
+            <View style={styles.alertTypeHeader}>
+              <View style={[styles.alertTypeIconContainer, { backgroundColor: '#F3E5F5' }]}>
+                <Ionicons name="notifications" size={20} color="#9C27B0" />
+              </View>
+              <View style={styles.alertTypeInfo}>
+                <Text style={styles.alertTypeTitle}>Alertas en Tiempo Real</Text>
+                <Text style={styles.alertTypeTime}>
+                  {expoPushToken ? '✅ Dispositivo registrado' : '⏳ Requiere app móvil'}
+                </Text>
+              </View>
+            </View>
+            
+            <Text style={styles.pushDescription}>
+              Las notificaciones push te avisan inmediatamente cuando hay stock crítico o deudas pendientes. 
+              Solo funcionan en la app móvil (iOS/Android).
+            </Text>
+            
+            <TouchableOpacity
+              style={[styles.pushTestButton, testingPush && styles.pushTestButtonDisabled]}
+              onPress={handleTestPush}
+              disabled={testingPush}
+            >
+              {testingPush ? (
+                <ActivityIndicator color="#9C27B0" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="notifications-outline" size={18} color="#9C27B0" />
+                  <Text style={styles.pushTestButtonText}>Probar Notificación</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Save Button */}
         <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
