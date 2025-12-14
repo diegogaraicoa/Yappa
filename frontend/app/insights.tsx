@@ -125,9 +125,13 @@ export default function InsightsScreen() {
           <Ionicons name="arrow-back" size={24} color="#212121" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Insights IA</Text>
-        <View style={[styles.badge, { backgroundColor: '#A66BFF' }]}>
-          <Text style={styles.badgeText}>{insights.length}</Text>
-        </View>
+        <TouchableOpacity
+          onPress={() => router.push('/insights-timeline')}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={styles.historyButton}
+        >
+          <Ionicons name="time-outline" size={22} color="#A66BFF" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
