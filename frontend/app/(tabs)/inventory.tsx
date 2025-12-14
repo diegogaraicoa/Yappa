@@ -531,6 +531,22 @@ export default function InventoryScreen() {
                         <Text style={styles.productDetailValue}>${(product.cost || 0).toFixed(2)}</Text>
                       </View>
                     </View>
+                    
+                    {/* Botón de Reponer para productos con stock bajo/agotado */}
+                    {needsAttention && (
+                      <TouchableOpacity
+                        style={[
+                          styles.replenishButton,
+                          isCriticalStock && styles.replenishButtonCritical,
+                          isLowStock && styles.replenishButtonLow
+                        ]}
+                        onPress={() => openReplenishModal(product)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="add-circle" size={18} color="#FFF" />
+                        <Text style={styles.replenishButtonText}>Reponer Stock</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               );
