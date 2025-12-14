@@ -497,6 +497,23 @@ async def delete_customer(customer_id: str, current_user: dict = Depends(get_cur
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return {"message": "Cliente eliminado"}
 
+@api_router.put("/customers/{customer_id}")
+async def update_customer(customer_id: str, customer: CustomerUpdate, current_user: dict = Depends(get_current_user)):
+    update_dict = {k: v for k, v in customer.dict().items() if v is not None}
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No hay datos para actualizar")
+    
+    result = await db.customers.update_one(
+        {"_id": ObjectId(customer_id), "store_id": current_user["store_id"]},
+        {"$set": update_dict}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    
+    updated_customer = await db.customers.find_one({"_id": ObjectId(customer_id)})
+    updated_customer["_id"] = str(updated_customer["_id"])
+    return updated_customer
+
 # ==================== SUPPLIER ENDPOINTS ====================
 
 @api_router.post("/suppliers")
