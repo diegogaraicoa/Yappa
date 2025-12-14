@@ -117,6 +117,17 @@ class CustomerCreate(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
 
+class CustomerUpdate(BaseModel):
+    name: Optional[str] = None
+    nombre: Optional[str] = None
+    lastname: Optional[str] = None
+    apellido: Optional[str] = None
+    phone: Optional[str] = None
+    telefono: Optional[str] = None
+    email: Optional[str] = None
+    deuda_total: Optional[float] = None
+    balance: Optional[float] = None
+
 # Supplier Models
 class Supplier(BaseModel):
     id: Optional[str] = Field(alias="_id")
