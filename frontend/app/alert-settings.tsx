@@ -583,4 +583,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  // Push Notifications Styles
+  pushDescription: {
+    fontSize: 13,
+    color: '#757575',
+    lineHeight: 18,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  pushTestButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3E5F5',
+    borderRadius: 8,
+    paddingVertical: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#CE93D8',
+  },
+  pushTestButtonDisabled: {
+    opacity: 0.6,
+  },
+  pushTestButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#9C27B0',
+  },
 });
