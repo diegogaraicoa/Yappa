@@ -157,19 +157,19 @@ export default function InventoryScreen() {
     setEditingProduct(product);
     // Soportar ambos esquemas de nombres de campos (inglés y español)
     const qty = product.quantity ?? product.stock ?? 0;
-    const price = product.price ?? product.precio ?? 0;
-    const cost = product.cost ?? product.costo ?? 0;
-    const name = product.name ?? product.nombre ?? '';
-    const minStock = product.min_stock_alert ?? product.stock_minimo ?? 10;
+    const price = product.precio ?? product.price ?? 0;
+    const cost = product.costo ?? product.cost ?? 0;
+    const name = product.nombre ?? product.name ?? '';
+    const minStock = product.stock_minimo ?? product.min_stock_alert ?? 10;
     
     setNewProduct({
       name: name,
       quantity: qty.toString(),
       price: price.toString(),
       cost: cost.toString(),
-      description: product.description ?? product.descripcion ?? '',
-      category_id: product.category_id ?? product.categoria_id ?? '',
-      image: product.image ?? product.imagen ?? '',
+      description: product.descripcion ?? product.description ?? '',
+      category_id: product.categoria_id ?? product.category_id ?? '',
+      image: product.imagen ?? product.image ?? '',
       min_stock_alert: minStock.toString(),
       alert_enabled: product.alert_enabled !== false,
     });
