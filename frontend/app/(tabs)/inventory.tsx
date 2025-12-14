@@ -881,61 +881,69 @@ export default function InventoryScreen() {
 
       {/* Replenish Stock Modal */}
       <Modal visible={showReplenishModal} animationType="fade" transparent>
-        <KeyboardAvoidingView
-          style={styles.modalContainer}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <View style={[styles.modalContent, { maxHeight: 350 }]}>
-            <View style={styles.replenishModalHeader}>
-              <View style={styles.replenishIconCircle}>
-                <Ionicons name="cube" size={32} color="#4CAF50" />
+        <View style={styles.actionModalOverlay}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.actionModalKeyboard}
+          >
+            <View style={styles.actionModalContent}>
+              {/* Icon */}
+              <View style={[styles.actionModalIcon, { backgroundColor: '#E8F5E9' }]}>
+                <Ionicons name="cube" size={28} color="#4CAF50" />
+              </View>
+              
+              {/* Title */}
+              <Text style={styles.actionModalTitle}>Reponer Stock</Text>
+              
+              {/* Product name */}
+              <Text style={styles.actionModalSubtitle}>
+                {replenishProduct?.nombre || replenishProduct?.name || 'Producto'}
+              </Text>
+              
+              {/* Current value */}
+              <Text style={styles.actionModalInfo}>
+                Stock actual: <Text style={styles.actionModalInfoBold}>{replenishProduct?.stock ?? replenishProduct?.quantity ?? 0}</Text> unidades
+              </Text>
+              
+              {/* Input */}
+              <View style={styles.actionModalInputWrapper}>
+                <Text style={styles.actionModalInputLabel}>Unidades a agregar</Text>
+                <TextInput
+                  style={styles.actionModalInput}
+                  value={replenishQuantity}
+                  onChangeText={setReplenishQuantity}
+                  placeholder="0"
+                  placeholderTextColor="#BDBDBD"
+                  keyboardType="number-pad"
+                  autoFocus
+                />
+              </View>
+
+              {/* Buttons */}
+              <View style={styles.actionModalButtons}>
+                <TouchableOpacity
+                  style={styles.actionModalCancelBtn}
+                  onPress={() => {
+                    setShowReplenishModal(false);
+                    setReplenishProduct(null);
+                    setReplenishQuantity('');
+                  }}
+                >
+                  <Text style={styles.actionModalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionModalConfirmBtn, { backgroundColor: '#4CAF50' }]}
+                  onPress={confirmReplenish}
+                  disabled={replenishing}
+                >
+                  <Text style={styles.actionModalConfirmText}>
+                    {replenishing ? 'Guardando...' : 'Confirmar'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
-            <Text style={styles.replenishModalTitle}>Reponer Stock</Text>
-            <Text style={styles.replenishModalProduct}>
-              {replenishProduct?.nombre || replenishProduct?.name || 'Producto'}
-            </Text>
-            <Text style={styles.replenishModalCurrentStock}>
-              Stock actual: {replenishProduct?.stock ?? replenishProduct?.quantity ?? 0} unidades
-            </Text>
-            
-            <View style={styles.replenishInputContainer}>
-              <Text style={styles.replenishInputLabel}>¿Cuántas unidades compraste?</Text>
-              <TextInput
-                style={styles.replenishInput}
-                value={replenishQuantity}
-                onChangeText={setReplenishQuantity}
-                placeholder="Ej: 50"
-                keyboardType="number-pad"
-                autoFocus
-              />
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => {
-                  setShowReplenishModal(false);
-                  setReplenishProduct(null);
-                  setReplenishQuantity('');
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modalCancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalSaveButton, { backgroundColor: '#4CAF50' }]}
-                onPress={confirmReplenish}
-                disabled={replenishing}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modalSaveButtonText}>
-                  {replenishing ? 'Guardando...' : 'Confirmar'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </View>
   );
