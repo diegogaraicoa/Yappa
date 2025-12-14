@@ -328,12 +328,20 @@ export default function InventoryScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header YAPPA */}
+        {/* Header con botón back */}
         <View style={styles.header}>
-          <View>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#212121" />
+          </TouchableOpacity>
+          <View style={styles.headerTitleContainer}>
             <Text style={styles.appName}>YAPPA</Text>
             <Text style={styles.screenTitle}>Inventario</Text>
           </View>
+          <View style={{ width: 24 }} />
         </View>
 
         {/* Stats KPIs */}
