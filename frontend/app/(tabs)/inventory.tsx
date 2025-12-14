@@ -22,6 +22,7 @@ import * as ImagePicker from 'expo-image-picker';
 import api from '../../utils/api';
 
 export default function InventoryScreen() {
+  const router = useRouter();
   const { user } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
