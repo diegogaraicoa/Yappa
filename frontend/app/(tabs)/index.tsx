@@ -17,7 +17,6 @@ import api from '../../utils/api';
 import { useFocusEffect } from '@react-navigation/native';
 import FloatingHelpButton from '../../components/FloatingHelpButton';
 import AIInsightCard from '../../components/AIInsightCard';
-import QuickActions from '../../components/QuickActions';
 
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
@@ -25,7 +24,6 @@ export default function HomeScreen() {
   const [alertCount, setAlertCount] = useState(0);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [hasQuickActions, setHasQuickActions] = useState(false);
   const [balanceData, setBalanceData] = useState({
     income: 0,
     expenses: 0,
