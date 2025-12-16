@@ -390,22 +390,64 @@ export default function AlertSettingsScreen() {
             {pushNotificationsEnabled && (
               <>
                 <Text style={styles.pushDescription}>
-                  Las notificaciones push te avisan inmediatamente cuando hay stock crítico o deudas pendientes. 
-                  Solo funcionan en la app móvil (iOS/Android).
+                  Las notificaciones push te avisan inmediatamente en tu dispositivo móvil (iOS/Android).
                 </Text>
                 
-                {/* Sub-toggles for different push types */}
-                <View style={styles.channelRow}>
-                  <View style={styles.channelItem}>
-                    <View style={styles.channelIcon}>
-                      <Ionicons name="cube-outline" size={16} color="#9C27B0" />
+                {/* Sub-toggles for different push alert types */}
+                <View style={styles.pushTogglesContainer}>
+                  {/* Stock Alerts */}
+                  <View style={styles.pushToggleRow}>
+                    <View style={styles.pushToggleInfo}>
+                      <Ionicons name="cube-outline" size={18} color="#FF9800" />
+                      <Text style={styles.pushToggleLabel}>Stock Bajo/Agotado</Text>
                     </View>
-                    <Text style={styles.channelLabel}>Stock</Text>
                     <Switch
                       value={stockAlertPush}
                       onValueChange={setStockAlertPush}
                       trackColor={{ false: '#E0E0E0', true: '#E1BEE7' }}
                       thumbColor={stockAlertPush ? '#9C27B0' : '#BDBDBD'}
+                    />
+                  </View>
+                  
+                  {/* Debt Alerts */}
+                  <View style={styles.pushToggleRow}>
+                    <View style={styles.pushToggleInfo}>
+                      <Ionicons name="cash-outline" size={18} color="#F44336" />
+                      <Text style={styles.pushToggleLabel}>Deudas Pendientes</Text>
+                    </View>
+                    <Switch
+                      value={debtAlertPush}
+                      onValueChange={setDebtAlertPush}
+                      trackColor={{ false: '#E0E0E0', true: '#E1BEE7' }}
+                      thumbColor={debtAlertPush ? '#9C27B0' : '#BDBDBD'}
+                    />
+                  </View>
+                  
+                  {/* Daily Summary */}
+                  <View style={styles.pushToggleRow}>
+                    <View style={styles.pushToggleInfo}>
+                      <Ionicons name="today-outline" size={18} color="#2196F3" />
+                      <Text style={styles.pushToggleLabel}>Resumen Diario</Text>
+                    </View>
+                    <Switch
+                      value={dailyPush}
+                      onValueChange={setDailyPush}
+                      trackColor={{ false: '#E0E0E0', true: '#E1BEE7' }}
+                      thumbColor={dailyPush ? '#9C27B0' : '#BDBDBD'}
+                    />
+                  </View>
+                  
+                  {/* Weekly Insights */}
+                  <View style={styles.pushToggleRow}>
+                    <View style={styles.pushToggleInfo}>
+                      <Ionicons name="analytics-outline" size={18} color="#4CAF50" />
+                      <Text style={styles.pushToggleLabel}>Insights Semanales IA</Text>
+                    </View>
+                    <Switch
+                      value={weeklyPush}
+                      onValueChange={setWeeklyPush}
+                      trackColor={{ false: '#E0E0E0', true: '#E1BEE7' }}
+                      thumbColor={weeklyPush ? '#9C27B0' : '#BDBDBD'}
                     />
                   </View>
                 </View>
