@@ -525,12 +525,8 @@ async def delete_customer(customer_id: str, current_user: dict = Depends(get_cur
     return {"message": "Cliente eliminado"}
 
 @api_router.put("/customers/{customer_id}")
-async def update_customer(customer_id: str, customer: CustomerUpdate):
-    # Temporary: Use tiendaclave merchant
-    merchant = await db.merchants.find_one({"username": "tiendaclave"})
-    if not merchant:
-        raise HTTPException(status_code=404, detail="Merchant no encontrado")
-    store_id = str(merchant["_id"])
+async def update_customer(customer_id: str, customer: CustomerUpdate, current_user: dict = Depends(get_current_user)):
+    store_id = current_user["store_id"]
     
     update_dict = {k: v for k, v in customer.dict().items() if v is not None}
     if not update_dict:
