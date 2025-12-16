@@ -962,6 +962,152 @@ class NotificationSettings(BaseModel):
     daily_summary_enabled: bool = True
     weekly_summary_enabled: bool = True
 
+# ==================== BUSINESS ANALYTICS ENDPOINT ====================
+
+@api_router.get("/analytics/business")
+async def get_business_analytics(
+    days: int = 30
+):
+    """
+    Obtiene analytics del negocio: producto top, mejores días, mejor cliente, tendencias
+    """
+    from datetime import timedelta
+    from collections import Counter
+    
+    # Temporary: Use tiendaclave merchant
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+    
+    store_id = str(merchant["_id"])
+    start_date = datetime.now() - timedelta(days=days)
+    
+    # Query ventas del período
+    sales = await db.sales.find({
+        "store_id": store_id,
+        "date": {"$gte": start_date}
+    }).to_list(10000)
+    
+    # Query clientes
+    customers = await db.customers.find({"store_id": store_id}).to_list(1000)
+    
+    # Query productos
+    products = await db.products.find({"store_id": store_id}).to_list(1000)
+    products_dict = {str(p["_id"]): p for p in products}
+    
+    # 1. Producto más vendido
+    product_sales = Counter()
+    product_revenue = Counter()
+    for sale in sales:
+        for item in sale.get("products", []):
+            product_id = item.get("product_id") or item.get("productId")
+            quantity = item.get("quantity", 1)
+            price = item.get("price", 0)
+            if product_id:
+                product_sales[product_id] += quantity
+                product_revenue[product_id] += quantity * price
+    
+    top_product = None
+    if product_sales:
+        top_product_id = product_sales.most_common(1)[0][0]
+        top_product_data = products_dict.get(top_product_id, {})
+        top_product = {
+            "id": top_product_id,
+            "name": top_product_data.get("nombre", top_product_data.get("name", "Producto")),
+            "units_sold": product_sales[top_product_id],
+            "revenue": product_revenue.get(top_product_id, 0)
+        }
+    
+    # 2. Mejor día de la semana
+    day_sales = Counter()
+    day_names = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+    for sale in sales:
+        sale_date = sale.get("date")
+        if sale_date:
+            day_of_week = sale_date.weekday()
+            day_sales[day_of_week] += sale.get("total", 0)
+    
+    best_day = None
+    if day_sales:
+        best_day_num = day_sales.most_common(1)[0][0]
+        best_day = {
+            "day": day_names[best_day_num],
+            "day_number": best_day_num,
+            "total_sales": day_sales[best_day_num]
+        }
+    
+    # 3. Mejor cliente
+    customer_purchases = Counter()
+    customers_dict = {str(c["_id"]): c for c in customers}
+    for sale in sales:
+        customer_id = sale.get("customer_id")
+        if customer_id:
+            customer_purchases[customer_id] += sale.get("total", 0)
+    
+    best_customer = None
+    if customer_purchases:
+        best_customer_id = customer_purchases.most_common(1)[0][0]
+        customer_data = customers_dict.get(best_customer_id, {})
+        nombre = customer_data.get("nombre", customer_data.get("name", ""))
+        apellido = customer_data.get("apellido", customer_data.get("lastname", ""))
+        best_customer = {
+            "id": best_customer_id,
+            "name": f"{nombre} {apellido}".strip() or "Cliente",
+            "total_purchases": customer_purchases[best_customer_id],
+            "purchase_count": sum(1 for s in sales if s.get("customer_id") == best_customer_id)
+        }
+    
+    # 4. Tendencia de ventas (comparar con período anterior)
+    previous_start = start_date - timedelta(days=days)
+    previous_sales = await db.sales.find({
+        "store_id": store_id,
+        "date": {"$gte": previous_start, "$lt": start_date}
+    }).to_list(10000)
+    
+    current_total = sum(s.get("total", 0) for s in sales)
+    previous_total = sum(s.get("total", 0) for s in previous_sales)
+    
+    trend_percentage = 0
+    if previous_total > 0:
+        trend_percentage = ((current_total - previous_total) / previous_total) * 100
+    
+    trend = {
+        "current_period": current_total,
+        "previous_period": previous_total,
+        "percentage_change": round(trend_percentage, 1),
+        "direction": "up" if trend_percentage > 0 else "down" if trend_percentage < 0 else "stable"
+    }
+    
+    # 5. Estadísticas generales
+    total_sales_count = len(sales)
+    total_revenue = sum(s.get("total", 0) for s in sales)
+    avg_sale = total_revenue / total_sales_count if total_sales_count > 0 else 0
+    
+    # 6. Top 5 productos
+    top_5_products = []
+    for product_id, units in product_sales.most_common(5):
+        product_data = products_dict.get(product_id, {})
+        top_5_products.append({
+            "id": product_id,
+            "name": product_data.get("nombre", product_data.get("name", "Producto")),
+            "units_sold": units,
+            "revenue": product_revenue.get(product_id, 0)
+        })
+    
+    return {
+        "period_days": days,
+        "top_product": top_product,
+        "best_day": best_day,
+        "best_customer": best_customer,
+        "trend": trend,
+        "top_5_products": top_5_products,
+        "summary": {
+            "total_sales": total_sales_count,
+            "total_revenue": total_revenue,
+            "average_sale": round(avg_sale, 2)
+        }
+    }
+
 @api_router.get("/user/notification-settings")
 async def get_notification_settings(current_user: dict = Depends(get_current_user)):
     """Get user's notification settings"""
