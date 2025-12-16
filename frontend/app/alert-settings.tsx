@@ -376,27 +376,53 @@ export default function AlertSettingsScreen() {
                   {expoPushToken ? '✅ Dispositivo registrado' : '⏳ Requiere app móvil'}
                 </Text>
               </View>
+              <Switch
+                value={pushNotificationsEnabled}
+                onValueChange={setPushNotificationsEnabled}
+                trackColor={{ false: '#E0E0E0', true: '#E1BEE7' }}
+                thumbColor={pushNotificationsEnabled ? '#9C27B0' : '#BDBDBD'}
+              />
             </View>
             
-            <Text style={styles.pushDescription}>
-              Las notificaciones push te avisan inmediatamente cuando hay stock crítico o deudas pendientes. 
-              Solo funcionan en la app móvil (iOS/Android).
-            </Text>
-            
-            <TouchableOpacity
-              style={[styles.pushTestButton, testingPush && styles.pushTestButtonDisabled]}
-              onPress={handleTestPush}
-              disabled={testingPush}
-            >
-              {testingPush ? (
-                <ActivityIndicator color="#9C27B0" size="small" />
-              ) : (
-                <>
-                  <Ionicons name="notifications-outline" size={18} color="#9C27B0" />
-                  <Text style={styles.pushTestButtonText}>Probar Notificación</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            {pushNotificationsEnabled && (
+              <>
+                <Text style={styles.pushDescription}>
+                  Las notificaciones push te avisan inmediatamente cuando hay stock crítico o deudas pendientes. 
+                  Solo funcionan en la app móvil (iOS/Android).
+                </Text>
+                
+                {/* Sub-toggles for different push types */}
+                <View style={styles.channelRow}>
+                  <View style={styles.channelItem}>
+                    <View style={styles.channelIcon}>
+                      <Ionicons name="cube-outline" size={16} color="#9C27B0" />
+                    </View>
+                    <Text style={styles.channelLabel}>Stock</Text>
+                    <Switch
+                      value={stockAlertPush}
+                      onValueChange={setStockAlertPush}
+                      trackColor={{ false: '#E0E0E0', true: '#E1BEE7' }}
+                      thumbColor={stockAlertPush ? '#9C27B0' : '#BDBDBD'}
+                    />
+                  </View>
+                </View>
+                
+                <TouchableOpacity
+                  style={[styles.pushTestButton, testingPush && styles.pushTestButtonDisabled]}
+                  onPress={handleTestPush}
+                  disabled={testingPush}
+                >
+                  {testingPush ? (
+                    <ActivityIndicator color="#9C27B0" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="notifications-outline" size={18} color="#9C27B0" />
+                      <Text style={styles.pushTestButtonText}>Probar Notificación</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
 
