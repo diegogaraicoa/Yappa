@@ -2318,6 +2318,16 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
+# Include AI Report routes
+try:
+    from routes.ai_report_routes import router as ai_report_router
+    app.include_router(ai_report_router, prefix="/api")
+    print("✅ AI Report routes loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading AI report routes: {e}")
+    import traceback
+    traceback.print_exc()
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
