@@ -23,22 +23,17 @@ export default function AlertSettingsScreen() {
   const [saving, setSaving] = useState(false);
   const [testingPush, setTestingPush] = useState(false);
 
-  // Contact info
-  const [emailAddress, setEmailAddress] = useState('');
+  // Contact info - Solo WhatsApp
   const [whatsappNumber, setWhatsappNumber] = useState('');
 
-  // Individual alert preferences
-  const [stockAlertEmail, setStockAlertEmail] = useState(false);
+  // Individual alert preferences - Solo WhatsApp y Push
   const [stockAlertWhatsapp, setStockAlertWhatsapp] = useState(false);
   const [stockAlertPush, setStockAlertPush] = useState(true);
   const [debtAlertPush, setDebtAlertPush] = useState(true);
-  const [dailyEmail, setDailyEmail] = useState(false);
   const [dailyWhatsapp, setDailyWhatsapp] = useState(false);
   const [dailyPush, setDailyPush] = useState(false);
-  const [weeklyEmail, setWeeklyEmail] = useState(false);
   const [weeklyWhatsapp, setWeeklyWhatsapp] = useState(false);
   const [weeklyPush, setWeeklyPush] = useState(true);
-  const [monthlyEmail, setMonthlyEmail] = useState(false);
   const [monthlyWhatsapp, setMonthlyWhatsapp] = useState(false);
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(true);
 
@@ -52,15 +47,10 @@ export default function AlertSettingsScreen() {
       const response = await api.get('/api/admin_ops/alert-settings');
       
       if (response.data) {
-        setEmailAddress(response.data.email || '');
         setWhatsappNumber(response.data.whatsapp_number || '');
-        setStockAlertEmail(response.data.stock_alert_email || false);
         setStockAlertWhatsapp(response.data.stock_alert_whatsapp || false);
-        setDailyEmail(response.data.daily_email || false);
         setDailyWhatsapp(response.data.daily_whatsapp || false);
-        setWeeklyEmail(response.data.weekly_email || false);
         setWeeklyWhatsapp(response.data.weekly_whatsapp || false);
-        setMonthlyEmail(response.data.monthly_email || false);
         setMonthlyWhatsapp(response.data.monthly_whatsapp || false);
       }
     } catch (error: any) {
@@ -73,13 +63,7 @@ export default function AlertSettingsScreen() {
 
   const saveSettings = async () => {
     // Validaciones
-    const hasEmailAlerts = stockAlertEmail || dailyEmail || weeklyEmail || monthlyEmail;
     const hasWhatsappAlerts = stockAlertWhatsapp || dailyWhatsapp || weeklyWhatsapp || monthlyWhatsapp;
-
-    if (hasEmailAlerts && (!emailAddress || !emailAddress.includes('@'))) {
-      Alert.alert('Error', 'Por favor ingresa un email válido');
-      return;
-    }
 
     if (hasWhatsappAlerts && !whatsappNumber) {
       Alert.alert('Error', 'Por favor ingresa un número de WhatsApp');
@@ -90,15 +74,14 @@ export default function AlertSettingsScreen() {
       setSaving(true);
 
       const response = await api.post('/api/admin_ops/alert-settings', {
-        email: (emailAddress || '').trim().toLowerCase(),
         whatsapp_number: (whatsappNumber || '').trim(),
-        stock_alert_email: stockAlertEmail,
         stock_alert_whatsapp: stockAlertWhatsapp,
-        daily_email: dailyEmail,
+        stock_alert_push: stockAlertPush,
+        debt_alert_push: debtAlertPush,
         daily_whatsapp: dailyWhatsapp,
-        weekly_email: weeklyEmail,
+        daily_push: dailyPush,
         weekly_whatsapp: weeklyWhatsapp,
-        monthly_email: monthlyEmail,
+        weekly_push: weeklyPush,
         monthly_whatsapp: monthlyWhatsapp,
       });
 
@@ -176,29 +159,16 @@ export default function AlertSettingsScreen() {
         <View style={styles.infoCard}>
           <Ionicons name="information-circle" size={24} color="#00D2FF" />
           <Text style={styles.infoText}>
-            Personaliza qué alertas quieres recibir y por qué canal (Email o WhatsApp).
+            Personaliza qué alertas quieres recibir por WhatsApp y Push Notifications.
           </Text>
         </View>
 
-        {/* Contact Information */}
+        {/* Contact Information - Solo WhatsApp */}
         <View style={styles.section}>
-          <Text style={styles.sectionMainTitle}>📱 Información de Contacto</Text>
+          <Text style={styles.sectionMainTitle}>📱 WhatsApp</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={emailAddress}
-              onChangeText={setEmailAddress}
-              placeholder="correo@ejemplo.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>WhatsApp</Text>
+            <Text style={styles.inputLabel}>Número de WhatsApp</Text>
             <TextInput
               style={styles.input}
               value={whatsappNumber}
@@ -230,16 +200,6 @@ export default function AlertSettingsScreen() {
             
             <View style={styles.channelsRow}>
               <View style={styles.channelItem}>
-                <Ionicons name="mail" size={16} color="#00D2FF" />
-                <Text style={styles.channelLabel}>Email</Text>
-                <Switch
-                  value={stockAlertEmail}
-                  onValueChange={setStockAlertEmail}
-                  trackColor={{ false: '#E0E0E0', true: '#B3E5FC' }}
-                  thumbColor={stockAlertEmail ? '#00D2FF' : '#BDBDBD'}
-                />
-              </View>
-              <View style={styles.channelItem}>
                 <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
                 <Text style={styles.channelLabel}>WhatsApp</Text>
                 <Switch
@@ -265,16 +225,6 @@ export default function AlertSettingsScreen() {
             </View>
             
             <View style={styles.channelsRow}>
-              <View style={styles.channelItem}>
-                <Ionicons name="mail" size={16} color="#00D2FF" />
-                <Text style={styles.channelLabel}>Email</Text>
-                <Switch
-                  value={dailyEmail}
-                  onValueChange={setDailyEmail}
-                  trackColor={{ false: '#E0E0E0', true: '#B3E5FC' }}
-                  thumbColor={dailyEmail ? '#00D2FF' : '#BDBDBD'}
-                />
-              </View>
               <View style={styles.channelItem}>
                 <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
                 <Text style={styles.channelLabel}>WhatsApp</Text>
@@ -302,16 +252,6 @@ export default function AlertSettingsScreen() {
             
             <View style={styles.channelsRow}>
               <View style={styles.channelItem}>
-                <Ionicons name="mail" size={16} color="#00D2FF" />
-                <Text style={styles.channelLabel}>Email</Text>
-                <Switch
-                  value={weeklyEmail}
-                  onValueChange={setWeeklyEmail}
-                  trackColor={{ false: '#E0E0E0', true: '#B3E5FC' }}
-                  thumbColor={weeklyEmail ? '#00D2FF' : '#BDBDBD'}
-                />
-              </View>
-              <View style={styles.channelItem}>
                 <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
                 <Text style={styles.channelLabel}>WhatsApp</Text>
                 <Switch
@@ -338,16 +278,6 @@ export default function AlertSettingsScreen() {
             
             <View style={styles.channelsRow}>
               <View style={styles.channelItem}>
-                <Ionicons name="mail" size={16} color="#00D2FF" />
-                <Text style={styles.channelLabel}>Email</Text>
-                <Switch
-                  value={monthlyEmail}
-                  onValueChange={setMonthlyEmail}
-                  trackColor={{ false: '#E0E0E0', true: '#B3E5FC' }}
-                  thumbColor={monthlyEmail ? '#00D2FF' : '#BDBDBD'}
-                />
-              </View>
-              <View style={styles.channelItem}>
                 <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
                 <Text style={styles.channelLabel}>WhatsApp</Text>
                 <Switch
@@ -363,7 +293,7 @@ export default function AlertSettingsScreen() {
 
         {/* Push Notifications Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📲 Notificaciones Push</Text>
+          <Text style={styles.sectionMainTitle}>📲 Notificaciones Push</Text>
           <Text style={styles.sectionDesc}>
             Recibe alertas instantáneas en tu dispositivo móvil
           </Text>
@@ -438,7 +368,7 @@ export default function AlertSettingsScreen() {
                   </View>
                   
                   {/* Weekly Insights */}
-                  <View style={styles.pushToggleRow}>
+                  <View style={[styles.pushToggleRow, { borderBottomWidth: 0 }]}>
                     <View style={styles.pushToggleInfo}>
                       <Ionicons name="analytics-outline" size={18} color="#4CAF50" />
                       <Text style={styles.pushToggleLabel}>Insights Semanales IA</Text>
@@ -552,6 +482,12 @@ const styles = StyleSheet.create({
     color: '#212121',
     marginBottom: 16,
   },
+  sectionDesc: {
+    fontSize: 14,
+    color: '#757575',
+    marginTop: -8,
+    marginBottom: 16,
+  },
   inputGroup: {
     marginBottom: 16,
   },
@@ -630,12 +566,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FAFAFA',
     paddingVertical: 10,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
     borderRadius: 8,
-    gap: 4,
+    gap: 8,
   },
   channelLabel: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#424242',
     flex: 1,
   },
