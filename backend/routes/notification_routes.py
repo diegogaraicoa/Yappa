@@ -223,3 +223,76 @@ async def deactivate_push_token(push_token: str):
         "success": result.modified_count > 0,
         "message": "Token desactivado" if result.modified_count > 0 else "Token no encontrado"
     }
+
+
+# ==================== SCHEDULER TEST ENDPOINTS ====================
+
+@router.post("/scheduler/test/{job_type}")
+async def test_scheduler_job(job_type: str):
+    """
+    Ejecuta manualmente un job del scheduler para pruebas
+    
+    job_type puede ser:
+    - 'stock': Ejecuta alertas de stock diarias
+    - 'daily': Ejecuta resumen diario
+    - 'weekly': Ejecuta resumen semanal
+    - 'monthly': Ejecuta insights mensuales
+    """
+    from services.alert_scheduler import (
+        send_daily_stock_alerts,
+        send_daily_sales_summary,
+        send_weekly_summary_with_insights,
+        send_monthly_ai_insights
+    )
+    
+    valid_jobs = {
+        "stock": ("Alertas de Stock Diarias", send_daily_stock_alerts),
+        "daily": ("Resumen de Ventas Diario", send_daily_sales_summary),
+        "weekly": ("Resumen Semanal + AI Insights", send_weekly_summary_with_insights),
+        "monthly": ("Insights Mensuales IA", send_monthly_ai_insights)
+    }
+    
+    if job_type not in valid_jobs:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Tipo de job inválido. Opciones válidas: {list(valid_jobs.keys())}"
+        )
+    
+    job_name, job_func = valid_jobs[job_type]
+    
+    try:
+        await job_func()
+        return {
+            "success": True,
+            "message": f"Job '{job_name}' ejecutado correctamente",
+            "job_type": job_type
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "job_type": job_type
+        }
+
+
+@router.get("/scheduler/status")
+async def get_scheduler_status():
+    """
+    Obtiene el estado actual del scheduler y los próximos jobs programados
+    """
+    from services.alert_scheduler import scheduler
+    
+    jobs = []
+    for job in scheduler.get_jobs():
+        jobs.append({
+            "id": job.id,
+            "name": job.name,
+            "next_run": str(job.next_run_time) if job.next_run_time else None,
+            "trigger": str(job.trigger)
+        })
+    
+    return {
+        "running": scheduler.running,
+        "jobs": jobs,
+        "jobs_count": len(jobs)
+    }
