@@ -795,8 +795,11 @@ export default function InventoryScreen() {
 
       {/* Category Modal */}
       <Modal visible={showCategoryModal} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { maxHeight: 300 }]}>
+        <KeyboardAvoidingView 
+          style={styles.modalContainer} 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={[styles.modalContent, { maxHeight: 280 }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Nueva Categoría</Text>
               <TouchableOpacity 
@@ -818,7 +821,6 @@ export default function InventoryScreen() {
                 placeholderTextColor="#BDBDBD"
                 value={newCategoryName}
                 onChangeText={setNewCategoryName}
-                autoFocus
               />
             </View>
 
