@@ -513,7 +513,7 @@ La deuda se actualizará automáticamente.
 
 Interfaz web profesional para analytics profundos, comparaciones temporales, exportación de datos y gestión masiva.
 
-**URL:** https://ai-frontend-revamp.preview.emergentagent.com/admin
+**URL:** https://yappa-insights.preview.emergentagent.com/admin
 
 ---
 

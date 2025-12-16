@@ -3,7 +3,7 @@
 # Script de prueba completo para Admin Ops CRUD
 # Prueba todo el flujo: Admin → Merchant → Clerk → KYB
 
-BASE_URL="https://ai-frontend-revamp.preview.emergentagent.com/api"
+BASE_URL="https://yappa-insights.preview.emergentagent.com/api"
 
 echo "=========================================="
 echo "🚀 INICIANDO PRUEBAS DE ADMIN OPS"

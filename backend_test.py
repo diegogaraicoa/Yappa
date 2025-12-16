@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://ai-frontend-revamp.preview.emergentagent.com/api"
+BASE_URL = "https://yappa-insights.preview.emergentagent.com/api"
 LOGIN_CREDENTIALS = {
     "username": "tiendaclave", 
     "password": "Chifle98."
