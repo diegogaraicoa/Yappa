@@ -117,9 +117,12 @@ export default function SuppliersScreen() {
   };
 
   const filteredSuppliers = suppliers.filter(
-    (supplier) =>
-      supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      supplier.phone?.includes(searchQuery)
+    (supplier) => {
+      const name = supplier.nombre || supplier.name || '';
+      const phone = supplier.telefono || supplier.phone || '';
+      return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        phone.includes(searchQuery);
+    }
   );
 
   return (
