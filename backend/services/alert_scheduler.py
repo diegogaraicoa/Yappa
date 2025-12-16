@@ -22,7 +22,7 @@ db = client[os.environ.get('DB_NAME', 'tiendadb')]
 scheduler = AsyncIOScheduler()
 
 async def send_daily_stock_alerts():
-    """Job: Send daily stock alerts at 8am"""
+    """Job: Send daily stock alerts at 8am via Email, WhatsApp, and Push"""
     print(f"[{datetime.now()}] Running daily stock alerts job...")
     
     try:
@@ -52,7 +52,7 @@ async def send_daily_stock_alerts():
             if not merchant:
                 continue
             
-            # Send Email
+            # Send Email (if enabled)
             if merchant.get("stock_alert_email") and merchant.get("email"):
                 try:
                     from .email_service import send_stock_alert_email
@@ -65,7 +65,7 @@ async def send_daily_stock_alerts():
                 except Exception as e:
                     print(f"⚠️ Error al enviar email a {merchant.get('email')}: {str(e)}")
             
-            # Send WhatsApp
+            # Send WhatsApp (if enabled)
             if merchant.get("stock_alert_whatsapp") and merchant.get("whatsapp_number"):
                 try:
                     for product in alert_products:
@@ -84,6 +84,43 @@ async def send_daily_stock_alerts():
                     print(f"✅ Alerta de stock enviada por WhatsApp a {merchant['whatsapp_number']}")
                 except Exception as e:
                     print(f"⚠️ Error al enviar WhatsApp: {str(e)}")
+            
+            # Send Push Notification (if enabled)
+            if merchant.get("stock_alert_push") and merchant.get("expo_push_token"):
+                try:
+                    # Send one consolidated push or one per critical product
+                    critical_products = [p for p in alert_products if p["stock"] == 0]
+                    warning_products = [p for p in alert_products if p["stock"] > 0]
+                    
+                    if critical_products:
+                        # Send critical alert
+                        product_names = ", ".join([p["name"] for p in critical_products[:3]])
+                        if len(critical_products) > 3:
+                            product_names += f" y {len(critical_products) - 3} más"
+                        
+                        expo_push_service.send_push_notification(
+                            merchant["expo_push_token"],
+                            "🚨 Stock Agotado",
+                            f"Sin stock: {product_names}",
+                            {"type": "stock_alert", "level": "critical", "count": len(critical_products)}
+                        )
+                    
+                    if warning_products:
+                        # Send warning alert
+                        product_names = ", ".join([p["name"] for p in warning_products[:3]])
+                        if len(warning_products) > 3:
+                            product_names += f" y {len(warning_products) - 3} más"
+                        
+                        expo_push_service.send_push_notification(
+                            merchant["expo_push_token"],
+                            "⚠️ Stock Bajo",
+                            f"Stock bajo: {product_names}",
+                            {"type": "stock_alert", "level": "warning", "count": len(warning_products)}
+                        )
+                    
+                    print(f"✅ Alerta de stock enviada por Push a {merchant.get('store_name', 'Tienda')}")
+                except Exception as e:
+                    print(f"⚠️ Error al enviar Push: {str(e)}")
         
         print(f"[{datetime.now()}] Daily stock alerts sent to {len(stores_alerts)} stores")
     
