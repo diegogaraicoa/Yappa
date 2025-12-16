@@ -26,7 +26,7 @@ interface AIInsight {
 
 export default function AIInsightCard() {
   const router = useRouter();
-  const { insightsCount, criticalCount, lowStockCount, debtCount } = useInsights();
+  const { insightsCount } = useInsights();
   const [insight, setInsight] = useState<AIInsight | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,111 +47,55 @@ export default function AIInsightCard() {
     }
   };
 
-  const handleAction = () => {
-    if (!insight) return;
-
-    try {
-      // Todas las acciones de stock/deuda llevan a insights
-      if (insight.type === 'critical_stock' || insight.type === 'low_stock' || insight.type === 'overdue_debt') {
-        router.push('/insights');
-        return;
-      }
-
-      switch (insight.cta_action) {
-        case 'navigate_to_product':
-        case 'navigate_to_inventory':
-        case 'navigate_to_customers':
-        case 'send_payment_reminder':
-        case 'navigate_to_insights':
-        case 'view_insight_details':
-          router.push('/insights');
-          break;
-        case 'navigate_to_balance':
-          router.push('/(tabs)/balance');
-          break;
-        default:
-          router.push('/insights');
-      }
-    } catch (error) {
-      console.error('Error en navegación:', error);
-    }
+  const handlePress = () => {
+    router.push('/insights');
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.7}>
         <ActivityIndicator size="small" color="#A66BFF" />
-      </View>
+      </TouchableOpacity>
     );
   }
 
-  if (!insight) {
-    return null;
-  }
+  // Versión simplificada - siempre muestra algo útil
+  const displayTitle = insight?.title || 'Datos de mi Negocio';
+  const hasAlerts = insightsCount > 0;
 
   return (
     <TouchableOpacity
-      style={[styles.container, { borderLeftColor: insight.color }]}
-      onPress={handleAction}
-      activeOpacity={0.8}
+      style={styles.container}
+      onPress={handlePress}
+      activeOpacity={0.7}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={[styles.iconContainer, { backgroundColor: `${insight.color}20` }]}>
-            <Text style={styles.iconEmoji}>{insight.icon}</Text>
-          </View>
-          <View style={styles.headerText}>
-            <Text style={styles.category}>{insight.category}</Text>
-            <Text style={styles.title}>{insight.title}</Text>
-          </View>
-        </View>
-        <View style={styles.badgeRow}>
-          {/* Badge de contador total */}
-          {insightsCount > 0 && (
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{insightsCount}</Text>
-            </View>
-          )}
-          <View style={[styles.badge, { backgroundColor: insight.color }]}>
-            <Ionicons name="sparkles" size={12} color="#FFF" />
-            <Text style={styles.badgeText}>IA</Text>
-          </View>
-        </View>
+      {/* Left side - Icon */}
+      <View style={styles.iconContainer}>
+        <Ionicons name="sparkles" size={22} color="#A66BFF" />
       </View>
 
-      {/* Message */}
-      <Text style={styles.message}>{insight.message}</Text>
+      {/* Center - Text */}
+      <View style={styles.textContainer}>
+        <Text style={styles.title} numberOfLines={1}>
+          {hasAlerts ? displayTitle : 'Tu negocio al día'}
+        </Text>
+        <Text style={styles.subtitle} numberOfLines={1}>
+          {hasAlerts 
+            ? `${insightsCount} ${insightsCount === 1 ? 'sugerencia' : 'sugerencias'} para ti`
+            : 'Ver análisis y reportes'
+          }
+        </Text>
+      </View>
 
-      {/* Stats Row */}
-      {(criticalCount > 0 || lowStockCount > 0 || debtCount > 0) && (
-        <View style={styles.statsRow}>
-          {criticalCount > 0 && (
-            <View style={[styles.statBadge, { backgroundColor: '#FFEBEE' }]}>
-              <Text style={[styles.statText, { color: '#FF4A4A' }]}>🚨 {criticalCount} agotados</Text>
-            </View>
-          )}
-          {lowStockCount > 0 && (
-            <View style={[styles.statBadge, { backgroundColor: '#FFF8E1' }]}>
-              <Text style={[styles.statText, { color: '#FFB800' }]}>⚠️ {lowStockCount} stock bajo</Text>
-            </View>
-          )}
-          {debtCount > 0 && (
-            <View style={[styles.statBadge, { backgroundColor: '#FFEBEE' }]}>
-              <Text style={[styles.statText, { color: '#F44336' }]}>💰 {debtCount} deudores</Text>
-            </View>
-          )}
-        </View>
-      )}
-
-      {/* CTA Button */}
-      <TouchableOpacity
-        style={[styles.ctaButton, { backgroundColor: insight.color }]}
-        onPress={handleAction}
-      >
-        <Text style={styles.ctaText}>Tomar Acción</Text>
-        <Ionicons name="arrow-forward" size={16} color="#FFF" />
-      </TouchableOpacity>
+      {/* Right side - Badge & Arrow */}
+      <View style={styles.rightContainer}>
+        {hasAlerts && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{insightsCount}</Text>
+          </View>
+        )}
+        <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
+      </View>
     </TouchableOpacity>
   );
 }
@@ -159,119 +103,58 @@ export default function AIInsightCard() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    marginVertical: 12,
+    borderRadius: 12,
+    padding: 14,
+    marginVertical: 8,
     marginHorizontal: 20,
-    borderLeftWidth: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3E5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
-  iconEmoji: {
-    fontSize: 24,
-  },
-  headerText: {
+  textContainer: {
     flex: 1,
   },
-  category: {
-    fontSize: 12,
-    color: '#757575',
+  title: {
+    fontSize: 15,
     fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: '#212121',
     marginBottom: 2,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#212121',
+  subtitle: {
+    fontSize: 13,
+    color: '#757575',
   },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  badgeRow: {
+  rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  countBadge: {
-    backgroundColor: '#FF4A4A',
-    borderRadius: 12,
-    minWidth: 24,
-    height: 24,
+  badge: {
+    backgroundColor: '#A66BFF',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
   },
-  countBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFF',
-  },
   badgeText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  statBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  message: {
-    fontSize: 15,
-    color: '#424242',
-    lineHeight: 22,
-    marginBottom: 16,
-  },
-  ctaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    gap: 8,
-  },
-  ctaText: {
-    fontSize: 15,
     fontWeight: '700',
     color: '#FFF',
   },
