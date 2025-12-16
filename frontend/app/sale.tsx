@@ -130,12 +130,23 @@ export default function SaleScreen() {
     }
   };
 
+  // Helper to get product price (handles both 'price' and 'precio' from backend)
+  const getProductPrice = (product: any): number => {
+    return product?.price ?? product?.precio ?? 0;
+  };
+
   const addProduct = (product: any) => {
-    setSelectedProducts([...selectedProducts, { ...product, saleQuantity: 1 }]);
+    const normalizedProduct = { 
+      ...product, 
+      saleQuantity: 1,
+      price: getProductPrice(product),
+      name: product?.name || product?.nombre || 'Producto'
+    };
+    setSelectedProducts([...selectedProducts, normalizedProduct]);
     setShowProductModal(false);
     
-    const newTotal = [...selectedProducts, { ...product, saleQuantity: 1 }]
-      .reduce((sum, p) => sum + (p.saleQuantity * p.price), 0);
+    const newTotal = [...selectedProducts, normalizedProduct]
+      .reduce((sum, p) => sum + ((p.saleQuantity || 1) * getProductPrice(p)), 0);
     setTotal(newTotal.toFixed(2));
   };
 
@@ -143,7 +154,7 @@ export default function SaleScreen() {
     const newProducts = selectedProducts.filter((_, i) => i !== index);
     setSelectedProducts(newProducts);
     
-    const newTotal = newProducts.reduce((sum, p) => sum + (p.saleQuantity * p.price), 0);
+    const newTotal = newProducts.reduce((sum, p) => sum + ((p.saleQuantity || 1) * getProductPrice(p)), 0);
     setTotal(newTotal.toFixed(2));
   };
 
@@ -152,7 +163,7 @@ export default function SaleScreen() {
     newProducts[index].saleQuantity = quantity;
     setSelectedProducts(newProducts);
     
-    const newTotal = newProducts.reduce((sum, p) => sum + (p.saleQuantity * p.price), 0);
+    const newTotal = newProducts.reduce((sum, p) => sum + ((p.saleQuantity || 1) * getProductPrice(p)), 0);
     setTotal(newTotal.toFixed(2));
   };
 
