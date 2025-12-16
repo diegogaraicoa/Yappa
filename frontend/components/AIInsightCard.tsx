@@ -11,56 +11,96 @@ import { useRouter } from 'expo-router';
 import api from '../utils/api';
 import { useInsights } from '../contexts/InsightsContext';
 
-interface AIInsight {
-  type: string;
-  category: string;
-  icon: string;
-  color: string;
-  title: string;
-  message: string;
-  cta_text: string;
-  cta_action: string;
-  cta_data: any;
-  priority: number;
-}
-
 export default function AIInsightCard() {
   const router = useRouter();
-  const { insightsCount } = useInsights();
-  const [insight, setInsight] = useState<AIInsight | null>(null);
+  const { insightsCount, criticalCount, lowStockCount, debtCount } = useInsights();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchInsight();
+    // Simular carga inicial
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
   }, []);
-
-  const fetchInsight = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get('/api/ai/insight-of-the-day');
-      setInsight(response.data);
-    } catch (error) {
-      console.error('Error fetching AI insight:', error);
-      setInsight(null);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handlePress = () => {
     router.push('/insights');
   };
 
+  // Determinar título y subtítulo basado en los tipos de alertas
+  const getDisplayContent = () => {
+    const hasAlerts = insightsCount > 0;
+    
+    if (!hasAlerts) {
+      return {
+        title: 'Tu negocio al día',
+        subtitle: 'Ver análisis y reportes',
+      };
+    }
+
+    // Prioridad: críticos > deudas > stock bajo
+    if (criticalCount > 0 && debtCount > 0) {
+      return {
+        title: 'Alertas pendientes',
+        subtitle: `${criticalCount} de stock · ${debtCount} de cobro`,
+      };
+    }
+    
+    if (criticalCount > 0 && lowStockCount > 0) {
+      return {
+        title: 'Revisar inventario',
+        subtitle: `${criticalCount + lowStockCount} productos necesitan atención`,
+      };
+    }
+    
+    if (debtCount > 0 && lowStockCount > 0) {
+      return {
+        title: 'Tienes pendientes',
+        subtitle: `${debtCount} cobros · ${lowStockCount} de stock`,
+      };
+    }
+
+    if (criticalCount > 0) {
+      return {
+        title: 'Stock crítico',
+        subtitle: `${criticalCount} ${criticalCount === 1 ? 'producto agotado' : 'productos agotados'}`,
+      };
+    }
+
+    if (debtCount > 0) {
+      return {
+        title: 'Cobros pendientes',
+        subtitle: `${debtCount} ${debtCount === 1 ? 'cliente debe' : 'clientes deben'}`,
+      };
+    }
+
+    if (lowStockCount > 0) {
+      return {
+        title: 'Stock bajo',
+        subtitle: `${lowStockCount} ${lowStockCount === 1 ? 'producto por acabarse' : 'productos por acabarse'}`,
+      };
+    }
+
+    // Fallback genérico
+    return {
+      title: 'Sugerencias para ti',
+      subtitle: `${insightsCount} ${insightsCount === 1 ? 'recomendación' : 'recomendaciones'}`,
+    };
+  };
+
   if (loading) {
     return (
       <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.7}>
-        <ActivityIndicator size="small" color="#A66BFF" />
+        <View style={styles.iconContainer}>
+          <ActivityIndicator size="small" color="#A66BFF" />
+        </View>
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>Cargando...</Text>
+        </View>
       </TouchableOpacity>
     );
   }
 
-  // Versión simplificada - siempre muestra algo útil
-  const displayTitle = insight?.title || 'Datos de mi Negocio';
+  const { title, subtitle } = getDisplayContent();
   const hasAlerts = insightsCount > 0;
 
   return (
@@ -76,15 +116,8 @@ export default function AIInsightCard() {
 
       {/* Center - Text */}
       <View style={styles.textContainer}>
-        <Text style={styles.title} numberOfLines={1}>
-          {hasAlerts ? displayTitle : 'Tu negocio al día'}
-        </Text>
-        <Text style={styles.subtitle} numberOfLines={1}>
-          {hasAlerts 
-            ? `${insightsCount} ${insightsCount === 1 ? 'sugerencia' : 'sugerencias'} para ti`
-            : 'Ver análisis y reportes'
-          }
-        </Text>
+        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
       </View>
 
       {/* Right side - Badge & Arrow */}
