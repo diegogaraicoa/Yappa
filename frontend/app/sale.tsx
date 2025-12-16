@@ -495,11 +495,11 @@ export default function SaleScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={styles.modalItemLeft}>
-                    <Text style={styles.modalItemName}>{product.name}</Text>
-                    <Text style={styles.modalItemPrice}>${product.price.toFixed(2)}</Text>
+                    <Text style={styles.modalItemName}>{product.name || product.nombre || 'Producto'}</Text>
+                    <Text style={styles.modalItemPrice}>${(product.price ?? product.precio ?? 0).toFixed(2)}</Text>
                   </View>
                   <View style={styles.modalItemRight}>
-                    <Text style={styles.modalItemStock}>Stock: {product.quantity}</Text>
+                    <Text style={styles.modalItemStock}>Stock: {product.quantity ?? product.stock ?? 0}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
