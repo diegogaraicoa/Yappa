@@ -219,22 +219,22 @@ export default function SuppliersScreen() {
 
               {/* Supplier Info */}
               <View style={styles.supplierInfo}>
-                <Text style={styles.supplierName}>{supplier.name}</Text>
+                <Text style={styles.supplierName}>{supplier.nombre || supplier.name}</Text>
 
-                {supplier.contact && (
+                {(supplier.contacto || supplier.contact) && (
                   <View style={styles.supplierDetail}>
                     <Ionicons name="person-outline" size={14} color="#757575" />
                     <Text style={styles.supplierDetailText}>
-                      {supplier.contact}
+                      {supplier.contacto || supplier.contact}
                     </Text>
                   </View>
                 )}
 
-                {supplier.phone && (
+                {(supplier.telefono || supplier.phone) && (
                   <View style={styles.supplierDetail}>
                     <Ionicons name="call-outline" size={14} color="#757575" />
                     <Text style={styles.supplierDetailText}>
-                      {supplier.phone}
+                      {supplier.telefono || supplier.phone}
                     </Text>
                   </View>
                 )}
