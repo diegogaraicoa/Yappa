@@ -523,7 +523,7 @@ async def send_weekly_ai_insights():
         print(f"Error in weekly AI insights job: {str(e)}")
 
 async def send_monthly_ai_insights():
-    """Job: Send AI insights monthly on 1st"""
+    """Job: Send AI insights monthly on 1st via Email, WhatsApp, and Push"""
     print(f"[{datetime.now()}] Running monthly AI insights job...")
     
     try:
@@ -534,6 +534,14 @@ async def send_monthly_ai_insights():
         
         for merchant in merchants:
             store_id = str(merchant.get("_id"))
+            
+            # Check if merchant has any monthly alerts enabled
+            has_monthly_email = merchant.get("monthly_email", False)
+            has_monthly_whatsapp = merchant.get("monthly_whatsapp", False)
+            has_monthly_push = merchant.get("monthly_push", False)
+            
+            if not has_monthly_email and not has_monthly_whatsapp and not has_monthly_push:
+                continue
             
             # Get last 30 days of data
             thirty_days_ago = datetime.now() - timedelta(days=30)
@@ -550,6 +558,11 @@ async def send_monthly_ai_insights():
             
             products = await db.products.find({"store_id": store_id}).to_list(1000)
             customers = await db.customers.find({"store_id": store_id}).to_list(1000)
+            
+            # Calculate metrics for push notification
+            total_sales = sum(sale.get("total", 0) for sale in sales)
+            total_expenses = sum(expense.get("amount", 0) for expense in expenses)
+            balance = total_sales - total_expenses
             
             # Generate insights
             insights = await ai_insights_service.generate_business_insights(
@@ -569,7 +582,7 @@ async def send_monthly_ai_insights():
                 })
                 
                 # Send Email (if enabled)
-                if merchant.get("monthly_email") and merchant.get("email"):
+                if has_monthly_email and merchant.get("email"):
                     try:
                         from .email_service import send_monthly_insights_email
                         send_monthly_insights_email(
@@ -582,13 +595,26 @@ async def send_monthly_ai_insights():
                         print(f"⚠️ Error al enviar email mensual: {str(e)}")
                 
                 # Send WhatsApp (if enabled)
-                if merchant.get("monthly_whatsapp") and merchant.get("whatsapp_number"):
+                if has_monthly_whatsapp and merchant.get("whatsapp_number"):
                     try:
                         message = ai_insights_service.format_insights_for_whatsapp(insights)
                         twilio_service.send_whatsapp(merchant["whatsapp_number"], message)
                         print("✅ Insights mensuales enviados por WhatsApp")
                     except Exception as e:
                         print(f"⚠️ Error al enviar WhatsApp mensual: {str(e)}")
+                
+                # Send Push Notification (if enabled)
+                if has_monthly_push and merchant.get("expo_push_token"):
+                    try:
+                        expo_push_service.send_push_notification(
+                            merchant["expo_push_token"],
+                            "📊 Reporte Mensual Listo",
+                            f"Balance del mes: ${balance:.2f}. Abre la app para ver insights IA.",
+                            {"type": "monthly_insights", "balance": balance}
+                        )
+                        print(f"✅ Insights mensuales enviados por Push a {merchant.get('store_name', 'Tienda')}")
+                    except Exception as e:
+                        print(f"⚠️ Error al enviar Push mensual: {str(e)}")
         
         print(f"[{datetime.now()}] Monthly AI insights sent")
     
