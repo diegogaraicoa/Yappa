@@ -303,8 +303,8 @@ export default function SaleScreen() {
             {selectedProducts.map((product, index) => (
               <View key={index} style={styles.productCard}>
                 <View style={styles.productLeft}>
-                  <Text style={styles.productName}>{product.name}</Text>
-                  <Text style={styles.productPrice}>${product.price.toFixed(2)} c/u</Text>
+                  <Text style={styles.productName}>{product.name || product.nombre || 'Producto'}</Text>
+                  <Text style={styles.productPrice}>${(product.price ?? product.precio ?? 0).toFixed(2)} c/u</Text>
                 </View>
                 <View style={styles.productRight}>
                   <View style={styles.quantityControl}>
