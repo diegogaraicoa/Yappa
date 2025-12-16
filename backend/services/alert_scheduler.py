@@ -249,7 +249,7 @@ async def send_daily_sales_summary():
         print(f"Error in daily sales summary job: {str(e)}")
 
 async def send_weekly_summary_with_insights():
-    """Job: Send weekly summary + AI insights on Monday at 9am (COMBINED)"""
+    """Job: Send weekly summary + AI insights on Monday at 9am via Email, WhatsApp, and Push"""
     print(f"[{datetime.now()}] Running weekly summary with AI insights job...")
     
     try:
@@ -266,6 +266,14 @@ async def send_weekly_summary_with_insights():
         
         for merchant in merchants:
             store_id = str(merchant.get("_id"))
+            
+            # Check if merchant has any weekly alerts enabled
+            has_weekly_email = merchant.get("weekly_email", False)
+            has_weekly_whatsapp = merchant.get("weekly_whatsapp", False)
+            has_weekly_push = merchant.get("weekly_push", False)
+            
+            if not has_weekly_email and not has_weekly_whatsapp and not has_weekly_push:
+                continue
             
             # Get week's data
             sales = await db.sales.find({
@@ -325,7 +333,7 @@ async def send_weekly_summary_with_insights():
             }
             
             # Send Email (if enabled)
-            if merchant.get("weekly_email") and merchant.get("email"):
+            if has_weekly_email and merchant.get("email"):
                 try:
                     from .email_service import send_weekly_summary_email
                     send_weekly_summary_email(
@@ -338,7 +346,7 @@ async def send_weekly_summary_with_insights():
                     print(f"⚠️ Error al enviar email semanal: {str(e)}")
             
             # Send WhatsApp (if enabled)
-            if merchant.get("weekly_whatsapp") and merchant.get("whatsapp_number"):
+            if has_weekly_whatsapp and merchant.get("whatsapp_number"):
                 try:
                     twilio_service.send_weekly_summary(
                         merchant["whatsapp_number"],
@@ -351,6 +359,21 @@ async def send_weekly_summary_with_insights():
                     print("✅ Resumen semanal enviado por WhatsApp")
                 except Exception as e:
                     print(f"⚠️ Error al enviar WhatsApp semanal: {str(e)}")
+            
+            # Send Push Notification (if enabled)
+            if has_weekly_push and merchant.get("expo_push_token"):
+                try:
+                    # Send summary push
+                    emoji = "📈" if balance >= 0 else "📉"
+                    expo_push_service.send_push_notification(
+                        merchant["expo_push_token"],
+                        f"{emoji} Resumen Semanal",
+                        f"Ventas: ${total_sales:.2f} | Balance: ${balance:.2f}",
+                        {"type": "weekly_summary", "total_sales": total_sales, "balance": balance}
+                    )
+                    print(f"✅ Resumen semanal enviado por Push a {merchant.get('store_name', 'Tienda')}")
+                except Exception as e:
+                    print(f"⚠️ Error al enviar Push semanal: {str(e)}")
         
         print(f"[{datetime.now()}] Weekly summary with insights sent")
     
