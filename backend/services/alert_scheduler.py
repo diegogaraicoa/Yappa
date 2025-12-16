@@ -128,7 +128,7 @@ async def send_daily_stock_alerts():
         print(f"Error in daily stock alerts job: {str(e)}")
 
 async def send_daily_sales_summary():
-    """Job: Send daily sales summary at 8pm"""
+    """Job: Send daily sales summary at 8pm via Email, WhatsApp, and Push"""
     print(f"[{datetime.now()}] Running daily sales summary job...")
     
     try:
@@ -143,11 +143,12 @@ async def send_daily_sales_summary():
         for merchant in merchants:
             store_id = str(merchant.get("_id"))
             
-            # Check if merchant has either email or whatsapp daily alerts enabled
+            # Check if merchant has any daily alerts enabled
             has_daily_email = merchant.get("daily_email", False)
             has_daily_whatsapp = merchant.get("daily_whatsapp", False)
+            has_daily_push = merchant.get("daily_push", False)
             
-            if not has_daily_email and not has_daily_whatsapp:
+            if not has_daily_email and not has_daily_whatsapp and not has_daily_push:
                 continue
             
             # Get today's sales
@@ -169,7 +170,7 @@ async def send_daily_sales_summary():
             # Calcular productos más vendidos
             product_sales = {}
             for sale in sales:
-                for item in sale.get("items", []):
+                for item in sale.get("items", sale.get("products", [])):
                     product_name = item.get("product_name", "Producto")
                     quantity = item.get("quantity", 0)
                     if product_name in product_sales:
@@ -186,12 +187,12 @@ async def send_daily_sales_summary():
             products = await db.products.find({"store_id": store_id}).to_list(10000)
             low_stock_alerts = [
                 {
-                    "product": p.get("nombre", "Producto"),
-                    "stock": p.get("stock", 0),
-                    "min_stock": p.get("stock_minimo", 0)
+                    "product": p.get("nombre", p.get("name", "Producto")),
+                    "stock": p.get("stock", p.get("quantity", 0)),
+                    "min_stock": p.get("stock_minimo", p.get("min_stock_alert", 0))
                 }
                 for p in products
-                if p.get("stock", 0) <= p.get("stock_minimo", 0)
+                if p.get("stock", p.get("quantity", 0)) <= p.get("stock_minimo", p.get("min_stock_alert", 0))
             ]
             
             # Send Email (only if daily_email is enabled and email exists)
@@ -229,6 +230,18 @@ async def send_daily_sales_summary():
                     print(f"✅ WhatsApp de resumen diario enviado a {merchant['whatsapp_number']}")
                 except Exception as e:
                     print(f"⚠️ Error al enviar WhatsApp a {merchant.get('whatsapp_number')}: {str(e)}")
+            
+            # Send Push Notification (only if daily_push is enabled and expo_push_token exists)
+            if has_daily_push and merchant.get("expo_push_token"):
+                try:
+                    expo_push_service.send_daily_summary_push(
+                        merchant["expo_push_token"],
+                        total_sales,
+                        balance
+                    )
+                    print(f"✅ Push de resumen diario enviado a {merchant.get('store_name', 'Tienda')}")
+                except Exception as e:
+                    print(f"⚠️ Error al enviar Push: {str(e)}")
         
         print(f"[{datetime.now()}] Daily sales summary sent to {len(merchants)} merchants")
     
