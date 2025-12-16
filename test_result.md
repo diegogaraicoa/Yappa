@@ -242,10 +242,23 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Alert Scheduler - Status and Test Endpoints"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+  - task: "Alert Scheduler - Automated notifications with Push support"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/services/alert_scheduler.py, /app/backend/routes/notification_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "SCHEDULER DE ALERTAS COMPLETADO. Implementación: 1) alert_scheduler.py actualizado con soporte para Push Notifications en todos los jobs (stock diario, resumen diario, resumen semanal, insights mensuales), 2) Jobs configurados: stock alerts 8AM, daily summary 8PM, weekly summary Lunes 9AM, monthly insights día 1 10AM, 3) notification_routes.py actualizado con endpoints de testing: GET /api/notifications/scheduler/status (ver estado del scheduler), POST /api/notifications/scheduler/test/{job_type} (ejecutar job manualmente). Jobs verifican preferencias del merchant (stock_alert_push, daily_push, weekly_push, monthly_push) antes de enviar. NECESITO TESTING: Verificar endpoints de status y test manual del scheduler."
 
   - task: "KPI Dashboard - Backend endpoints"
     implemented: true
