@@ -31,10 +31,13 @@ export default function AlertSettingsScreen() {
   const [stockAlertEmail, setStockAlertEmail] = useState(false);
   const [stockAlertWhatsapp, setStockAlertWhatsapp] = useState(false);
   const [stockAlertPush, setStockAlertPush] = useState(true);
+  const [debtAlertPush, setDebtAlertPush] = useState(true);
   const [dailyEmail, setDailyEmail] = useState(false);
   const [dailyWhatsapp, setDailyWhatsapp] = useState(false);
+  const [dailyPush, setDailyPush] = useState(false);
   const [weeklyEmail, setWeeklyEmail] = useState(false);
   const [weeklyWhatsapp, setWeeklyWhatsapp] = useState(false);
+  const [weeklyPush, setWeeklyPush] = useState(true);
   const [monthlyEmail, setMonthlyEmail] = useState(false);
   const [monthlyWhatsapp, setMonthlyWhatsapp] = useState(false);
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(true);
