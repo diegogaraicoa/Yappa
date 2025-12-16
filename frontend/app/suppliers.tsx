@@ -60,9 +60,9 @@ export default function SuppliersScreen() {
     setIsEditing(true);
     setSelectedSupplier(supplier);
     setFormData({
-      name: supplier.name,
-      contact: supplier.contact || '',
-      phone: supplier.phone || '',
+      name: supplier.nombre || supplier.name || '',
+      contact: supplier.contacto || supplier.contact || '',
+      phone: supplier.telefono || supplier.phone || '',
       email: supplier.email || '',
     });
     setShowModal(true);
