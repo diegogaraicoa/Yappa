@@ -653,12 +653,8 @@ async def get_product(product_id: str, current_user: dict = Depends(get_current_
     return product
 
 @api_router.put("/products/{product_id}")
-async def update_product(product_id: str, product: ProductUpdate):
-    # Temporary: Use tiendaclave merchant
-    merchant = await db.merchants.find_one({"username": "tiendaclave"})
-    if not merchant:
-        raise HTTPException(status_code=404, detail="Merchant no encontrado")
-    store_id = str(merchant["_id"])
+async def update_product(product_id: str, product: ProductUpdate, current_user: dict = Depends(get_current_user)):
+    store_id = current_user["store_id"]
     
     update_dict = {k: v for k, v in product.dict().items() if v is not None}
     if not update_dict:
