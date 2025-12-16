@@ -664,6 +664,29 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 12,
   },
+  pushTogglesContainer: {
+    backgroundColor: '#FAFAFA',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  pushToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  pushToggleInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  pushToggleLabel: {
+    fontSize: 14,
+    color: '#424242',
+  },
   pushTestButton: {
     flexDirection: 'row',
     alignItems: 'center',
