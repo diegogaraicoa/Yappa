@@ -91,7 +91,7 @@ python3 check_my_sales.py
 ```
 
 O desde la Admin Console web:
-https://yappa-insights.preview.emergentagent.com/admin
+https://insight-engine-41.preview.emergentagent.com/admin
 
 ---
 
