@@ -48,18 +48,45 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Autenticación compatible con ambos sistemas:
+    - Sistema antiguo: token con 'sub' que apunta a 'users'
+    - Sistema nuevo: token con 'merchant_id' que apunta a 'merchants'
+    """
     try:
         token = credentials.credentials
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        
+        # Intentar primero con el nuevo sistema (merchant_id)
+        merchant_id = payload.get("merchant_id")
+        if merchant_id:
+            merchant = await db.merchants.find_one({"_id": ObjectId(merchant_id)})
+            if merchant:
+                # Retornar un objeto compatible con el sistema antiguo
+                return {
+                    "_id": merchant["_id"],
+                    "store_id": str(merchant["_id"]),  # El merchant_id ES el store_id
+                    "username": merchant.get("username"),
+                    "email": merchant.get("email"),
+                    "admin_id": merchant.get("admin_id"),
+                    "clerk_id": payload.get("clerk_id"),
+                    "whatsapp_number": merchant.get("whatsapp_number"),
+                    "expo_push_token": merchant.get("expo_push_token"),
+                    "alerts_enabled": merchant.get("alerts_enabled", True),
+                    "stock_alerts_enabled": merchant.get("stock_alerts_enabled", True),
+                }
+        
+        # Fallback al sistema antiguo (sub -> users)
         user_id: str = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Token inválido")
-        user = await db.users.find_one({"_id": ObjectId(user_id)})
-        if user is None:
-            raise HTTPException(status_code=401, detail="Usuario no encontrado")
-        return user
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido")
+        if user_id:
+            user = await db.users.find_one({"_id": ObjectId(user_id)})
+            if user:
+                return user
+        
+        raise HTTPException(status_code=401, detail="Token inválido - usuario no encontrado")
+        
+    except JWTError as e:
+        raise HTTPException(status_code=401, detail=f"Token inválido: {str(e)}")
 
 # ==================== MODELS ====================
 
