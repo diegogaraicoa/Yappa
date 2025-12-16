@@ -401,7 +401,7 @@ export default function SuppliersScreen() {
               <Text style={styles.deleteModalText}>
                 ¿Estás seguro de que quieres eliminar a{' '}
                 <Text style={styles.deleteModalTextBold}>
-                  {selectedSupplier.name}
+                  {selectedSupplier.nombre || selectedSupplier.name}
                 </Text>
                 ?
               </Text>
