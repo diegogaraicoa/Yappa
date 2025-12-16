@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for PUT Endpoints - Actionable Modals
-Testing critical PUT endpoints for product stock updates and customer debt updates
+Backend Authentication Flow Testing for PUT Endpoints
+Testing the fixed authentication issue where tokens were generated with merchant_id 
+but get_current_user was looking for sub (user_id).
 """
 
 import requests
@@ -9,314 +10,300 @@ import json
 import sys
 from datetime import datetime
 
-# Configuration
-BASE_URL = "https://yappa-insights.preview.emergentagent.com/api"
-LOGIN_CREDENTIALS = {
-    "username": "tiendaclave", 
-    "password": "Chifle98."
-}
+# Backend URL from frontend .env
+BACKEND_URL = "https://yappa-insights.preview.emergentagent.com/api"
 
-class BackendTester:
+# Test credentials
+USERNAME = "tiendaclave"
+PASSWORD = "Chifle98."
+
+class AuthenticationTester:
     def __init__(self):
-        self.base_url = BASE_URL
+        self.token = None
         self.session = requests.Session()
-        self.auth_token = None
-        self.test_results = []
+        self.session.headers.update({
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        })
         
-    def log_test(self, test_name, success, details="", error=""):
-        """Log test results"""
-        result = {
-            "test": test_name,
-            "success": success,
-            "details": details,
-            "error": error,
-            "timestamp": datetime.now().isoformat()
+    def log(self, message, level="INFO"):
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] {level}: {message}")
+        
+    def test_login_and_get_token(self):
+        """Test login and save token for subsequent requests"""
+        self.log("🔐 Testing login and token generation...")
+        
+        try:
+            # Use query parameters as specified in the review request
+            url = f"{BACKEND_URL}/onboarding/login/step1"
+            params = {
+                'username': USERNAME,
+                'password': PASSWORD
+            }
+            
+            response = self.session.post(url, params=params)
+            self.log(f"Login request to: {url}")
+            self.log(f"Login response status: {response.status_code}")
+            
+            if response.status_code != 200:
+                self.log(f"❌ Login failed with status {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+            data = response.json()
+            self.log(f"Login response: {json.dumps(data, indent=2)}")
+            
+            # Check if it's a legacy account (no clerks) - should have token directly
+            if data.get('legacy_account') and data.get('token'):
+                self.token = data['token']
+                self.log(f"✅ Login successful - Legacy account with direct token")
+                self.log(f"Token: {self.token[:50]}...")
+                return True
+            elif data.get('clerks'):
+                self.log("❌ Account has clerks - need step 2 login (not supported in this test)", "ERROR")
+                return False
+            else:
+                self.log("❌ Unexpected login response format", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Login failed with exception: {str(e)}", "ERROR")
+            return False
+    
+    def get_products(self):
+        """Get products list to obtain a product_id for testing"""
+        self.log("📦 Getting products list...")
+        
+        try:
+            url = f"{BACKEND_URL}/products"
+            response = self.session.get(url)
+            
+            if response.status_code != 200:
+                self.log(f"❌ Get products failed with status {response.status_code}", "ERROR")
+                return None
+                
+            products = response.json()
+            self.log(f"✅ Found {len(products)} products")
+            
+            if products:
+                product = products[0]
+                self.log(f"Using product: {product.get('nombre', product.get('name', 'Unknown'))} (ID: {product['_id']})")
+                return product
+            else:
+                self.log("❌ No products found", "ERROR")
+                return None
+                
+        except Exception as e:
+            self.log(f"❌ Get products failed: {str(e)}", "ERROR")
+            return None
+    
+    def get_customers(self):
+        """Get customers list to obtain a customer_id for testing"""
+        self.log("👥 Getting customers list...")
+        
+        try:
+            url = f"{BACKEND_URL}/customers"
+            response = self.session.get(url)
+            
+            if response.status_code != 200:
+                self.log(f"❌ Get customers failed with status {response.status_code}", "ERROR")
+                return None
+                
+            customers = response.json()
+            self.log(f"✅ Found {len(customers)} customers")
+            
+            if customers:
+                customer = customers[0]
+                customer_name = f"{customer.get('nombre', customer.get('name', ''))} {customer.get('apellido', customer.get('lastname', ''))}"
+                self.log(f"Using customer: {customer_name.strip()} (ID: {customer['_id']})")
+                return customer
+            else:
+                self.log("❌ No customers found", "ERROR")
+                return None
+                
+        except Exception as e:
+            self.log(f"❌ Get customers failed: {str(e)}", "ERROR")
+            return None
+    
+    def test_put_product_with_auth(self, product_id):
+        """Test PUT /api/products/{product_id} with authentication"""
+        self.log(f"🔧 Testing PUT /api/products/{product_id} with authentication...")
+        
+        try:
+            url = f"{BACKEND_URL}/products/{product_id}"
+            headers = {
+                'Authorization': f'Bearer {self.token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Test data - update stock
+            data = {"stock": 100}
+            
+            response = self.session.put(url, headers=headers, json=data)
+            self.log(f"PUT products request to: {url}")
+            self.log(f"Request headers: Authorization: Bearer {self.token[:20]}...")
+            self.log(f"Request body: {json.dumps(data)}")
+            self.log(f"Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                self.log(f"✅ PUT products with auth successful")
+                self.log(f"Updated product: {json.dumps(result, indent=2)}")
+                return True
+            elif response.status_code in [401, 403]:
+                self.log(f"❌ PUT products failed - Authentication error {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+            else:
+                self.log(f"❌ PUT products failed with status {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ PUT products with auth failed: {str(e)}", "ERROR")
+            return False
+    
+    def test_put_customer_with_auth(self, customer_id):
+        """Test PUT /api/customers/{customer_id} with authentication"""
+        self.log(f"🔧 Testing PUT /api/customers/{customer_id} with authentication...")
+        
+        try:
+            url = f"{BACKEND_URL}/customers/{customer_id}"
+            headers = {
+                'Authorization': f'Bearer {self.token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Test data - update debt
+            data = {"deuda_total": 50}
+            
+            response = self.session.put(url, headers=headers, json=data)
+            self.log(f"PUT customers request to: {url}")
+            self.log(f"Request headers: Authorization: Bearer {self.token[:20]}...")
+            self.log(f"Request body: {json.dumps(data)}")
+            self.log(f"Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                self.log(f"✅ PUT customers with auth successful")
+                self.log(f"Updated customer: {json.dumps(result, indent=2)}")
+                return True
+            elif response.status_code in [401, 403]:
+                self.log(f"❌ PUT customers failed - Authentication error {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+            else:
+                self.log(f"❌ PUT customers failed with status {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ PUT customers with auth failed: {str(e)}", "ERROR")
+            return False
+    
+    def test_put_product_without_auth(self, product_id):
+        """Test PUT /api/products/{product_id} without authentication (should fail)"""
+        self.log(f"🚫 Testing PUT /api/products/{product_id} without authentication (should fail)...")
+        
+        try:
+            url = f"{BACKEND_URL}/products/{product_id}"
+            # No Authorization header
+            data = {"stock": 200}
+            
+            response = self.session.put(url, json=data)
+            self.log(f"PUT products request to: {url} (no auth header)")
+            self.log(f"Request body: {json.dumps(data)}")
+            self.log(f"Response status: {response.status_code}")
+            
+            if response.status_code in [401, 403]:
+                self.log(f"✅ PUT products without auth correctly failed with {response.status_code}")
+                return True
+            elif response.status_code == 200:
+                self.log(f"❌ PUT products without auth unexpectedly succeeded", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+            else:
+                self.log(f"❌ PUT products without auth failed with unexpected status {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ PUT products without auth test failed: {str(e)}", "ERROR")
+            return False
+    
+    def run_comprehensive_test(self):
+        """Run the complete authentication flow test"""
+        self.log("🚀 Starting comprehensive authentication flow test for PUT endpoints")
+        self.log("=" * 80)
+        
+        results = {
+            'login': False,
+            'put_product_with_auth': False,
+            'put_customer_with_auth': False,
+            'put_product_without_auth': False
         }
-        self.test_results.append(result)
-        status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status}: {test_name}")
-        if details:
-            print(f"   Details: {details}")
-        if error:
-            print(f"   Error: {error}")
-        print()
-
-    def authenticate(self):
-        """Authenticate with the backend using tiendaclave credentials"""
-        try:
-            login_url = f"{self.base_url}/onboarding/login/step1"
-            response = self.session.post(login_url, params=LOGIN_CREDENTIALS)
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.auth_token = data.get("token")
-                if self.auth_token:
-                    self.session.headers.update({
-                        "Authorization": f"Bearer {self.auth_token}"
-                    })
-                    self.log_test("Authentication", True, f"Successfully logged in as {LOGIN_CREDENTIALS['username']}")
-                    return True
-                else:
-                    self.log_test("Authentication", False, error="No access token in response")
-                    return False
-            else:
-                self.log_test("Authentication", False, error=f"Login failed with status {response.status_code}: {response.text}")
-                return False
-                
-        except Exception as e:
-            self.log_test("Authentication", False, error=f"Authentication error: {str(e)}")
-            return False
-
-    def test_get_products(self):
-        """Test GET /api/products to get available products"""
-        try:
-            url = f"{self.base_url}/products"
-            response = self.session.get(url)
-            
-            if response.status_code == 200:
-                products = response.json()
-                if isinstance(products, list) and len(products) > 0:
-                    self.log_test("GET /api/products", True, f"Retrieved {len(products)} products")
-                    return products
-                else:
-                    self.log_test("GET /api/products", False, error="No products found or invalid response format")
-                    return []
-            else:
-                self.log_test("GET /api/products", False, error=f"Status {response.status_code}: {response.text}")
-                return []
-                
-        except Exception as e:
-            self.log_test("GET /api/products", False, error=f"Exception: {str(e)}")
-            return []
-
-    def test_put_product_stock(self, product_id, original_stock):
-        """Test PUT /api/products/{product_id} to update stock"""
-        try:
-            url = f"{self.base_url}/products/{product_id}"
-            
-            # Calculate new stock value (add 10 to original)
-            new_stock = float(original_stock) + 10.0
-            
-            # Test data - using both 'stock' and 'quantity' fields for compatibility
-            update_data = {
-                "stock": new_stock,
-                "quantity": new_stock
-            }
-            
-            # Make PUT request (no auth required as per instructions)
-            response = requests.put(url, json=update_data)
-            
-            if response.status_code == 200:
-                updated_product = response.json()
-                
-                # Check if stock was updated correctly
-                updated_stock = updated_product.get("stock", updated_product.get("quantity", 0))
-                
-                if float(updated_stock) == new_stock:
-                    self.log_test(
-                        f"PUT /api/products/{product_id}", 
-                        True, 
-                        f"Stock updated successfully: {original_stock} → {updated_stock}"
-                    )
-                    return True
-                else:
-                    self.log_test(
-                        f"PUT /api/products/{product_id}", 
-                        False, 
-                        error=f"Stock not updated correctly. Expected: {new_stock}, Got: {updated_stock}"
-                    )
-                    return False
-            else:
-                self.log_test(
-                    f"PUT /api/products/{product_id}", 
-                    False, 
-                    error=f"Status {response.status_code}: {response.text}"
-                )
-                return False
-                
-        except Exception as e:
-            self.log_test(f"PUT /api/products/{product_id}", False, error=f"Exception: {str(e)}")
-            return False
-
-    def test_get_customers(self):
-        """Test GET /api/customers to get available customers"""
-        try:
-            url = f"{self.base_url}/customers"
-            response = self.session.get(url)
-            
-            if response.status_code == 200:
-                customers = response.json()
-                if isinstance(customers, list) and len(customers) > 0:
-                    self.log_test("GET /api/customers", True, f"Retrieved {len(customers)} customers")
-                    return customers
-                else:
-                    self.log_test("GET /api/customers", False, error="No customers found or invalid response format")
-                    return []
-            else:
-                self.log_test("GET /api/customers", False, error=f"Status {response.status_code}: {response.text}")
-                return []
-                
-        except Exception as e:
-            self.log_test("GET /api/customers", False, error=f"Exception: {str(e)}")
-            return []
-
-    def test_put_customer_debt(self, customer_id, original_debt):
-        """Test PUT /api/customers/{customer_id} to update debt"""
-        try:
-            url = f"{self.base_url}/customers/{customer_id}"
-            
-            # Calculate new debt value (add 50 to original, or set to 50 if no original debt)
-            new_debt = float(original_debt or 0) + 50.0
-            
-            # Test data - using 'deuda_total' field as specified
-            update_data = {
-                "deuda_total": new_debt
-            }
-            
-            # Make PUT request (no auth required as per instructions)
-            response = requests.put(url, json=update_data)
-            
-            if response.status_code == 200:
-                updated_customer = response.json()
-                
-                # Check if debt was updated correctly
-                updated_debt = updated_customer.get("deuda_total", 0)
-                
-                if float(updated_debt) == new_debt:
-                    self.log_test(
-                        f"PUT /api/customers/{customer_id}", 
-                        True, 
-                        f"Debt updated successfully: {original_debt or 0} → {updated_debt}"
-                    )
-                    return True
-                else:
-                    self.log_test(
-                        f"PUT /api/customers/{customer_id}", 
-                        False, 
-                        error=f"Debt not updated correctly. Expected: {new_debt}, Got: {updated_debt}"
-                    )
-                    return False
-            else:
-                self.log_test(
-                    f"PUT /api/customers/{customer_id}", 
-                    False, 
-                    error=f"Status {response.status_code}: {response.text}"
-                )
-                return False
-                
-        except Exception as e:
-            self.log_test(f"PUT /api/customers/{customer_id}", False, error=f"Exception: {str(e)}")
-            return False
-
-    def run_actionable_modals_tests(self):
-        """Run comprehensive tests for actionable modals PUT endpoints"""
-        print("🚀 STARTING ACTIONABLE MODALS PUT ENDPOINTS TESTING")
-        print("=" * 60)
-        print()
         
-        # Step 1: Authenticate
-        if not self.authenticate():
-            print("❌ Authentication failed. Cannot proceed with tests.")
-            return False
+        # Step 1: Login and get token
+        if not self.test_login_and_get_token():
+            self.log("❌ CRITICAL: Login failed - cannot proceed with other tests", "ERROR")
+            return results
+        results['login'] = True
         
-        # Step 2: Test Products Flow
-        print("📦 TESTING PRODUCTS STOCK UPDATE FLOW")
-        print("-" * 40)
+        # Step 2: Get test data
+        product = self.get_products()
+        customer = self.get_customers()
         
-        products = self.test_get_products()
-        if products:
-            # Test with first available product
-            test_product = products[0]
-            product_id = test_product.get("_id")
-            original_stock = test_product.get("stock", test_product.get("quantity", 0))
+        if not product:
+            self.log("❌ CRITICAL: No products available for testing", "ERROR")
+            return results
             
-            print(f"Testing with product: {test_product.get('name', test_product.get('nombre', 'Unknown'))}")
-            print(f"Product ID: {product_id}")
-            print(f"Original stock: {original_stock}")
-            print()
-            
-            self.test_put_product_stock(product_id, original_stock)
-        else:
-            print("❌ No products available for testing")
+        if not customer:
+            self.log("❌ CRITICAL: No customers available for testing", "ERROR")
+            return results
         
-        print()
+        # Step 3: Test PUT endpoints with authentication
+        results['put_product_with_auth'] = self.test_put_product_with_auth(product['_id'])
+        results['put_customer_with_auth'] = self.test_put_customer_with_auth(customer['_id'])
         
-        # Step 3: Test Customers Flow
-        print("👥 TESTING CUSTOMERS DEBT UPDATE FLOW")
-        print("-" * 40)
-        
-        customers = self.test_get_customers()
-        if customers:
-            # Test with first available customer
-            test_customer = customers[0]
-            customer_id = test_customer.get("_id")
-            original_debt = test_customer.get("deuda_total", 0)
-            
-            print(f"Testing with customer: {test_customer.get('name', test_customer.get('nombre', 'Unknown'))} {test_customer.get('lastname', test_customer.get('apellido', ''))}")
-            print(f"Customer ID: {customer_id}")
-            print(f"Original debt: {original_debt}")
-            print()
-            
-            self.test_put_customer_debt(customer_id, original_debt)
-        else:
-            print("❌ No customers available for testing")
-        
-        print()
+        # Step 4: Test PUT endpoint without authentication (should fail)
+        results['put_product_without_auth'] = self.test_put_product_without_auth(product['_id'])
         
         # Summary
-        self.print_summary()
+        self.log("=" * 80)
+        self.log("📊 TEST RESULTS SUMMARY:")
+        self.log("=" * 80)
         
-        # Return overall success
-        failed_tests = [t for t in self.test_results if not t["success"]]
-        return len(failed_tests) == 0
-
-    def print_summary(self):
-        """Print test summary"""
-        print("📊 TEST SUMMARY")
-        print("=" * 60)
+        total_tests = len(results)
+        passed_tests = sum(1 for result in results.values() if result)
         
-        total_tests = len(self.test_results)
-        passed_tests = len([t for t in self.test_results if t["success"]])
-        failed_tests = total_tests - passed_tests
+        for test_name, result in results.items():
+            status = "✅ PASS" if result else "❌ FAIL"
+            self.log(f"{test_name}: {status}")
         
-        print(f"Total Tests: {total_tests}")
-        print(f"Passed: {passed_tests} ✅")
-        print(f"Failed: {failed_tests} ❌")
-        print(f"Success Rate: {(passed_tests/total_tests*100):.1f}%" if total_tests > 0 else "0%")
-        print()
+        self.log(f"\nOverall: {passed_tests}/{total_tests} tests passed")
         
-        if failed_tests > 0:
-            print("❌ FAILED TESTS:")
-            for test in self.test_results:
-                if not test["success"]:
-                    print(f"  - {test['test']}: {test['error']}")
-            print()
+        if passed_tests == total_tests:
+            self.log("🎉 ALL TESTS PASSED - Authentication flow is working correctly!", "SUCCESS")
+        else:
+            self.log(f"⚠️  {total_tests - passed_tests} test(s) failed - Authentication issues detected", "ERROR")
         
-        print("🎯 CRITICAL ENDPOINTS STATUS:")
-        product_tests = [t for t in self.test_results if "PUT /api/products/" in t["test"]]
-        customer_tests = [t for t in self.test_results if "PUT /api/customers/" in t["test"]]
-        
-        if product_tests:
-            product_status = "✅ WORKING" if product_tests[0]["success"] else "❌ FAILING"
-            print(f"  - Product Stock Updates: {product_status}")
-        
-        if customer_tests:
-            customer_status = "✅ WORKING" if customer_tests[0]["success"] else "❌ FAILING"
-            print(f"  - Customer Debt Updates: {customer_status}")
-        
-        print()
+        return results
 
 def main():
     """Main test execution"""
-    tester = BackendTester()
-    success = tester.run_actionable_modals_tests()
+    print("🔐 Backend Authentication Flow Testing for PUT Endpoints")
+    print("Testing the fixed authentication issue: merchant_id vs sub token compatibility")
+    print("=" * 80)
     
-    if success:
-        print("🎉 ALL TESTS PASSED! Actionable modals PUT endpoints are working correctly.")
-        sys.exit(0)
+    tester = AuthenticationTester()
+    results = tester.run_comprehensive_test()
+    
+    # Exit with appropriate code
+    if all(results.values()):
+        sys.exit(0)  # Success
     else:
-        print("⚠️  SOME TESTS FAILED! Check the summary above for details.")
-        sys.exit(1)
+        sys.exit(1)  # Failure
 
 if __name__ == "__main__":
     main()
