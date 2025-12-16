@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Modal,
   Pressable,
   RefreshControl,
@@ -21,7 +20,6 @@ import AIInsightCard from '../../components/AIInsightCard';
 export default function HomeScreen() {
   const { user, signOut } = useAuth();
   const router = useRouter();
-  const [alertCount, setAlertCount] = useState(0);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [balanceData, setBalanceData] = useState({
@@ -29,42 +27,57 @@ export default function HomeScreen() {
     expenses: 0,
     balance: 0,
   });
-
-  const fetchAlertCount = async () => {
-    try {
-      const response = await api.get('/api/alerts/low-stock');
-      setAlertCount(response.data.length);
-    } catch (error: any) {
-      console.error('Error fetching alerts:', error);
-      setAlertCount(0);
-    }
-  };
+  const [todayStats, setTodayStats] = useState({
+    sales: 0,
+    salesCount: 0,
+    expenses: 0,
+    expensesCount: 0,
+  });
 
   const fetchBalanceData = async () => {
     try {
       const response = await api.get('/api/balance');
       const data = response.data;
       setBalanceData({
-        income: data.total_income || 0,
-        expenses: data.total_expenses || 0,
+        income: data.ingresos || data.total_income || 0,
+        expenses: data.egresos || data.total_expenses || 0,
         balance: data.balance || 0,
       });
     } catch (error: any) {
       console.error('Error fetching balance:', error);
-      setBalanceData({ income: 0, expenses: 0, balance: 0 });
+    }
+  };
+
+  const fetchTodayStats = async () => {
+    try {
+      // Intentar obtener stats de hoy
+      const today = new Date().toISOString().split('T')[0];
+      const balanceResponse = await api.get('/api/balance', {
+        params: { start_date: today, end_date: today }
+      });
+      
+      const data = balanceResponse.data;
+      setTodayStats({
+        sales: data.ingresos || 0,
+        salesCount: data.resumen_ingresos?.numero_ventas || 0,
+        expenses: data.egresos || 0,
+        expensesCount: data.resumen_egresos?.numero_gastos || 0,
+      });
+    } catch (error) {
+      console.log('Error fetching today stats:', error);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchAlertCount(), fetchBalanceData()]);
+    await Promise.all([fetchBalanceData(), fetchTodayStats()]);
     setRefreshing(false);
   };
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchAlertCount();
       fetchBalanceData();
+      fetchTodayStats();
     }, [])
   );
 
@@ -78,42 +91,15 @@ export default function HomeScreen() {
     router.replace('/auth');
   };
 
-  const menuItems = [
-    {
-      id: 'sale',
-      title: 'Venta',
-      subtitle: 'Registrar venta',
-      icon: 'arrow-up-circle',
-      iconColor: '#00D2FF',
-      bgColor: '#E8F5E9',
-      action: () => router.push('/sale'),
-    },
-    {
-      id: 'expense',
-      title: 'Gastos',
-      subtitle: 'Registrar gasto',
-      icon: 'arrow-down-circle',
-      iconColor: '#F44336',
-      bgColor: '#FFEBEE',
-      action: () => router.push('/expense'),
-    },
-    {
-      id: 'debts',
-      title: 'Deudas',
-      subtitle: 'Por cobrar/pagar',
-      icon: 'document-text-outline',
-      iconColor: '#FF9800',
-      bgColor: '#FFF3E0',
-      action: () => router.push('/debts'),
-    },
-  ];
-
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-EC', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(amount);
+    return `$${amount.toFixed(2)}`;
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Buenos días';
+    if (hour < 18) return 'Buenas tardes';
+    return 'Buenas noches';
   };
 
   return (
@@ -131,12 +117,12 @@ export default function HomeScreen() {
           />
         }
       >
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <View style={styles.welcomeHeader}>
+        {/* Header - Command Center Style */}
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
             <View>
               <Text style={styles.appName}>YAPPA</Text>
-              <Text style={styles.storeName}>{user?.store_name}</Text>
+              <Text style={styles.greeting}>{getGreeting()} 👋</Text>
             </View>
             <TouchableOpacity 
               onPress={handleLogout} 
@@ -146,89 +132,132 @@ export default function HomeScreen() {
               <Ionicons name="log-out-outline" size={22} color="#757575" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.greeting}>Hola 👋</Text>
-          <Text style={styles.subtitle}>Balance de tu negocio</Text>
+          <Text style={styles.storeName}>{user?.store_name}</Text>
         </View>
 
-        {/* Balance Section - Lo más importante */}
-        <View style={styles.balanceSection}>
-          <TouchableOpacity 
-            style={styles.balanceCard}
-            onPress={() => router.push('/(tabs)/balance')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.balanceHeader}>
-              <Text style={styles.balanceLabel}>Balance del mes</Text>
-              <Ionicons name="chevron-forward" size={20} color="#757575" />
-            </View>
-            
-            <View style={styles.balanceAmountContainer}>
+        {/* Hero Balance Card */}
+        <TouchableOpacity 
+          style={styles.heroCard}
+          onPress={() => router.push('/(tabs)/balance')}
+          activeOpacity={0.9}
+        >
+          <View style={styles.heroContent}>
+            <View style={styles.heroLeft}>
+              <Text style={styles.heroLabel}>Balance Total</Text>
               <Text style={[
-                styles.balanceAmount,
+                styles.heroAmount,
                 { color: balanceData.balance >= 0 ? '#00D2FF' : '#F44336' }
               ]}>
                 {formatCurrency(balanceData.balance)}
               </Text>
-              {balanceData.balance >= 0 ? (
-                <View style={styles.positiveIndicator}>
-                  <Ionicons name="trending-up" size={24} color="#00D2FF" />
-                </View>
-              ) : (
-                <View style={styles.negativeIndicator}>
-                  <Ionicons name="trending-down" size={24} color="#F44336" />
-                </View>
-              )}
-            </View>
-
-            <View style={styles.balanceDetails}>
-              <View style={styles.balanceDetailItem}>
-                <View style={styles.balanceDetailDot} style={{ backgroundColor: '#00D2FF' }} />
-                <Text style={styles.balanceDetailLabel}>Ingresos</Text>
-                <Text style={styles.balanceDetailValue}>{formatCurrency(balanceData.income)}</Text>
-              </View>
-              <View style={styles.balanceDetailItem}>
-                <View style={styles.balanceDetailDot} style={{ backgroundColor: '#F44336' }} />
-                <Text style={styles.balanceDetailLabel}>Gastos</Text>
-                <Text style={styles.balanceDetailValue}>{formatCurrency(balanceData.expenses)}</Text>
+              <View style={styles.heroTrend}>
+                <Ionicons 
+                  name={balanceData.balance >= 0 ? "trending-up" : "trending-down"} 
+                  size={16} 
+                  color={balanceData.balance >= 0 ? '#00D2FF' : '#F44336'} 
+                />
+                <Text style={[
+                  styles.heroTrendText,
+                  { color: balanceData.balance >= 0 ? '#00D2FF' : '#F44336' }
+                ]}>
+                  Este mes
+                </Text>
               </View>
             </View>
-          </TouchableOpacity>
+            <View style={styles.heroRight}>
+              <View style={styles.miniStat}>
+                <Ionicons name="arrow-down-circle" size={18} color="#4CAF50" />
+                <Text style={styles.miniStatAmount}>{formatCurrency(balanceData.income)}</Text>
+              </View>
+              <View style={styles.miniStat}>
+                <Ionicons name="arrow-up-circle" size={18} color="#F44336" />
+                <Text style={styles.miniStatAmount}>{formatCurrency(balanceData.expenses)}</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.heroFooter}>
+            <Text style={styles.heroFooterText}>Ver detalles</Text>
+            <Ionicons name="chevron-forward" size={16} color="#757575" />
+          </View>
+        </TouchableOpacity>
+
+        {/* Today's Quick Stats */}
+        <View style={styles.todaySection}>
+          <Text style={styles.sectionTitle}>📊 Hoy</Text>
+          <View style={styles.todayCards}>
+            <View style={[styles.todayCard, styles.salesCard]}>
+              <Ionicons name="cart-outline" size={20} color="#4CAF50" />
+              <Text style={styles.todayCardValue}>{formatCurrency(todayStats.sales)}</Text>
+              <Text style={styles.todayCardLabel}>{todayStats.salesCount} ventas</Text>
+            </View>
+            <View style={[styles.todayCard, styles.expensesCard]}>
+              <Ionicons name="receipt-outline" size={20} color="#F44336" />
+              <Text style={styles.todayCardValue}>{formatCurrency(todayStats.expenses)}</Text>
+              <Text style={styles.todayCardLabel}>{todayStats.expensesCount} gastos</Text>
+            </View>
+          </View>
         </View>
 
-        {/* AI Insight Card */}
-        <AIInsightCard />
-
-        {/* Actions Section */}
-        <View style={styles.actionsLabel}>
-          <Text style={styles.actionsLabelText}>Menú Principal</Text>
+        {/* AI Insight Card - Ya existe */}
+        <View style={styles.insightSection}>
+          <AIInsightCard />
         </View>
 
-        {/* Action Cards - Grandes y legibles */}
-        <View style={styles.actionsSection}>
-          {menuItems.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.actionCard}
-              onPress={item.action}
+        {/* Quick Actions */}
+        <View style={styles.quickActionsSection}>
+          <Text style={styles.sectionTitle}>⚡ Acciones Rápidas</Text>
+          <View style={styles.quickActionsGrid}>
+            <TouchableOpacity 
+              style={styles.quickActionCard}
+              onPress={() => router.push('/sale')}
               activeOpacity={0.7}
             >
-              <View style={[styles.iconContainer, { backgroundColor: item.bgColor }]}>
-                <Ionicons name={item.icon as any} size={32} color={item.iconColor} />
+              <View style={[styles.quickActionIcon, { backgroundColor: '#E8F5E9' }]}>
+                <Ionicons name="add-circle" size={28} color="#4CAF50" />
               </View>
-              <View style={styles.actionTextContainer}>
-                <Text style={styles.actionTitle}>{item.title}</Text>
-                <Text style={styles.actionSubtitle}>{item.subtitle}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
+              <Text style={styles.quickActionText}>Nueva Venta</Text>
             </TouchableOpacity>
-          ))}
+
+            <TouchableOpacity 
+              style={styles.quickActionCard}
+              onPress={() => router.push('/expense')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#FFEBEE' }]}>
+                <Ionicons name="remove-circle" size={28} color="#F44336" />
+              </View>
+              <Text style={styles.quickActionText}>Nuevo Gasto</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.quickActionCard}
+              onPress={() => router.push('/debts')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#FFF3E0' }]}>
+                <Ionicons name="document-text" size={28} color="#FF9800" />
+              </View>
+              <Text style={styles.quickActionText}>Deudas</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.quickActionCard}
+              onPress={() => router.push('/(tabs)/inventory')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.quickActionIcon, { backgroundColor: '#E3F2FD' }]}>
+                <Ionicons name="cube" size={28} color="#2196F3" />
+              </View>
+              <Text style={styles.quickActionText}>Inventario</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Bottom spacing */}
-        <View style={styles.bottomSpacing} />
+        <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Logout Modal - Minimalista */}
+      {/* Logout Modal */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -237,10 +266,8 @@ export default function HomeScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={styles.modalIconContainer}>
-              <View style={styles.modalIconCircle}>
-                <Ionicons name="log-out-outline" size={32} color="#F44336" />
-              </View>
+            <View style={styles.modalIconCircle}>
+              <Ionicons name="log-out-outline" size={32} color="#F44336" />
             </View>
             <Text style={styles.modalTitle}>Cerrar sesión</Text>
             <Text style={styles.modalMessage}>
@@ -270,251 +297,203 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  // Container
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
   },
-
-  // ScrollView
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 20, // Espacio normal
-    paddingBottom: 100, // Espacio para los tabs en el bottom
+    paddingBottom: 20,
   },
 
-  // Welcome Section
-  welcomeSection: {
+  // Header
+  header: {
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingTop: 0,
-    paddingBottom: 16,
+    paddingTop: 60,
+    paddingBottom: 20,
   },
-  welcomeHeader: {
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 24,
   },
   appName: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#00D2FF',
-    letterSpacing: 1,
-    marginBottom: 4,
-    textTransform: 'uppercase',
+    letterSpacing: 2,
   },
-  storeName: {
-    fontSize: 20,
+  greeting: {
+    fontSize: 24,
     fontWeight: '700',
     color: '#212121',
-    letterSpacing: -0.5,
+    marginTop: 4,
+  },
+  storeName: {
+    fontSize: 14,
+    color: '#757575',
+    marginTop: 4,
   },
   logoutButton: {
     padding: 8,
-    borderRadius: 8,
-  },
-  greeting: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#212121',
-    marginBottom: 8,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#757575',
-    lineHeight: 24,
-  },
-
-  // Balance Section - Lo más importante
-  balanceSection: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  balanceCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F5F5',
     borderRadius: 20,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#F5F5F5',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  balanceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  balanceLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#757575',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  balanceAmountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  balanceAmount: {
-    fontSize: 40,
-    fontWeight: '800',
-    letterSpacing: -1,
-  },
-  positiveIndicator: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#E8F5E9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  negativeIndicator: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FFEBEE',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  balanceDetails: {
-    gap: 12,
-  },
-  balanceDetailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  balanceDetailDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  balanceDetailLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#757575',
-    flex: 1,
-  },
-  balanceDetailValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#212121',
   },
 
-  // Actions Label
-  actionsLabel: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  actionsLabelText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#757575',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-
-  // Alert Banner - Minimalista
-  alertBanner: {
+  // Hero Balance Card
+  heroCard: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
-    marginBottom: 24,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FFB74D',
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  alertIconContainer: {
-    width: 40,
-    height: 40,
+    marginTop: 16,
     borderRadius: 20,
-    backgroundColor: '#FFF3E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  alertContent: {
+  heroContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  heroLeft: {
     flex: 1,
   },
-  alertTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#212121',
-    marginBottom: 2,
-  },
-  alertSubtitle: {
-    fontSize: 14,
-    fontWeight: '400',
+  heroLabel: {
+    fontSize: 13,
     color: '#757575',
-    lineHeight: 20,
+    fontWeight: '500',
   },
-
-  // Action Cards - Grandes y legibles
-  actionsSection: {
-    paddingHorizontal: 20,
+  heroAmount: {
+    fontSize: 32,
+    fontWeight: '700',
+    marginTop: 4,
   },
-  actionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
+  heroTrend: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#F5F5F5',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    marginTop: 8,
+    gap: 4,
   },
-  iconContainer: {
+  heroTrendText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  heroRight: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  miniStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  miniStatAmount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#424242',
+  },
+  heroFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    gap: 4,
+  },
+  heroFooterText: {
+    fontSize: 13,
+    color: '#757575',
+    fontWeight: '500',
+  },
+
+  // Today Section
+  todaySection: {
+    marginTop: 24,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#212121',
+    marginBottom: 12,
+  },
+  todayCards: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  todayCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  salesCard: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#4CAF50',
+  },
+  expensesCard: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#F44336',
+  },
+  todayCardValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212121',
+    marginTop: 8,
+  },
+  todayCardLabel: {
+    fontSize: 12,
+    color: '#757575',
+    marginTop: 4,
+  },
+
+  // Insight Section
+  insightSection: {
+    marginTop: 24,
+    paddingHorizontal: 20,
+  },
+
+  // Quick Actions
+  quickActionsSection: {
+    marginTop: 24,
+    paddingHorizontal: 20,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  quickActionCard: {
+    width: '47%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  quickActionIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    justifyContent: 'center',
   },
-  actionTextContainer: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: 18,
+  quickActionText: {
+    fontSize: 13,
     fontWeight: '600',
-    color: '#212121',
-    marginBottom: 4,
-  },
-  actionSubtitle: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#757575',
-    lineHeight: 20,
+    color: '#424242',
+    marginTop: 12,
   },
 
-  // Bottom Spacing
-  bottomSpacing: {
-    height: 20,
-  },
-
-  // Modal - Minimalista
+  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -524,77 +503,58 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 32,
-    width: '100%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  modalIconContainer: {
+    borderRadius: 20,
+    padding: 24,
     alignItems: 'center',
-    marginBottom: 24,
+    width: '100%',
+    maxWidth: 320,
   },
   modalIconCircle: {
     width: 64,
     height: 64,
     borderRadius: 32,
     backgroundColor: '#FFEBEE',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: '#212121',
-    textAlign: 'center',
-    marginBottom: 12,
-    letterSpacing: -0.5,
+    marginBottom: 8,
   },
   modalMessage: {
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: 14,
     color: '#757575',
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
+    marginBottom: 24,
   },
   modalButtons: {
+    flexDirection: 'row',
     gap: 12,
+    width: '100%',
   },
   modalButton: {
-    paddingVertical: 16,
+    flex: 1,
+    paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
-    minHeight: 56,
-    justifyContent: 'center',
   },
   cancelButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#E0E0E0',
+    backgroundColor: '#F5F5F5',
   },
   confirmButton: {
     backgroundColor: '#F44336',
-    shadowColor: '#F44336',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
   },
   cancelButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#616161',
-    letterSpacing: 0.5,
+    color: '#757575',
   },
   confirmButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
-    letterSpacing: 0.5,
   },
 });
