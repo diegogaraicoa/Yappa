@@ -621,6 +621,86 @@ async def send_monthly_ai_insights():
     except Exception as e:
         print(f"Error in monthly AI insights job: {str(e)}")
 
+
+async def generate_monthly_ai_reports():
+    """Job: Generate comprehensive AI reports for all merchants on 1st of month at 11am"""
+    print(f"[{datetime.now()}] Running monthly AI reports generation job...")
+    
+    try:
+        from .ai_report_service import ai_report_service
+        
+        # Get previous month
+        today = datetime.now()
+        if today.month == 1:
+            year = today.year - 1
+            month = 12
+        else:
+            year = today.year
+            month = today.month - 1
+        
+        # Get all merchants
+        merchants = await db.merchants.find({}).to_list(10000)
+        reports_generated = 0
+        
+        for merchant in merchants:
+            store_id = str(merchant.get("_id"))
+            
+            # Check if report already exists for this month
+            existing = await db.ai_reports.find_one({
+                'merchant_id': store_id,
+                'year': year,
+                'month': month
+            })
+            
+            if existing:
+                print(f"⏭️ Reporte ya existe para {merchant.get('store_name', 'Tienda')} - {month}/{year}")
+                continue
+            
+            try:
+                # Generate report
+                result = await ai_report_service.generate_report(db, store_id, year, month)
+                
+                if result.get('success'):
+                    reports_generated += 1
+                    print(f"✅ Reporte generado para {merchant.get('store_name', 'Tienda')} - {month}/{year}")
+                    
+                    # Send notification
+                    if merchant.get("monthly_push") and merchant.get("expo_push_token"):
+                        try:
+                            expo_push_service.send_push_notification(
+                                merchant["expo_push_token"],
+                                "📊 Reporte Mensual Generado",
+                                f"Tu reporte de {result['report']['month_name']} está listo. ¡Revísalo!",
+                                {"type": "monthly_report", "report_id": result['report']['id']}
+                            )
+                        except Exception as e:
+                            print(f"⚠️ Error enviando push de reporte: {str(e)}")
+                    
+                    # Send WhatsApp notification
+                    if merchant.get("monthly_whatsapp") and merchant.get("whatsapp_number"):
+                        try:
+                            message = f"📊 *REPORTE MENSUAL LISTO*\n\n"
+                            message += f"Tu reporte de {result['report']['month_name']} {year} ha sido generado.\n\n"
+                            message += f"💰 Ventas: ${result['report']['metrics'].get('total_sales', 0):.2f}\n"
+                            message += f"📈 Balance: ${result['report']['metrics'].get('net_balance', 0):.2f}\n\n"
+                            message += "Abre la app para ver el análisis completo con IA."
+                            
+                            twilio_service.send_whatsapp(merchant["whatsapp_number"], message)
+                        except Exception as e:
+                            print(f"⚠️ Error enviando WhatsApp de reporte: {str(e)}")
+                else:
+                    print(f"⚠️ Error generando reporte para {merchant.get('store_name', 'Tienda')}: {result.get('error')}")
+            except Exception as e:
+                print(f"⚠️ Error procesando merchant {store_id}: {str(e)}")
+        
+        print(f"[{datetime.now()}] Monthly AI reports generated: {reports_generated} reports")
+    
+    except Exception as e:
+        print(f"Error in monthly AI reports job: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
+
 def start_scheduler():
     """Initialize and start the scheduler"""
     # Daily stock alerts at 8:00 AM
