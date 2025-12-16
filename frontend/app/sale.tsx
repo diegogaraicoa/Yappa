@@ -18,14 +18,14 @@ import api from '../utils/api';
 
 export default function SaleScreen() {
   const router = useRouter();
-  const [withInventory, setWithInventory] = useState<boolean | null>(null);
+  const [withInventory, setWithInventory] = useState(null as boolean | null);
   const [total, setTotal] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Efectivo');
   const [paid, setPaid] = useState(true);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [customers, setCustomers] = useState([] as any[]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null as any);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
@@ -35,8 +35,8 @@ export default function SaleScreen() {
     phone: '',
     email: '',
   });
-  const [products, setProducts] = useState<any[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState([] as any[]);
+  const [selectedProducts, setSelectedProducts] = useState([] as any[]);
   const [showProductModal, setShowProductModal] = useState(false);
   const [showNewProductModal, setShowNewProductModal] = useState(false);
   const [newProductQuick, setNewProductQuick] = useState({
