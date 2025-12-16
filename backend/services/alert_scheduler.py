@@ -659,6 +659,15 @@ def start_scheduler():
         replace_existing=True
     )
     
+    # Monthly AI Report generation on 1st of month at 11:00 AM
+    scheduler.add_job(
+        generate_monthly_ai_reports,
+        CronTrigger(day=1, hour=11, minute=0),
+        id='monthly_ai_reports',
+        name='Generate monthly AI reports',
+        replace_existing=True
+    )
+    
     scheduler.start()
     print("Alert scheduler started successfully")
     print("Jobs scheduled:")
@@ -667,6 +676,7 @@ def start_scheduler():
     print("  - Weekly summary: Monday 9:00 AM")
     print("  - Weekly AI insights: Monday 9:30 AM")
     print("  - Monthly AI insights: 1st of month 10:00 AM")
+    print("  - Monthly AI reports: 1st of month 11:00 AM")
 
 def stop_scheduler():
     """Stop the scheduler"""
