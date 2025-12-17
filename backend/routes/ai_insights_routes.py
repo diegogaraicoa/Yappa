@@ -310,8 +310,13 @@ async def get_all_insights():
             })
     
     # 2. Deudas pendientes (usar campo deuda_total de clientes para consistencia)
+    # Buscar clientes con deuda (merchant_id puede ser string o ausente en datos legacy)
     customers_with_debt = await db.customers.find({
-        "merchant_id": store_id,
+        "$or": [
+            {"merchant_id": store_id},
+            {"merchant_id": {"$exists": False}},  # Datos legacy sin merchant_id
+            {"merchant_id": None}
+        ],
         "deuda_total": {"$lt": 0}  # Deuda negativa = debe dinero
     }).sort("deuda_total", 1).to_list(20)
     
