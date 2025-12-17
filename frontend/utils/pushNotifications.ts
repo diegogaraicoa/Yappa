@@ -46,7 +46,7 @@ class PushNotificationService {
     // Obtener el token de Expo Push
     try {
       const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: 'your-project-id', // Esto se puede configurar en app.json
+        projectId: '1d4993ea-b1c2-456d-bcf1-928c0dc0b80a', // YAPPA EAS Project ID
       });
       this.expoPushToken = tokenData.data;
       console.log('✅ PUSH: Token obtained:', this.expoPushToken);
