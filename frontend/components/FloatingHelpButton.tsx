@@ -15,15 +15,6 @@ export default function FloatingHelpButton() {
     setShowModal(false);
   };
 
-  const handleEmail = () => {
-    const url = 'mailto:soporte@yappa.app?subject=Ayuda%20YAPPA';
-    Linking.openURL(url).catch((err) => {
-      console.error('Error opening email:', err);
-      showAlert('Error', 'No se pudo abrir el cliente de email');
-    });
-    setShowModal(false);
-  };
-
   return (
     <>
       <TouchableOpacity
