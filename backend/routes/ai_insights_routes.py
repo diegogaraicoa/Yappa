@@ -309,32 +309,18 @@ async def get_all_insights():
                 "timestamp": datetime.now().isoformat()
             })
     
-    # 2. Deudas pendientes
-    unpaid_sales = await db.sales.find({
-        "store_id": store_id,
-        "paid": False
-    }).to_list(100)
+    # 2. Deudas pendientes (usar campo deuda_total de clientes para consistencia)
+    customers_with_debt = await db.customers.find({
+        "merchant_id": store_id,
+        "deuda_total": {"$lt": 0}  # Deuda negativa = debe dinero
+    }).sort("deuda_total", 1).to_list(20)
     
-    debts_by_customer = {}
-    for sale in unpaid_sales:
-        customer_id = sale.get("customer_id")
-        if customer_id:
-            if customer_id not in debts_by_customer:
-                debts_by_customer[customer_id] = {
-                    "customer_name": sale.get("customer_name", "Cliente"),
-                    "total_debt": 0,
-                    "oldest_date": sale.get("created_at")
-                }
-            
-            debt = sale.get("total", 0) - sale.get("paid_amount", 0)
-            debts_by_customer[customer_id]["total_debt"] += debt
-            
-            if sale.get("created_at") < debts_by_customer[customer_id]["oldest_date"]:
-                debts_by_customer[customer_id]["oldest_date"] = sale.get("created_at")
-    
-    for customer_id, debt_info in debts_by_customer.items():
-        days_old = (datetime.now() - debt_info["oldest_date"]).days
-        if days_old >= 7:
+    for customer in customers_with_debt:
+        debt_amount = abs(customer.get("deuda_total", 0))
+        customer_name = customer.get("nombre", customer.get("name", "Cliente"))
+        customer_id = str(customer.get("_id"))
+        
+        if debt_amount > 0:
             all_insights.append({
                 "id": f"debt_{customer_id}",
                 "type": "overdue_debt",
@@ -342,12 +328,12 @@ async def get_all_insights():
                 "icon": "💰",
                 "color": "#FF9800",
                 "title": "Deuda Pendiente",
-                "message": f"{debt_info['customer_name']} debe ${debt_info['total_debt']:.2f} desde hace {days_old} días.",
-                "cta_text": "Cobrar",
-                "cta_action": "send_payment_reminder",
+                "message": f"{customer_name} debe ${debt_amount:.2f}. ¡Es momento de cobrar!",
+                "cta_text": "Ver Clientes",
+                "cta_action": "navigate_to_customers",
                 "cta_data": {"customer_id": customer_id},
                 "priority": 7,
-                "timestamp": debt_info["oldest_date"].isoformat()
+                "timestamp": datetime.now().isoformat()
             })
     
     # 3. Insights del scheduler (últimos 7 días)
