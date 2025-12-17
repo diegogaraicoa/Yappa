@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "YAPPA",
+    "slug": "yappa",
+    "owner": "diegogaraicoas-organization",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
