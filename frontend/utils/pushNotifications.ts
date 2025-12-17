@@ -1,8 +1,12 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from './api';
+
+// Project ID de EAS
+const EAS_PROJECT_ID = Constants.expoConfig?.extra?.eas?.projectId || '1d4993ea-b1c2-456d-bcf1-928c0dc0b80a';
 
 // Configurar cómo se manejan las notificaciones cuando la app está en primer plano
 Notifications.setNotificationHandler({
