@@ -58,8 +58,8 @@ export default function ExploreScreen() {
     },
     {
       id: 4,
-      title: 'Alertas',
-      description: 'Configura notificaciones',
+      title: 'Notificaciones',
+      description: 'Configura tus notificaciones',
       icon: 'notifications-outline',
       iconFilled: 'notifications',
       color: '#FF9800',
