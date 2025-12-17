@@ -40,7 +40,7 @@ export default function AIInsightCard() {
     // Prioridad: críticos > deudas > stock bajo
     if (criticalCount > 0 && debtCount > 0) {
       return {
-        title: 'Alertas pendientes',
+        title: 'Tu YAPPA del día',
         subtitle: `${criticalCount} de stock · ${debtCount} de cobro`,
       };
     }
