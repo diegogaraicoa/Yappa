@@ -106,14 +106,14 @@ export default function InsightsScreen() {
       switch (insight.cta_action) {
         case 'navigate_to_product':
         case 'navigate_to_inventory':
-          router.push('/(tabs)/inventory?from=insights');
+          router.replace('/(tabs)/inventory');
           break;
         case 'navigate_to_customers':
         case 'send_payment_reminder':
-          router.push('/customers?from=insights');
+          router.replace('/customers');
           break;
         case 'navigate_to_balance':
-          router.push('/(tabs)/balance');
+          router.replace('/(tabs)/balance');
           break;
         case 'navigate_to_insights':
           break;
