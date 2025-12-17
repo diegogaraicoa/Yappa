@@ -47,11 +47,18 @@ export default function AlertSettingsScreen() {
       const response = await api.get('/api/admin_ops/alert-settings');
       
       if (response.data) {
+        // WhatsApp settings
         setWhatsappNumber(response.data.whatsapp_number || '');
         setStockAlertWhatsapp(response.data.stock_alert_whatsapp || false);
         setDailyWhatsapp(response.data.daily_whatsapp || false);
         setWeeklyWhatsapp(response.data.weekly_whatsapp || false);
         setMonthlyWhatsapp(response.data.monthly_whatsapp || false);
+        
+        // Push notification settings
+        setStockAlertPush(response.data.stock_alert_push !== false);
+        setDebtAlertPush(response.data.debt_alert_push !== false);
+        setDailyPush(response.data.daily_push || false);
+        setWeeklyPush(response.data.weekly_push !== false);
       }
     } catch (error: any) {
       console.error('Error loading settings:', error);
