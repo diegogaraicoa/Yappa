@@ -87,7 +87,11 @@ async def get_insight_of_the_day():
     # 3. Verificar deudas pendientes (PRIORIDAD MEDIA)
     # Usar campo deuda_total de clientes (consistente con pantalla de clientes)
     customers_with_debt = await db.customers.find({
-        "merchant_id": store_id,
+        "$or": [
+            {"merchant_id": store_id},
+            {"merchant_id": {"$exists": False}},
+            {"merchant_id": None}
+        ],
         "deuda_total": {"$lt": 0}  # Deuda negativa = debe dinero
     }).sort("deuda_total", 1).to_list(10)  # Ordenar por deuda más alta primero
     
