@@ -977,7 +977,7 @@ async def save_alert_settings(settings: AlertSettingsRequest):
     if not merchant:
         raise HTTPException(status_code=404, detail="Merchant no encontrado")
     
-    # Actualizar configuración
+    # Actualizar configuración (incluye WhatsApp y Push)
     await db.merchants.update_one(
         {"_id": merchant["_id"]},
         {"$set": {
@@ -985,10 +985,14 @@ async def save_alert_settings(settings: AlertSettingsRequest):
             "whatsapp_number": settings.whatsapp_number,
             "stock_alert_email": settings.stock_alert_email,
             "stock_alert_whatsapp": settings.stock_alert_whatsapp,
+            "stock_alert_push": settings.stock_alert_push,
+            "debt_alert_push": settings.debt_alert_push,
             "daily_email": settings.daily_email,
             "daily_whatsapp": settings.daily_whatsapp,
+            "daily_push": settings.daily_push,
             "weekly_email": settings.weekly_email,
             "weekly_whatsapp": settings.weekly_whatsapp,
+            "weekly_push": settings.weekly_push,
             "monthly_email": settings.monthly_email,
             "monthly_whatsapp": settings.monthly_whatsapp,
             "updated_at": datetime.utcnow()
