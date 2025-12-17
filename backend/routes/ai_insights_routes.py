@@ -85,53 +85,29 @@ async def get_insight_of_the_day():
         }
     
     # 3. Verificar deudas pendientes (PRIORIDAD MEDIA)
-    unpaid_sales = await db.sales.find({
-        "store_id": store_id,
-        "paid": False
-    }).to_list(100)
+    # Usar campo deuda_total de clientes (consistente con pantalla de clientes)
+    customers_with_debt = await db.customers.find({
+        "merchant_id": store_id,
+        "deuda_total": {"$lt": 0}  # Deuda negativa = debe dinero
+    }).sort("deuda_total", 1).to_list(10)  # Ordenar por deuda más alta primero
     
-    if unpaid_sales:
-        # Agrupar por cliente
-        debts_by_customer = {}
-        for sale in unpaid_sales:
-            customer_id = sale.get("customer_id")
-            if customer_id:
-                if customer_id not in debts_by_customer:
-                    debts_by_customer[customer_id] = {
-                        "customer_name": sale.get("customer_name", "Cliente"),
-                        "total_debt": 0,
-                        "sales_count": 0,
-                        "oldest_date": sale.get("created_at")
-                    }
-                
-                debt = sale.get("total", 0) - sale.get("paid_amount", 0)
-                debts_by_customer[customer_id]["total_debt"] += debt
-                debts_by_customer[customer_id]["sales_count"] += 1
-                
-                if sale.get("created_at") < debts_by_customer[customer_id]["oldest_date"]:
-                    debts_by_customer[customer_id]["oldest_date"] = sale.get("created_at")
+    if customers_with_debt:
+        # Tomar el cliente con mayor deuda
+        top_debtor = customers_with_debt[0]
+        debt_amount = abs(top_debtor.get("deuda_total", 0))
+        customer_name = top_debtor.get("nombre", top_debtor.get("name", "Cliente"))
         
-        # Buscar la deuda más antigua
-        oldest_debt = None
-        oldest_days = 0
-        
-        for customer_id, debt_info in debts_by_customer.items():
-            days_old = (datetime.now() - debt_info["oldest_date"]).days
-            if days_old > oldest_days:
-                oldest_days = days_old
-                oldest_debt = debt_info
-        
-        if oldest_debt and oldest_days >= 7:  # Solo mostrar si tiene más de 1 semana
+        if debt_amount > 0:
             return {
                 "type": "overdue_debt",
                 "category": "Cobranza",
                 "icon": "💰",
                 "color": "#FF9800",
                 "title": "Deuda Pendiente",
-                "message": f"{oldest_debt['customer_name']} debe ${oldest_debt['total_debt']:.2f} desde hace {oldest_days} días.",
-                "cta_text": "Enviar Recordatorio",
-                "cta_action": "send_payment_reminder",
-                "cta_data": {"customer_id": customer_id},
+                "message": f"{customer_name} debe ${debt_amount:.2f}. ¡Es momento de cobrar!",
+                "cta_text": "Ver Clientes",
+                "cta_action": "navigate_to_customers",
+                "cta_data": {"customer_id": str(top_debtor.get("_id"))},
                 "priority": 7
             }
     
