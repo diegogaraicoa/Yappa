@@ -52,17 +52,6 @@ export default function FloatingHelpButton() {
                 <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.optionButton} onPress={handleEmail}>
-                <View style={styles.optionIcon}>
-                  <Ionicons name="mail" size={28} color="#00D2FF" />
-                </View>
-                <View style={styles.optionText}>
-                  <Text style={styles.optionTitle}>Email</Text>
-                  <Text style={styles.optionSubtitle}>soporte@yappa.app</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#BDBDBD" />
-              </TouchableOpacity>
-
               <View style={styles.divider} />
 
               <View style={styles.faqSection}>
