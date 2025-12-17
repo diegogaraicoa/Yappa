@@ -916,16 +916,20 @@ async def delete_kyb(kyb_id: str):
 from pydantic import BaseModel
 
 class AlertSettingsRequest(BaseModel):
-    email: str
-    whatsapp_number: str
-    stock_alert_email: bool
-    stock_alert_whatsapp: bool
-    daily_email: bool
-    daily_whatsapp: bool
-    weekly_email: bool
-    weekly_whatsapp: bool
-    monthly_email: bool
-    monthly_whatsapp: bool
+    email: str = ""
+    whatsapp_number: str = ""
+    stock_alert_email: bool = False
+    stock_alert_whatsapp: bool = False
+    stock_alert_push: bool = True
+    debt_alert_push: bool = True
+    daily_email: bool = False
+    daily_whatsapp: bool = False
+    daily_push: bool = False
+    weekly_email: bool = False
+    weekly_whatsapp: bool = False
+    weekly_push: bool = True
+    monthly_email: bool = False
+    monthly_whatsapp: bool = False
 
 @router.get("/alert-settings")
 async def get_alert_settings():
