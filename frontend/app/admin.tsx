@@ -113,6 +113,7 @@ export default function AdminConsoleScreen() {
     { id: 'reports', title: 'Reportes IA', icon: 'document-text', color: '#E91E63' },
     { id: 'training', title: 'Capacitación', icon: 'school', color: '#9C27B0' },
     { id: 'bulk-upload', title: 'Carga Masiva', icon: 'cloud-upload', color: '#00BCD4' },
+    { id: 'export', title: 'Exportar CSV', icon: 'download', color: '#4CAF50' },
   ];
 
   return (
