@@ -109,18 +109,31 @@ export default function AlertSettingsScreen() {
   const handleTestPush = async () => {
     setTestingPush(true);
     try {
-      const granted = await requestPermissions();
+      // Usar endpoint del backend que envía push remota + WhatsApp
+      const response = await api.post('/api/notifications/test-all');
       
-      if (!granted) {
-        Alert.alert('Permisos Requeridos', 'Debes permitir las notificaciones para recibir alertas.');
-        return;
+      const results = response.data.results;
+      let message = '';
+      
+      if (results.push?.success) {
+        message += '✅ Push enviada\n';
+      } else {
+        message += '❌ Push: ' + (results.push?.error || 'Error') + '\n';
       }
       
-      await sendTestNotification();
-      Alert.alert('¡Listo!', 'Se envió una notificación de prueba. Debería aparecer en tu dispositivo.');
+      if (results.whatsapp?.success) {
+        message += '✅ WhatsApp enviado';
+      } else {
+        message += '❌ WhatsApp: ' + (results.whatsapp?.error || 'Error');
+      }
+      
+      Alert.alert('Resultado', message);
     } catch (error) {
-      console.error('Error testing push:', error);
-      Alert.alert('Error', 'No se pudo enviar la notificación de prueba. Las notificaciones push solo funcionan en dispositivos móviles.');
+      console.error('Error testing notifications:', error);
+      Alert.alert(
+        'Error',
+        'No se pudo enviar las notificaciones de prueba'
+      );
     } finally {
       setTestingPush(false);
     }
