@@ -115,6 +115,8 @@ export default function AdminConsoleScreen() {
         return <ReportsView data={data} />;
       case 'training':
         return <TrainingView data={data} />;
+      case 'export':
+        return <ExportDataView data={data} />;
       default:
         return <DashboardView data={data} />;
     }
