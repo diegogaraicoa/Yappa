@@ -275,6 +275,84 @@ async def test_scheduler_job(job_type: str):
         }
 
 
+@router.post("/test-all")
+async def test_all_notifications():
+    """
+    Prueba TODAS las notificaciones: Push remota + WhatsApp
+    """
+    import httpx
+    from main import get_database
+    from services.twilio_service import twilio_service
+    
+    db = get_database()
+    results = {"push": None, "whatsapp": None}
+    
+    # Obtener merchant
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant no encontrado")
+    
+    store_id = str(merchant.get("_id"))
+    
+    # 1. ENVIAR PUSH NOTIFICATION REMOTA
+    try:
+        tokens = await db.push_tokens.find({
+            "store_id": store_id,
+            "active": True
+        }).to_list(100)
+        
+        if tokens:
+            messages = []
+            for token in tokens:
+                push_token = token["push_token"]
+                if push_token.startswith("ExponentPushToken"):
+                    messages.append({
+                        "to": push_token,
+                        "sound": "default",
+                        "title": "🧪 Prueba YAPPA",
+                        "body": "¡Tus notificaciones push están funcionando!",
+                        "data": {"type": "test"},
+                        "priority": "high"
+                    })
+            
+            if messages:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        "https://exp.host/--/api/v2/push/send",
+                        json=messages,
+                        headers={"Content-Type": "application/json"}
+                    )
+                    results["push"] = {
+                        "success": True,
+                        "sent_to": len(messages),
+                        "response": response.json()
+                    }
+            else:
+                results["push"] = {"success": False, "error": "No hay tokens válidos"}
+        else:
+            results["push"] = {"success": False, "error": "No hay dispositivos registrados"}
+    except Exception as e:
+        results["push"] = {"success": False, "error": str(e)}
+    
+    # 2. ENVIAR WHATSAPP
+    try:
+        whatsapp_number = merchant.get("whatsapp_number")
+        if whatsapp_number:
+            message = "🧪 *Prueba YAPPA*\n\n¡Tus notificaciones de WhatsApp están funcionando correctamente!"
+            twilio_service.send_whatsapp(whatsapp_number, message)
+            results["whatsapp"] = {"success": True, "sent_to": whatsapp_number}
+        else:
+            results["whatsapp"] = {"success": False, "error": "No hay número de WhatsApp configurado"}
+    except Exception as e:
+        results["whatsapp"] = {"success": False, "error": str(e)}
+    
+    return {
+        "success": True,
+        "message": "Prueba de notificaciones completada",
+        "results": results
+    }
+
+
 @router.get("/scheduler/status")
 async def get_scheduler_status():
     """
