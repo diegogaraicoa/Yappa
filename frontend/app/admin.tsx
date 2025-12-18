@@ -68,6 +68,21 @@ export default function AdminConsoleScreen() {
           const tutorials = await api.get('/api/training');
           setData({ tutorials: tutorials.data });
           break;
+        case 'export':
+          // Load all data types for export
+          const [exportSales, exportCustomers, exportProducts, exportSuppliers] = await Promise.all([
+            api.get('/api/sales'),
+            api.get('/api/customers'),
+            api.get('/api/products'),
+            api.get('/api/suppliers'),
+          ]);
+          setData({ 
+            sales: exportSales.data, 
+            customers: exportCustomers.data,
+            products: exportProducts.data,
+            suppliers: exportSuppliers.data 
+          });
+          break;
       }
     } catch (error) {
       console.error('Error loading data:', error);
