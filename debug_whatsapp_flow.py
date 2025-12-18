@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://insight-engine-41.preview.emergentagent.com/api"
+BACKEND_URL = "https://smarte-reports.preview.emergentagent.com/api"
 TEST_USER_PHONE = "+593992913093"
 TEST_EMAIL = "debug@example.com"
 TEST_PASSWORD = "debugpass123"

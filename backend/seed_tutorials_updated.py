@@ -513,7 +513,7 @@ La deuda se actualizará automáticamente.
 
 Interfaz web profesional para analytics profundos, comparaciones temporales, exportación de datos y gestión masiva.
 
-**URL:** https://insight-engine-41.preview.emergentagent.com/admin
+**URL:** https://smarte-reports.preview.emergentagent.com/admin
 
 ---
 

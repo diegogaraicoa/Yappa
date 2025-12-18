@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://insight-engine-41.preview.emergentagent.com/api"
+BACKEND_URL = "https://smarte-reports.preview.emergentagent.com/api"
 
 # Test credentials
 USERNAME = "tiendaclave"

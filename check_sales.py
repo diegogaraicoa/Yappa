@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv('/app/frontend/.env')
 
 # Configuration
-BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://insight-engine-41.preview.emergentagent.com') + "/api"
+BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://smarte-reports.preview.emergentagent.com') + "/api"
 TEST_EMAIL = "maria.gonzalez@test.com"
 TEST_PASSWORD = "MiTienda2025!"
 

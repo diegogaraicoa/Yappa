@@ -701,7 +701,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://insight-engine-41.preview.emergentagent.com/admin
+**URL:** https://smarte-reports.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet
