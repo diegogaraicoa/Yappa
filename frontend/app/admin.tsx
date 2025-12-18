@@ -1253,6 +1253,298 @@ function TrainingView({ data }: any) {
   );
 }
 
+// Export Data View Component
+function ExportDataView({ data }: any) {
+  const [exportType, setExportType] = useState('sales');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [exporting, setExporting] = useState(false);
+
+  const sales = data?.sales || [];
+  const customers = data?.customers || [];
+  const products = data?.products || [];
+  const suppliers = data?.suppliers || [];
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-EC');
+  };
+
+  const filterByDate = (items: any[], dateField: string = 'created_at') => {
+    if (!dateFrom && !dateTo) return items;
+    
+    return items.filter(item => {
+      const itemDate = new Date(item[dateField] || item.fecha || item.date);
+      if (isNaN(itemDate.getTime())) return true; // Si no hay fecha válida, incluir
+      
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        if (itemDate < fromDate) return false;
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59); // Incluir todo el día
+        if (itemDate > toDate) return false;
+      }
+      return true;
+    });
+  };
+
+  const getFilteredData = () => {
+    switch (exportType) {
+      case 'sales':
+        return filterByDate(sales, 'fecha');
+      case 'customers':
+        return filterByDate(customers, 'created_at');
+      case 'products':
+        return products; // Productos no se filtran por fecha
+      case 'suppliers':
+        return suppliers; // Proveedores no se filtran por fecha
+      default:
+        return [];
+    }
+  };
+
+  const generateCSV = (dataToExport: any[]) => {
+    if (dataToExport.length === 0) return '';
+
+    let headers: string[] = [];
+    let rows: string[] = [];
+
+    switch (exportType) {
+      case 'sales':
+        headers = ['ID', 'Fecha', 'Cliente', 'Total', 'Método Pago', 'Pagado', 'Productos'];
+        rows = dataToExport.map(sale => {
+          const productos = (sale.products || sale.productos || [])
+            .map((p: any) => `${p.name || p.nombre}(${p.quantity || p.cantidad})`)
+            .join('; ');
+          return [
+            sale._id || '',
+            formatDate(sale.fecha || sale.date || sale.created_at),
+            sale.customer_name || sale.cliente || 'N/A',
+            (sale.total || 0).toFixed(2),
+            sale.payment_method || sale.metodo_pago || 'N/A',
+            sale.paid ? 'Sí' : 'No',
+            productos
+          ].join(',');
+        });
+        break;
+
+      case 'customers':
+        headers = ['ID', 'Nombre', 'Apellido', 'Teléfono', 'Email', 'Deuda Total'];
+        rows = dataToExport.map(c => [
+          c._id || '',
+          c.nombre || c.name || '',
+          c.apellido || c.lastname || '',
+          c.telefono || c.phone || '',
+          c.email || '',
+          (c.deuda_total || c.balance || 0).toFixed(2)
+        ].join(','));
+        break;
+
+      case 'products':
+        headers = ['ID', 'Nombre', 'Precio', 'Costo', 'Stock', 'Categoría', 'Stock Mínimo'];
+        rows = dataToExport.map(p => [
+          p._id || '',
+          `"${(p.name || p.nombre || '').replace(/"/g, '""')}"`,
+          (p.price || p.precio || 0).toFixed(2),
+          (p.cost || p.costo || 0).toFixed(2),
+          p.quantity || p.stock || 0,
+          p.category || p.categoria || 'N/A',
+          p.min_stock_alert || p.stock_minimo || 0
+        ].join(','));
+        break;
+
+      case 'suppliers':
+        headers = ['ID', 'Nombre', 'Contacto', 'Teléfono', 'Email'];
+        rows = dataToExport.map(s => [
+          s._id || '',
+          `"${(s.nombre || s.name || '').replace(/"/g, '""')}"`,
+          s.contacto || s.contact || '',
+          s.telefono || s.phone || '',
+          s.email || ''
+        ].join(','));
+        break;
+    }
+
+    return [headers.join(','), ...rows].join('\n');
+  };
+
+  const handleExport = () => {
+    setExporting(true);
+    try {
+      const filteredData = getFilteredData();
+      
+      if (filteredData.length === 0) {
+        Alert.alert('Sin datos', 'No hay datos para exportar con los filtros seleccionados');
+        setExporting(false);
+        return;
+      }
+
+      const csv = generateCSV(filteredData);
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      const typeNames: Record<string, string> = {
+        sales: 'ventas',
+        customers: 'clientes',
+        products: 'productos',
+        suppliers: 'proveedores'
+      };
+      
+      const dateStr = new Date().toISOString().split('T')[0];
+      a.download = `${typeNames[exportType]}_${dateStr}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      Alert.alert('✅ Exportación Exitosa', `Se exportaron ${filteredData.length} registros de ${typeNames[exportType]}`);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo exportar los datos');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const getDataCount = () => {
+    const filtered = getFilteredData();
+    return filtered.length;
+  };
+
+  const exportTypes = [
+    { id: 'sales', label: 'Ventas', icon: 'cart', color: '#00D2FF', count: sales.length },
+    { id: 'customers', label: 'Clientes', icon: 'people', color: '#9C27B0', count: customers.length },
+    { id: 'products', label: 'Productos', icon: 'cube', color: '#FF9800', count: products.length },
+    { id: 'suppliers', label: 'Proveedores', icon: 'briefcase', color: '#4CAF50', count: suppliers.length },
+  ];
+
+  return (
+    <ScrollView style={styles.scrollContent}>
+      <Text style={styles.pageTitle}>📥 Exportar Datos a CSV</Text>
+
+      {/* Data Type Selector */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>1. Selecciona el tipo de datos</Text>
+        <View style={styles.exportTypeGrid}>
+          {exportTypes.map(type => (
+            <TouchableOpacity
+              key={type.id}
+              style={[
+                styles.exportTypeCard,
+                exportType === type.id && styles.exportTypeActive,
+                exportType === type.id && { borderColor: type.color }
+              ]}
+              onPress={() => setExportType(type.id)}
+            >
+              <Ionicons 
+                name={type.icon as any} 
+                size={32} 
+                color={exportType === type.id ? type.color : '#999'} 
+              />
+              <Text style={[
+                styles.exportTypeText,
+                exportType === type.id && { color: type.color, fontWeight: '700' }
+              ]}>
+                {type.label}
+              </Text>
+              <Text style={styles.exportTypeCount}>{type.count} registros</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Date Filters - Solo para ventas y clientes */}
+      {(exportType === 'sales' || exportType === 'customers') && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>2. Filtrar por fecha (opcional)</Text>
+          <View style={styles.dateFilterRow}>
+            <View style={styles.dateFilterCol}>
+              <Text style={styles.dateFilterLabel}>Desde:</Text>
+              <TextInput
+                style={styles.dateFilterInput}
+                placeholder="YYYY-MM-DD"
+                value={dateFrom}
+                onChangeText={setDateFrom}
+                placeholderTextColor="#999"
+              />
+            </View>
+            <View style={styles.dateFilterCol}>
+              <Text style={styles.dateFilterLabel}>Hasta:</Text>
+              <TextInput
+                style={styles.dateFilterInput}
+                placeholder="YYYY-MM-DD"
+                value={dateTo}
+                onChangeText={setDateTo}
+                placeholderTextColor="#999"
+              />
+            </View>
+          </View>
+          {(dateFrom || dateTo) && (
+            <TouchableOpacity 
+              style={styles.clearFiltersButton}
+              onPress={() => { setDateFrom(''); setDateTo(''); }}
+            >
+              <Ionicons name="close-circle" size={18} color="#666" />
+              <Text style={styles.clearFiltersText}>Limpiar filtros</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* Preview & Export */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          {exportType === 'sales' || exportType === 'customers' ? '3.' : '2.'} Vista previa y exportar
+        </Text>
+        
+        <View style={styles.exportPreviewCard}>
+          <View style={styles.exportPreviewHeader}>
+            <Ionicons name="document-text" size={40} color="#4CAF50" />
+            <View style={styles.exportPreviewInfo}>
+              <Text style={styles.exportPreviewTitle}>
+                {getDataCount()} registros listos
+              </Text>
+              <Text style={styles.exportPreviewSubtitle}>
+                Archivo CSV compatible con Excel
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.exportButton, exporting && styles.exportButtonDisabled]}
+            onPress={handleExport}
+            disabled={exporting || getDataCount() === 0}
+          >
+            {exporting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="download" size={24} color="#fff" />
+                <Text style={styles.exportButtonText}>Descargar CSV</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Instructions */}
+      <View style={styles.exportInstructions}>
+        <Text style={styles.exportInstructionsTitle}>💡 Consejos</Text>
+        <Text style={styles.exportInstructionsText}>
+          • El archivo CSV se puede abrir en Excel, Google Sheets o Numbers{'\n'}
+          • Los filtros de fecha aplican solo a Ventas y Clientes{'\n'}
+          • Formato de fecha: YYYY-MM-DD (ej: 2025-01-15){'\n'}
+          • El archivo incluye encabezados de columna
+        </Text>
+      </View>
+
+      <View style={{ height: 40 }} />
+    </ScrollView>
+  );
+}
+
 
 const styles = StyleSheet.create({
   container: {
