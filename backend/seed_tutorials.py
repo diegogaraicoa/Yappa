@@ -11,7 +11,7 @@ from datetime import datetime
 
 async def seed_tutorials():
     client = AsyncIOMotorClient("mongodb://localhost:27017")
-    db = client["test_database"]
+    db = client["tiendadb"]
     
     # Clear existing tutorials
     await db.tutorials.delete_many({})
