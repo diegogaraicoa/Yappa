@@ -617,6 +617,17 @@ Aprende a usar el Admin Console para análisis más profundos""",
             "category": "intermediate",
             "content": """# Gestión de Deudas 💰
 
+## Acceso Rápido desde la Pantalla Principal
+
+**La forma más fácil de ver las deudas:**
+1. Desde la pantalla principal (Home)
+2. Toca directamente en **"Deudas"** en el panel de resumen
+3. ¡Listo! Verás todos los clientes que te deben
+
+Esta es la forma más rápida de acceder a la información de cobranza.
+
+---
+
 ## Tipos de Deudas
 
 ### 1. Cuentas por Cobrar (Te deben)
@@ -634,26 +645,28 @@ Al registrar una venta:
 
 ## Ver Deudas
 
-**Clientes que te deben:**
-- Menú → Deudas → Clientes
+### Opción 1: Acceso Directo (Recomendado)
+- **Pantalla Principal → Toca "Deudas"**
+- Ver inmediatamente quién te debe
 - Lista ordenada por monto
-- Detalle de cada deuda
 
-**Proveedores a quienes debes:**
-- Menú → Deudas → Proveedores
-- Control de pagos pendientes
+### Opción 2: Desde Menú
+- Menú → Clientes
+- Los clientes con deuda aparecen destacados en rojo
 
 ## Registrar un Pago
 
-1. Ve a la deuda específica
-2. Presiona "Registrar Pago"
-3. Ingresa monto pagado
-4. Guarda
+1. Ve a la lista de clientes (desde "Deudas" o menú Clientes)
+2. Encuentra el cliente con deuda (destacado en rojo)
+3. Presiona **"Registrar Pago"**
+4. Ingresa monto recibido
+5. Confirma
 
 La deuda se actualizará automáticamente.
 
 ## Mejores Prácticas
 
+✅ Revisa "Deudas" desde Home cada día
 ✅ Establece límites de crédito
 ✅ Define plazos claros (7, 15, 30 días)
 ✅ Haz seguimiento semanal
@@ -668,6 +681,7 @@ La app puede enviar recordatorios:
 
 ## Consejos
 
+💡 Toca "Deudas" en Home para ver rápido quién debe
 💡 Registra pagos parciales
 💡 Documenta todo
 💡 Sé consistente con seguimiento
