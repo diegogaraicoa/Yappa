@@ -2457,4 +2457,128 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 24,
   },
+  // Export Data Styles
+  exportTypeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  exportTypeCard: {
+    width: 'calc(50% - 6px)',
+    minWidth: 140,
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  exportTypeActive: {
+    backgroundColor: '#f8fffe',
+  },
+  exportTypeText: {
+    fontSize: 15,
+    color: '#333',
+    marginTop: 8,
+    fontWeight: '500',
+  },
+  exportTypeCount: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
+  },
+  dateFilterRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  dateFilterCol: {
+    flex: 1,
+  },
+  dateFilterLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  dateFilterInput: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 14,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  clearFiltersButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    padding: 8,
+    gap: 6,
+  },
+  clearFiltersText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  exportPreviewCard: {
+    backgroundColor: '#fff',
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    borderStyle: 'dashed',
+  },
+  exportPreviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  exportPreviewInfo: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  exportPreviewTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  exportPreviewSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  exportButton: {
+    backgroundColor: '#4CAF50',
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  exportButtonDisabled: {
+    opacity: 0.6,
+  },
+  exportButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  exportInstructions: {
+    backgroundColor: '#E3F2FD',
+    padding: 20,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  exportInstructionsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    marginBottom: 12,
+  },
+  exportInstructionsText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 22,
+  },
 });
