@@ -392,8 +392,17 @@ export default function CustomersScreen() {
           })
         )}
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* FAB - Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={openCreateModal}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={28} color="#FFFFFF" />
+      </TouchableOpacity>
 
       {/* Create/Edit Customer Modal */}
       <Modal visible={showModal} animationType="slide" transparent>
