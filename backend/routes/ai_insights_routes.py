@@ -640,3 +640,192 @@ async def resolve_insight(
         "history_id": str(result.inserted_id),
         "message": f"Insight marcado como resuelto: {action}"
     }
+
+
+@router.get("/super-insights")
+async def get_super_dashboard_insights():
+    """
+    AI Insights para el Super Dashboard.
+    
+    Compara métricas de esta semana vs semana pasada:
+    - Actividad de usuarios
+    - Nuevas cuentas creadas
+    - Uso de funcionalidades
+    - Churn risk
+    
+    Genera recomendaciones basadas en patrones.
+    """
+    from main import get_database
+    from bson import ObjectId
+    
+    db = get_database()
+    now = datetime.utcnow()
+    
+    # Definir períodos
+    this_week_start = now - timedelta(days=7)
+    last_week_start = now - timedelta(days=14)
+    last_week_end = this_week_start
+    
+    insights = []
+    
+    # 1. ACTIVIDAD DE USUARIOS (event_logs)
+    this_week_events = await db.event_logs.count_documents({
+        "timestamp": {"$gte": this_week_start}
+    })
+    last_week_events = await db.event_logs.count_documents({
+        "timestamp": {"$gte": last_week_start, "$lt": last_week_end}
+    })
+    
+    events_change = 0
+    if last_week_events > 0:
+        events_change = ((this_week_events - last_week_events) / last_week_events) * 100
+    elif this_week_events > 0:
+        events_change = 100
+    
+    insights.append({
+        "id": "user_activity",
+        "category": "Actividad",
+        "icon": "📊",
+        "color": "#2196F3" if events_change >= 0 else "#F44336",
+        "title": "Actividad de Usuarios",
+        "this_week": this_week_events,
+        "last_week": last_week_events,
+        "change_percent": round(events_change, 1),
+        "trend": "up" if events_change > 0 else ("down" if events_change < 0 else "stable"),
+        "insight": f"{'📈 Aumento' if events_change > 0 else '📉 Disminución'} del {abs(round(events_change))}% en actividad" if events_change != 0 else "Sin cambios en actividad"
+    })
+    
+    # 2. NUEVOS MERCHANTS
+    this_week_merchants = await db.merchants.count_documents({
+        "activated_at": {"$gte": this_week_start}
+    })
+    last_week_merchants = await db.merchants.count_documents({
+        "activated_at": {"$gte": last_week_start, "$lt": last_week_end}
+    })
+    
+    merchants_change = 0
+    if last_week_merchants > 0:
+        merchants_change = ((this_week_merchants - last_week_merchants) / last_week_merchants) * 100
+    elif this_week_merchants > 0:
+        merchants_change = 100
+    
+    insights.append({
+        "id": "new_merchants",
+        "category": "Crecimiento",
+        "icon": "🏪",
+        "color": "#4CAF50" if merchants_change >= 0 else "#FF9800",
+        "title": "Nuevos Merchants",
+        "this_week": this_week_merchants,
+        "last_week": last_week_merchants,
+        "change_percent": round(merchants_change, 1),
+        "trend": "up" if merchants_change > 0 else ("down" if merchants_change < 0 else "stable"),
+        "insight": f"{'🎉 ' if merchants_change > 0 else ''}{this_week_merchants} nuevos merchants esta semana"
+    })
+    
+    # 3. NUEVOS CLERKS
+    this_week_clerks = await db.clerks.count_documents({
+        "activated_at": {"$gte": this_week_start}
+    })
+    last_week_clerks = await db.clerks.count_documents({
+        "activated_at": {"$gte": last_week_start, "$lt": last_week_end}
+    })
+    
+    clerks_change = 0
+    if last_week_clerks > 0:
+        clerks_change = ((this_week_clerks - last_week_clerks) / last_week_clerks) * 100
+    elif this_week_clerks > 0:
+        clerks_change = 100
+    
+    insights.append({
+        "id": "new_clerks",
+        "category": "Crecimiento",
+        "icon": "👥",
+        "color": "#FF9800" if clerks_change >= 0 else "#F44336",
+        "title": "Nuevos Clerks",
+        "this_week": this_week_clerks,
+        "last_week": last_week_clerks,
+        "change_percent": round(clerks_change, 1),
+        "trend": "up" if clerks_change > 0 else ("down" if clerks_change < 0 else "stable"),
+        "insight": f"{this_week_clerks} nuevos clerks activados"
+    })
+    
+    # 4. FUNCIONALIDADES MÁS USADAS
+    pipeline = [
+        {"$match": {"timestamp": {"$gte": this_week_start}}},
+        {"$group": {"_id": "$section", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 5}
+    ]
+    top_features = await db.event_logs.aggregate(pipeline).to_list(5)
+    
+    # 5. CLERKS EN RIESGO DE CHURN (sin actividad en 7+ días)
+    active_clerk_ids = await db.event_logs.distinct(
+        "clerk_id",
+        {"timestamp": {"$gte": this_week_start}}
+    )
+    total_clerks = await db.clerks.count_documents({"activated_at": {"$ne": None}})
+    inactive_clerks = total_clerks - len(active_clerk_ids)
+    
+    churn_risk_percent = (inactive_clerks / total_clerks * 100) if total_clerks > 0 else 0
+    
+    insights.append({
+        "id": "churn_risk",
+        "category": "Retención",
+        "icon": "⚠️" if churn_risk_percent > 30 else "✅",
+        "color": "#F44336" if churn_risk_percent > 50 else ("#FF9800" if churn_risk_percent > 30 else "#4CAF50"),
+        "title": "Riesgo de Churn",
+        "this_week": inactive_clerks,
+        "total": total_clerks,
+        "change_percent": round(churn_risk_percent, 1),
+        "trend": "warning" if churn_risk_percent > 30 else "ok",
+        "insight": f"{inactive_clerks} clerks sin actividad en 7 días ({round(churn_risk_percent)}%)"
+    })
+    
+    # 6. RECOMENDACIONES AI
+    recommendations = []
+    
+    if events_change < -20:
+        recommendations.append({
+            "type": "warning",
+            "icon": "💡",
+            "title": "Actividad Decreciente",
+            "message": "La actividad ha bajado significativamente. Considera enviar notificaciones push o promociones para re-enganchar usuarios."
+        })
+    
+    if merchants_change > 50:
+        recommendations.append({
+            "type": "success",
+            "icon": "🚀",
+            "title": "Excelente Crecimiento",
+            "message": f"¡{this_week_merchants} nuevos merchants! Asegúrate de tener recursos de onboarding suficientes."
+        })
+    
+    if churn_risk_percent > 30:
+        recommendations.append({
+            "type": "alert",
+            "icon": "🔔",
+            "title": "Alto Riesgo de Abandono",
+            "message": f"{round(churn_risk_percent)}% de clerks están inactivos. Implementa una campaña de reactivación."
+        })
+    
+    if len(recommendations) == 0:
+        recommendations.append({
+            "type": "info",
+            "icon": "✨",
+            "title": "Todo en Orden",
+            "message": "Las métricas de la plataforma se ven saludables. ¡Sigue así!"
+        })
+    
+    return {
+        "generated_at": now.isoformat(),
+        "period": {
+            "this_week": {"start": this_week_start.isoformat(), "end": now.isoformat()},
+            "last_week": {"start": last_week_start.isoformat(), "end": last_week_end.isoformat()}
+        },
+        "insights": insights,
+        "top_features": [
+            {"name": f.get("_id", "Unknown"), "count": f.get("count", 0)} 
+            for f in top_features
+        ],
+        "recommendations": recommendations
+    }
