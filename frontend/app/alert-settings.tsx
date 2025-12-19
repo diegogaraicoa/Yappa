@@ -80,7 +80,7 @@ export default function AlertSettingsScreen() {
     try {
       setSaving(true);
 
-      const response = await api.post('/api/admin_ops/alert-settings', {
+      const response = await api.post('/api/admin-ops/alert-settings', {
         whatsapp_number: (whatsappNumber || '').trim(),
         stock_alert_whatsapp: stockAlertWhatsapp,
         stock_alert_push: stockAlertPush,
