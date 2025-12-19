@@ -459,6 +459,37 @@ async def delete_merchant(merchant_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.patch("/merchants/{merchant_id}/toggle-active")
+async def toggle_merchant_active(merchant_id: str):
+    """
+    Activar/Desactivar un merchant.
+    """
+    from main import get_database
+    db = get_database()
+    
+    try:
+        merchant = await db.merchants.find_one({"_id": ObjectId(merchant_id)})
+        if not merchant:
+            raise HTTPException(status_code=404, detail="Merchant no encontrado")
+        
+        # Toggle activated_at
+        is_active = merchant.get("activated_at") is not None
+        new_activated_at = None if is_active else datetime.utcnow()
+        
+        await db.merchants.update_one(
+            {"_id": ObjectId(merchant_id)},
+            {"$set": {"activated_at": new_activated_at, "updated_at": datetime.utcnow()}}
+        )
+        
+        status = "desactivado" if is_active else "activado"
+        return {"message": f"Merchant {status} exitosamente", "is_active": not is_active}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============================================
 # CRUD CLERKS
 # ============================================
