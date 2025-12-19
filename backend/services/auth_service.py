@@ -118,11 +118,14 @@ async def authenticate_clerk(db, merchant_id: str, email: str, password: str) ->
     """
     clerk = await db.clerks.find_one({
         "merchant_id": merchant_id,
-        "email": email,
-        "active": True
+        "email": email
     })
     
     if not clerk:
+        return None
+    
+    # Verificar si el clerk está desactivado (activated_at es None)
+    if clerk.get("activated_at") is None:
         return None
     
     if not verify_password(password, clerk["password"]):
