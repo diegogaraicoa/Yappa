@@ -149,7 +149,14 @@ export default function SuperDashboardScreen() {
 
   const loadKPIData = async () => {
     try {
-      const response = await api.get(`/api/dashboard/kpis?period=${selectedPeriod}`);
+      let url = `/api/dashboard/kpis?period=${selectedPeriod}`;
+      
+      // If custom period is selected and dates are set, add them to the URL
+      if (selectedPeriod === 'custom' && appliedCustomDates) {
+        url = `/api/dashboard/kpis?period=custom&start_date=${appliedCustomDates.start}&end_date=${appliedCustomDates.end}`;
+      }
+      
+      const response = await api.get(url);
       setKpiData(response.data);
     } catch (error) {
       console.error('Error loading KPI data:', error);
