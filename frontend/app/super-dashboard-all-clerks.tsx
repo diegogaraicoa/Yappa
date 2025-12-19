@@ -281,50 +281,77 @@ export default function AllClerksScreenCRUD() {
           filteredClerks.map((clerk: any, index: number) => {
             const activationBadge = getActivationBadge(clerk);
             const roleBadge = getRoleBadge(clerk.role);
+            const isExpanded = expandedId === clerk.id;
             return (
-              <View key={index} style={styles.card}>
+              <TouchableOpacity 
+                key={index} 
+                style={[styles.card, isExpanded && styles.cardExpanded]}
+                onPress={() => setExpandedId(isExpanded ? null : clerk.id)}
+                activeOpacity={0.7}
+              >
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.cardTitle}>{clerk.nombre}</Text>
                     <Text style={styles.cardSubtitle}>{clerk.email}</Text>
-                    <Text style={styles.merchantText}>🏪 {clerk.merchant_nombre}</Text>
                   </View>
-                  <View style={{ alignItems: 'flex-end' }}>
+                  <View style={{ alignItems: 'flex-end', flexDirection: 'row', gap: 8 }}>
                     <View style={[styles.badge, { backgroundColor: activationBadge.color }]}>
                       <Text style={styles.badgeText}>{activationBadge.label}</Text>
                     </View>
-                    <View style={[styles.badge, { backgroundColor: roleBadge.color, marginTop: 6 }]}>
-                      <Text style={styles.badgeText}>{roleBadge.label}</Text>
+                    <Ionicons 
+                      name={isExpanded ? "chevron-up" : "chevron-down"} 
+                      size={20} 
+                      color="#666" 
+                    />
+                  </View>
+                </View>
+                
+                {isExpanded && (
+                  <View style={styles.expandedContent}>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="storefront" size={16} color="#666" />
+                      <Text style={styles.expandedLabel}>Merchant:</Text>
+                      <Text style={styles.expandedValue}>{clerk.merchant_nombre}</Text>
+                    </View>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="person" size={16} color="#666" />
+                      <Text style={styles.expandedLabel}>Rol:</Text>
+                      <View style={[styles.badge, { backgroundColor: roleBadge.color }]}>
+                        <Text style={styles.badgeText}>{roleBadge.label}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="logo-whatsapp" size={16} color="#666" />
+                      <Text style={styles.expandedLabel}>WhatsApp:</Text>
+                      <Text style={styles.expandedValue}>{clerk.whatsapp_number || 'N/A'}</Text>
+                    </View>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="calendar" size={16} color="#666" />
+                      <Text style={styles.expandedLabel}>Fecha:</Text>
+                      <Text style={styles.expandedValue}>
+                        {clerk.activated_at ? `Activado: ${formatDate(clerk.activated_at)}` : `Creado: ${formatDate(clerk.created_at)}`}
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.actionButtons}>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.editButton]}
+                        onPress={(e) => { e.stopPropagation(); openEditModal(clerk); }}
+                      >
+                        <Ionicons name="pencil" size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>Editar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.deleteButton]}
+                        onPress={(e) => { e.stopPropagation(); handleDelete(clerk); }}
+                      >
+                        <Ionicons name="trash" size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>Eliminar</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-                </View>
-                <View style={styles.cardFooter}>
-                  <View style={styles.footerItem}>
-                    <Ionicons name="logo-whatsapp" size={14} color="#666" />
-                    <Text style={styles.footerText}>{clerk.whatsapp_number || 'N/A'}</Text>
-                  </View>
-                  <Text style={styles.dateText}>
-                    {clerk.activated_at ? `Act: ${formatDate(clerk.activated_at)}` : `Creado: ${formatDate(clerk.created_at)}`}
-                  </Text>
-                </View>
-                {/* Action Buttons */}
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.editButton]}
-                    onPress={() => openEditModal(clerk)}
-                  >
-                    <Ionicons name="pencil" size={16} color="#FFF" />
-                    <Text style={styles.actionButtonText}>Editar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.deleteButton]}
-                    onPress={() => handleDelete(clerk)}
-                  >
-                    <Ionicons name="trash" size={16} color="#FFF" />
-                    <Text style={styles.actionButtonText}>Eliminar</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+                )}
+              </TouchableOpacity>
             );
           })
         )}
