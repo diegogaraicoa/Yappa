@@ -309,7 +309,10 @@ export default function SuperDashboardScreen() {
           <TouchableOpacity
             key={period}
             style={[styles.filterButton, selectedPeriod === period && styles.filterButtonActive]}
-            onPress={() => setSelectedPeriod(period)}
+            onPress={() => {
+              setSelectedPeriod(period);
+              setAppliedCustomDates(null);
+            }}
           >
             <Text
               style={[styles.filterButtonText, selectedPeriod === period && styles.filterButtonTextActive]}
@@ -318,6 +321,33 @@ export default function SuperDashboardScreen() {
             </Text>
           </TouchableOpacity>
         ))}
+        
+        {/* Custom Date Range Button */}
+        <TouchableOpacity
+          style={[
+            styles.filterButton, 
+            styles.customDateButton,
+            selectedPeriod === 'custom' && styles.filterButtonActive
+          ]}
+          onPress={handleSelectCustomPeriod}
+        >
+          <Ionicons 
+            name="calendar" 
+            size={16} 
+            color={selectedPeriod === 'custom' ? '#FFF' : '#666'} 
+            style={{ marginRight: 6 }}
+          />
+          <Text
+            style={[
+              styles.filterButtonText, 
+              selectedPeriod === 'custom' && styles.filterButtonTextActive
+            ]}
+          >
+            {selectedPeriod === 'custom' && appliedCustomDates 
+              ? `${appliedCustomDates.start} → ${appliedCustomDates.end}`
+              : 'Personalizado'}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
