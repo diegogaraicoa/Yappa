@@ -1461,23 +1461,37 @@ function ExportDataView({ data }: any) {
           <Text style={styles.sectionTitle}>2. Filtrar por fecha (opcional)</Text>
           <View style={styles.dateFilterRow}>
             <View style={styles.dateFilterCol}>
-              <Text style={styles.dateFilterLabel}>Desde:</Text>
-              <TextInput
-                style={styles.dateFilterInput}
-                placeholder="YYYY-MM-DD"
+              <Text style={styles.dateFilterLabel}>📅 Desde:</Text>
+              <input
+                type="date"
                 value={dateFrom}
-                onChangeText={setDateFrom}
-                placeholderTextColor="#999"
+                onChange={(e) => setDateFrom(e.target.value)}
+                style={{
+                  padding: 14,
+                  fontSize: 16,
+                  borderRadius: 8,
+                  border: '1px solid #e0e0e0',
+                  backgroundColor: '#fff',
+                  width: '100%',
+                  cursor: 'pointer',
+                }}
               />
             </View>
             <View style={styles.dateFilterCol}>
-              <Text style={styles.dateFilterLabel}>Hasta:</Text>
-              <TextInput
-                style={styles.dateFilterInput}
-                placeholder="YYYY-MM-DD"
+              <Text style={styles.dateFilterLabel}>📅 Hasta:</Text>
+              <input
+                type="date"
                 value={dateTo}
-                onChangeText={setDateTo}
-                placeholderTextColor="#999"
+                onChange={(e) => setDateTo(e.target.value)}
+                style={{
+                  padding: 14,
+                  fontSize: 16,
+                  borderRadius: 8,
+                  border: '1px solid #e0e0e0',
+                  backgroundColor: '#fff',
+                  width: '100%',
+                  cursor: 'pointer',
+                }}
               />
             </View>
           </View>
