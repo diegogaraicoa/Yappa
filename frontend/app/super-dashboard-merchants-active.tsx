@@ -340,21 +340,21 @@ export default function AllMerchantsScreenCRUD() {
                     <View style={styles.actionButtons}>
                       <TouchableOpacity
                         style={[styles.actionButton, merchant.activated_at ? styles.deactivateButton : styles.activateButton]}
-                        onPress={(e) => { e.stopPropagation(); handleToggleActive(merchant); }}
+                        onPress={() => handleToggleActive(merchant)}
                       >
                         <Ionicons name={merchant.activated_at ? "pause-circle" : "play-circle"} size={16} color="#FFF" />
                         <Text style={styles.actionButtonText}>{merchant.activated_at ? "Desactivar" : "Activar"}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.actionButton, styles.editButton]}
-                        onPress={(e) => { e.stopPropagation(); openEditModal(merchant); }}
+                        onPress={() => openEditModal(merchant)}
                       >
                         <Ionicons name="pencil" size={16} color="#FFF" />
                         <Text style={styles.actionButtonText}>Editar</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.actionButton, styles.deleteButton]}
-                        onPress={(e) => { e.stopPropagation(); handleDelete(merchant); }}
+                        onPress={() => handleDelete(merchant)}
                       >
                         <Ionicons name="trash" size={16} color="#FFF" />
                         <Text style={styles.actionButtonText}>Eliminar</Text>
