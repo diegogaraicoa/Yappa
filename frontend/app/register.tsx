@@ -651,15 +651,6 @@ export default function RegisterScreen() {
                   <Text style={styles.primaryButtonText}>Crear mi cuenta</Text>
                 )}
               </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.multiStoreLink} 
-                onPress={() => { setStep('multi'); }}
-              >
-                <Text style={styles.multiStoreLinkText}>
-                  ¿Tienes más de una tienda? Regístrate aquí →
-                </Text>
-              </TouchableOpacity>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
