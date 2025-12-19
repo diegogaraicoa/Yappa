@@ -525,6 +525,37 @@ function DashboardView({ data }: any) {
           </View>
         ))}
       </View>
+
+      {/* Quick Stats Summary */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>📋 Resumen Rápido</Text>
+        <View style={styles.quickStatsCard}>
+          <View style={styles.quickStatRow}>
+            <Ionicons name="cart" size={20} color="#00D2FF" />
+            <Text style={styles.quickStatText}>
+              {analytics.sales?.count_month || 0} ventas este mes
+            </Text>
+          </View>
+          <View style={styles.quickStatRow}>
+            <Ionicons name="people" size={20} color="#9C27B0" />
+            <Text style={styles.quickStatText}>
+              {analytics.customers?.total || 0} clientes registrados
+            </Text>
+          </View>
+          <View style={styles.quickStatRow}>
+            <Ionicons name="cube" size={20} color="#FF9800" />
+            <Text style={styles.quickStatText}>
+              {analytics.products?.total || 0} productos en inventario
+            </Text>
+          </View>
+          <View style={styles.quickStatRow}>
+            <Ionicons name="download" size={20} color="#4CAF50" />
+            <Text style={styles.quickStatText}>
+              Exporta todos tus datos a CSV desde el menú lateral
+            </Text>
+          </View>
+        </View>
+      </View>
     </ScrollView>
   );
 }
