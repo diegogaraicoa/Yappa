@@ -288,13 +288,19 @@ export default function AllMerchantsScreenCRUD() {
             return (
               <TouchableOpacity 
                 key={index} 
-                style={[styles.card, isExpanded && styles.cardExpanded]}
+                style={[styles.card, isExpanded && styles.cardExpanded, isDeactivated && styles.cardDeactivated]}
                 onPress={() => setExpandedId(isExpanded ? null : merchant.id)}
                 activeOpacity={0.7}
               >
+                {isDeactivated && (
+                  <View style={styles.deactivatedBanner}>
+                    <Ionicons name="alert-circle" size={14} color="#FFF" />
+                    <Text style={styles.deactivatedBannerText}>DESACTIVADO</Text>
+                  </View>
+                )}
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.cardTitle}>{merchant.nombre}</Text>
+                    <Text style={[styles.cardTitle, isDeactivated && styles.cardTitleDeactivated]}>{merchant.nombre}</Text>
                     <Text style={styles.cardSubtitle}>@{merchant.username}</Text>
                   </View>
                   <View style={styles.cardHeaderRight}>
@@ -310,7 +316,6 @@ export default function AllMerchantsScreenCRUD() {
                   </View>
                 </View>
                 
-                {/* Expanded Content */}
                 {isExpanded && (
                   <View style={styles.expandedContent}>
                     <View style={styles.expandedRow}>
@@ -331,18 +336,24 @@ export default function AllMerchantsScreenCRUD() {
                       </Text>
                     </View>
                     
-                    {/* Action Buttons - Only visible when expanded */}
                     <View style={styles.actionButtons}>
                       <TouchableOpacity
+                        style={[styles.actionButton, !isDeactivated ? styles.deactivateButton : styles.activateButton]}
+                        onPress={() => handleToggleActive(merchant)}
+                      >
+                        <Ionicons name={!isDeactivated ? "pause-circle" : "play-circle"} size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>{!isDeactivated ? "Desactivar" : "Activar"}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
                         style={[styles.actionButton, styles.editButton]}
-                        onPress={(e) => { e.stopPropagation(); openEditModal(merchant); }}
+                        onPress={() => openEditModal(merchant)}
                       >
                         <Ionicons name="pencil" size={16} color="#FFF" />
                         <Text style={styles.actionButtonText}>Editar</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.actionButton, styles.deleteButton]}
-                        onPress={(e) => { e.stopPropagation(); handleDelete(merchant); }}
+                        onPress={() => handleDelete(merchant)}
                       >
                         <Ionicons name="trash" size={16} color="#FFF" />
                         <Text style={styles.actionButtonText}>Eliminar</Text>
