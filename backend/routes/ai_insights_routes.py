@@ -771,10 +771,10 @@ async def get_super_dashboard_insights(
     
     # 3. NUEVOS CLERKS
     this_week_clerks = await db.clerks.count_documents({
-        "activated_at": {"$gte": this_week_start}
+        "activated_at": {"$gte": current_start, "$lte": current_end}
     })
     last_week_clerks = await db.clerks.count_documents({
-        "activated_at": {"$gte": last_week_start, "$lt": last_week_end}
+        "activated_at": {"$gte": previous_start, "$lte": previous_end}
     })
     
     clerks_change = 0
