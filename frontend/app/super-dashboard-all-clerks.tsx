@@ -27,6 +27,7 @@ export default function AllClerksScreenCRUD() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentClerk, setCurrentClerk] = useState<any>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   
   // Form states
   const [formData, setFormData] = useState({
