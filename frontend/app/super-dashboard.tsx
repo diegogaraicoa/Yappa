@@ -10,6 +10,8 @@ import {
   SafeAreaView,
   Alert,
   Platform,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -18,7 +20,7 @@ import api from '../utils/api';
 
 const SUPER_ADMIN_TOKEN_KEY = '@super_admin_token';
 
-type Period = '30d' | '7d' | 'today' | 'this_month' | 'last_month';
+type Period = '30d' | '7d' | 'today' | 'this_month' | 'last_month' | 'custom';
 
 interface KPIData {
   period: {
