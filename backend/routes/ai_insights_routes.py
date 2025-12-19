@@ -643,17 +643,24 @@ async def resolve_insight(
 
 
 @router.get("/super-insights")
-async def get_super_dashboard_insights():
+async def get_super_dashboard_insights(
+    period: str = "this_month",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
     """
     AI Insights para el Super Dashboard.
     
-    Compara métricas de esta semana vs semana pasada:
+    Compara métricas del período actual vs período anterior:
     - Actividad de usuarios
     - Nuevas cuentas creadas
     - Uso de funcionalidades
     - Churn risk
     
     Genera recomendaciones basadas en patrones.
+    
+    Períodos soportados: 7d, 30d, today, this_month, last_month, custom
+    Default: this_month (mes actual vs mes anterior, como churn)
     """
     from main import get_database
     from bson import ObjectId
@@ -661,10 +668,50 @@ async def get_super_dashboard_insights():
     db = get_database()
     now = datetime.utcnow()
     
-    # Definir períodos
-    this_week_start = now - timedelta(days=7)
-    last_week_start = now - timedelta(days=14)
-    last_week_end = this_week_start
+    # Calcular períodos según el filtro seleccionado
+    if start_date and end_date and period == "custom":
+        # Período personalizado
+        current_start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+        current_end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+        # Período anterior = misma duración antes del inicio
+        duration = current_end - current_start
+        previous_end = current_start - timedelta(seconds=1)
+        previous_start = previous_end - duration
+        period_label = f"{start_date} - {end_date}"
+    elif period == "7d":
+        current_start = now - timedelta(days=7)
+        current_end = now
+        previous_end = current_start - timedelta(seconds=1)
+        previous_start = previous_end - timedelta(days=7)
+        period_label = "Últimos 7 días"
+    elif period == "30d":
+        current_start = now - timedelta(days=30)
+        current_end = now
+        previous_end = current_start - timedelta(seconds=1)
+        previous_start = previous_end - timedelta(days=30)
+        period_label = "Últimos 30 días"
+    elif period == "today":
+        current_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        current_end = now
+        previous_start = current_start - timedelta(days=1)
+        previous_end = current_start - timedelta(seconds=1)
+        period_label = "Hoy"
+    elif period == "last_month":
+        # Mes pasado completo
+        first_of_this_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        current_end = first_of_this_month - timedelta(seconds=1)
+        current_start = current_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        # Período anterior = mes antes del mes pasado
+        previous_end = current_start - timedelta(seconds=1)
+        previous_start = previous_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        period_label = "Mes pasado"
+    else:
+        # Default: this_month (mes actual vs mes anterior)
+        current_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        current_end = now
+        previous_end = current_start - timedelta(seconds=1)
+        previous_start = previous_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        period_label = "Este mes"
     
     insights = []
     
