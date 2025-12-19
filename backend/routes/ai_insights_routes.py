@@ -865,9 +865,11 @@ async def get_super_dashboard_insights(
     
     return {
         "generated_at": now.isoformat(),
+        "period_label": period_label,
+        "selected_period": period,
         "period": {
-            "this_week": {"start": this_week_start.isoformat(), "end": now.isoformat()},
-            "last_week": {"start": last_week_start.isoformat(), "end": last_week_end.isoformat()}
+            "current": {"start": current_start.isoformat(), "end": current_end.isoformat()},
+            "previous": {"start": previous_start.isoformat(), "end": previous_end.isoformat()}
         },
         "insights": insights,
         "top_features": [
