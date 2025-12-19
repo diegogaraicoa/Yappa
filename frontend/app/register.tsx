@@ -221,7 +221,7 @@ export default function RegisterScreen() {
 
             <TouchableOpacity 
               style={[styles.choiceButton, styles.noButton]} 
-              onPress={() => setStep('single')}
+              onPress={() => setStep('how_many')}
             >
               <Ionicons name="add-circle" size={24} color="#FFF" />
               <Text style={styles.choiceButtonText}>No, soy nuevo</Text>
