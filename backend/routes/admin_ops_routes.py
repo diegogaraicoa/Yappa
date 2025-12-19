@@ -222,6 +222,36 @@ async def delete_admin(admin_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.patch("/admins/{admin_id}/toggle-active")
+async def toggle_admin_active(admin_id: str):
+    """
+    Activar/Desactivar un admin.
+    """
+    from main import get_database
+    db = get_database()
+    
+    try:
+        admin = await db.admins.find_one({"_id": ObjectId(admin_id)})
+        if not admin:
+            raise HTTPException(status_code=404, detail="Admin no encontrado")
+        
+        is_active = admin.get("activated_at") is not None
+        new_activated_at = None if is_active else datetime.utcnow()
+        
+        await db.admins.update_one(
+            {"_id": ObjectId(admin_id)},
+            {"$set": {"activated_at": new_activated_at, "updated_at": datetime.utcnow()}}
+        )
+        
+        status = "desactivado" if is_active else "activado"
+        return {"message": f"Admin {status} exitosamente", "is_active": not is_active}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============================================
 # CRUD MERCHANTS
 # ============================================
