@@ -277,45 +277,71 @@ export default function AllMerchantsScreenCRUD() {
         ) : (
           filteredMerchants.map((merchant: any, index: number) => {
             const badge = getActivationBadge(merchant);
+            const isExpanded = expandedId === merchant.id;
             return (
-              <View key={index} style={styles.card}>
+              <TouchableOpacity 
+                key={index} 
+                style={[styles.card, isExpanded && styles.cardExpanded]}
+                onPress={() => setExpandedId(isExpanded ? null : merchant.id)}
+                activeOpacity={0.7}
+              >
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.cardTitle}>{merchant.nombre}</Text>
                     <Text style={styles.cardSubtitle}>@{merchant.username}</Text>
-                    <Text style={styles.adminText}>🏢 {merchant.admin_nombre}</Text>
                   </View>
-                  <View style={[styles.badge, { backgroundColor: badge.color }]}>
-                    <Text style={styles.badgeText}>{badge.label}</Text>
+                  <View style={styles.cardHeaderRight}>
+                    <View style={[styles.badge, { backgroundColor: badge.color }]}>
+                      <Text style={styles.badgeText}>{badge.label}</Text>
+                    </View>
+                    <Ionicons 
+                      name={isExpanded ? "chevron-up" : "chevron-down"} 
+                      size={20} 
+                      color="#666" 
+                      style={{ marginLeft: 8 }}
+                    />
                   </View>
                 </View>
-                <View style={styles.cardFooter}>
-                  <View style={styles.footerItem}>
-                    <Ionicons name="people" size={14} color="#666" />
-                    <Text style={styles.footerText}>{merchant.clerks_count} clerks</Text>
+                
+                {isExpanded && (
+                  <View style={styles.expandedContent}>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="business" size={16} color="#666" />
+                      <Text style={styles.expandedLabel}>Admin:</Text>
+                      <Text style={styles.expandedValue}>{merchant.admin_nombre}</Text>
+                    </View>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="people" size={16} color="#666" />
+                      <Text style={styles.expandedLabel}>Clerks:</Text>
+                      <Text style={styles.expandedValue}>{merchant.clerks_count}</Text>
+                    </View>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="calendar" size={16} color="#666" />
+                      <Text style={styles.expandedLabel}>Fecha:</Text>
+                      <Text style={styles.expandedValue}>
+                        {merchant.activated_at ? `Activado: ${formatDate(merchant.activated_at)}` : `Creado: ${formatDate(merchant.created_at)}`}
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.actionButtons}>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.editButton]}
+                        onPress={(e) => { e.stopPropagation(); openEditModal(merchant); }}
+                      >
+                        <Ionicons name="pencil" size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>Editar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.deleteButton]}
+                        onPress={(e) => { e.stopPropagation(); handleDelete(merchant); }}
+                      >
+                        <Ionicons name="trash" size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>Eliminar</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <Text style={styles.dateText}>
-                    {merchant.activated_at ? `Act: ${formatDate(merchant.activated_at)}` : `Creado: ${formatDate(merchant.created_at)}`}
-                  </Text>
-                </View>
-                {/* Action Buttons */}
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.editButton]}
-                    onPress={() => openEditModal(merchant)}
-                  >
-                    <Ionicons name="pencil" size={16} color="#FFF" />
-                    <Text style={styles.actionButtonText}>Editar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.deleteButton]}
-                    onPress={() => handleDelete(merchant)}
-                  >
-                    <Ionicons name="trash" size={16} color="#FFF" />
-                    <Text style={styles.actionButtonText}>Eliminar</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+                )}
+              </TouchableOpacity>
             );
           })
         )}
