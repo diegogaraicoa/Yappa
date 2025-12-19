@@ -290,7 +290,7 @@ export default function AllMerchantsScreenCRUD() {
           filteredMerchants.map((merchant: any, index: number) => {
             const badge = getActivationBadge(merchant);
             const isExpanded = expandedId === merchant.id;
-            const isDeactivated = !merchant.activated_at;
+            const isDeactivated = merchant.is_active === false || !merchant.activated_at;
             return (
               <TouchableOpacity 
                 key={index} 
