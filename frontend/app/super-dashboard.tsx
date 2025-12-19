@@ -186,6 +186,12 @@ export default function SuperDashboardScreen() {
     return labels[period];
   };
 
+  const formatDateShort = (dateString: string): string => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+  };
+
   const handleSelectCustomPeriod = () => {
     // Pre-fill with default dates (last 30 days)
     const today = new Date();
