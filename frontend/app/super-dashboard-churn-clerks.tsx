@@ -9,11 +9,12 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../utils/api';
 
 export default function ChurnClerksScreen() {
   const router = useRouter();
+  const { period = '30d' } = useLocalSearchParams<{ period?: string }>();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
@@ -23,7 +24,7 @@ export default function ChurnClerksScreen() {
 
   const loadData = async () => {
     try {
-      const response = await api.get('/api/dashboard/churn?period=30d');
+      const response = await api.get('/api/dashboard/churn?period=${period}');
       setData(response.data.clerks);
     } catch (error) {
       console.error('Error loading churn data:', error);

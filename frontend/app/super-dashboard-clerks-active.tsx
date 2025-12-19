@@ -11,11 +11,12 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../utils/api';
 
 export default function AllClerksScreenCRUD() {
   const router = useRouter();
+  const { period = '30d' } = useLocalSearchParams<{ period?: string }>();
   const [loading, setLoading] = useState(true);
   const [clerks, setClerks] = useState([]);
   const [merchants, setMerchants] = useState([]);
@@ -49,7 +50,7 @@ export default function AllClerksScreenCRUD() {
   const loadData = async () => {
     try {
       const [clerksResponse, merchantsResponse] = await Promise.all([
-        api.get('/api/dashboard/clerks/active?period=30d'),  // Solo activos
+        api.get('/api/dashboard/clerks/active?period=${period}'),  // Solo activos
         api.get('/api/admin-ops/merchants')
       ]);
       setClerks(clerksResponse.data.clerks || []);

@@ -9,11 +9,12 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../utils/api';
 
 export default function FeaturesLeastUsedScreen() {
   const router = useRouter();
+  const { period = '30d' } = useLocalSearchParams<{ period?: string }>();
   const [loading, setLoading] = useState(true);
   const [features, setFeatures] = useState([]);
 
@@ -23,7 +24,7 @@ export default function FeaturesLeastUsedScreen() {
 
   const loadData = async () => {
     try {
-      const response = await api.get('/api/dashboard/feature-usage-detail?period=30d');
+      const response = await api.get('/api/dashboard/feature-usage-detail?period=${period}');
       setFeatures(response.data.least_used || []);
     } catch (error) {
       console.error('Error loading features:', error);
