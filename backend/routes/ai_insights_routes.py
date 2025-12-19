@@ -744,10 +744,10 @@ async def get_super_dashboard_insights(
     
     # 2. NUEVOS MERCHANTS
     this_week_merchants = await db.merchants.count_documents({
-        "activated_at": {"$gte": this_week_start}
+        "activated_at": {"$gte": current_start, "$lte": current_end}
     })
     last_week_merchants = await db.merchants.count_documents({
-        "activated_at": {"$gte": last_week_start, "$lt": last_week_end}
+        "activated_at": {"$gte": previous_start, "$lte": previous_end}
     })
     
     merchants_change = 0
