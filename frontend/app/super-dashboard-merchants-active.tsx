@@ -702,6 +702,12 @@ const styles = StyleSheet.create({
   deleteButton: {
     backgroundColor: '#F44336',
   },
+  activateButton: {
+    backgroundColor: '#4CAF50',
+  },
+  deactivateButton: {
+    backgroundColor: '#FF9800',
+  },
   actionButtonText: {
     color: '#FFF',
     fontSize: 13,
