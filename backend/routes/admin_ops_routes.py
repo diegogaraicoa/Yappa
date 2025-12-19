@@ -13,7 +13,7 @@ sys.path.append('/app/backend')
 from models import AdminCreate, MerchantCreate, ClerkCreate, KYBDataCreate, KYBDataUpdate
 from bson import ObjectId
 
-router = APIRouter(prefix="/admin_ops", tags=["admin-ops"])
+router = APIRouter(prefix="/admin-ops", tags=["admin-ops"])
 
 
 # ============================================
