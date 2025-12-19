@@ -740,6 +740,39 @@ const styles = StyleSheet.create({
   deleteButton: {
     backgroundColor: '#F44336',
   },
+  activateButton: {
+    backgroundColor: '#4CAF50',
+  },
+  deactivateButton: {
+    backgroundColor: '#FF9800',
+  },
+  cardDeactivated: {
+    backgroundColor: '#FFF5F5',
+    borderColor: '#F44336',
+    borderWidth: 2,
+    opacity: 0.85,
+  },
+  deactivatedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F44336',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    marginBottom: 8,
+    gap: 6,
+  },
+  deactivatedBannerText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  cardTitleDeactivated: {
+    textDecorationLine: 'line-through',
+    color: '#999',
+  },
   actionButtonText: {
     color: '#FFF',
     fontSize: 13,
