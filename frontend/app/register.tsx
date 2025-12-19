@@ -450,6 +450,53 @@ export default function RegisterScreen() {
   }
 
   // ============================================
+  // ¿CUÁNTAS TIENDAS TIENES?
+  // ============================================
+  if (step === 'how_many') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <TouchableOpacity style={styles.backButton} onPress={() => { resetForm(); setStep('initial'); }}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
+            <Text style={styles.backButtonText}>Atrás</Text>
+          </TouchableOpacity>
+
+          <View style={styles.header}>
+            <Text style={styles.logo}>YAPPA</Text>
+            <Text style={styles.subtitle}>Nuevo negocio</Text>
+          </View>
+
+          <View style={styles.questionCard}>
+            <Ionicons name="storefront" size={48} color="#00D2FF" style={styles.questionIcon} />
+            <Text style={styles.questionTitle}>¿Cuántas tiendas tienes?</Text>
+            <Text style={styles.questionSubtitle}>
+              Esto nos ayuda a configurar tu cuenta correctamente
+            </Text>
+          </View>
+
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity 
+              style={[styles.choiceButton, styles.yesButton]} 
+              onPress={() => setStep('single')}
+            >
+              <Ionicons name="home" size={24} color="#FFF" />
+              <Text style={styles.choiceButtonText}>Solo 1 tienda</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.choiceButton, styles.noButton]} 
+              onPress={() => setStep('multi')}
+            >
+              <Ionicons name="business" size={24} color="#FFF" />
+              <Text style={styles.choiceButtonText}>2 o más tiendas</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // ============================================
   // REGISTRO DE 1 TIENDA
   // ============================================
   if (step === 'single') {
@@ -460,7 +507,7 @@ export default function RegisterScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <ScrollView contentContainerStyle={styles.scrollContent}>
-            <TouchableOpacity style={styles.backButton} onPress={() => { resetForm(); setStep('initial'); }}>
+            <TouchableOpacity style={styles.backButton} onPress={() => { resetForm(); setStep('how_many'); }}>
               <Ionicons name="arrow-back" size={24} color="#333" />
               <Text style={styles.backButtonText}>Atrás</Text>
             </TouchableOpacity>
