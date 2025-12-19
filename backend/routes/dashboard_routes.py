@@ -219,21 +219,39 @@ async def get_churn_details(
     
     Muestra quiénes churned y su última actividad.
     Clickeable desde el KPI card.
+    
+    IMPORTANTE: El churn compara el período seleccionado (como período ANTERIOR)
+    con el período ACTUAL (ahora). Ejemplo:
+    - Si seleccionas "last_month" (noviembre), compara contra diciembre actual
+    - Churn = activos en noviembre pero NO activos en diciembre
     """
     from main import get_database
     db = get_database()
     
     try:
-        if start_date and end_date:
-            current_start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
-            current_end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
-        else:
-            current_start, current_end = parse_period(period)
+        now = datetime.utcnow()
         
-        # Calcular período anterior
-        period_duration = current_end - current_start
-        previous_end = current_start - timedelta(seconds=1)
-        previous_start = previous_end - period_duration
+        if start_date and end_date:
+            previous_start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            previous_end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            # Período actual = desde el fin del período seleccionado hasta ahora
+            current_start = previous_end + timedelta(seconds=1)
+            current_end = now
+        elif period == "last_month":
+            # Período anterior = mes pasado completo
+            first_day_this_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            previous_end = first_day_this_month - timedelta(seconds=1)
+            previous_start = previous_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            # Período actual = este mes hasta ahora
+            current_start = first_day_this_month
+            current_end = now
+        else:
+            # Para otros períodos, el período seleccionado es el "anterior"
+            # y comparamos contra el período equivalente más reciente
+            previous_start, previous_end = parse_period(period)
+            period_duration = previous_end - previous_start
+            current_start = previous_end + timedelta(seconds=1)
+            current_end = now
         
         result = await get_churn_rate(db, current_start, current_end, previous_start, previous_end)
         return result
