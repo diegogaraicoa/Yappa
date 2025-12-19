@@ -156,6 +156,7 @@ async def get_clerks_by_merchant(db, merchant_id: str) -> list:
     """
     Obtiene lista de clerks de un merchant.
     Para mostrar en el dropdown del paso 2.
+    Solo muestra clerks activos (con activated_at no nulo).
     
     Args:
         db: Database connection
@@ -166,7 +167,7 @@ async def get_clerks_by_merchant(db, merchant_id: str) -> list:
     """
     clerks = await db.clerks.find({
         "merchant_id": merchant_id,
-        "active": True
+        "activated_at": {"$ne": None}
     }).to_list(100)
     
     # Retornar solo info necesaria para el dropdown
