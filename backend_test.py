@@ -91,6 +91,9 @@ class BackendTester:
                     self.log_test("Login Step 1", True, f"Token obtained for legacy account")
                     return True
                 elif data.get("success") and data.get("clerks"):
+                    # Store data for step 2
+                    self.merchant_id = data.get("merchant_id")
+                    self.clerks = data.get("clerks", [])
                     self.log_test("Login Step 1", True, f"Found {len(data['clerks'])} clerks, needs step 2")
                     return True
                 else:
@@ -106,10 +109,41 @@ class BackendTester:
 
     def test_login_step2(self):
         """Test login step 2 with PIN (if needed)"""
-        # This would only be called if step 1 returned clerks
-        # For now, we'll skip since tiendaclave is a legacy account
-        self.log_test("Login Step 2", True, "Skipped - legacy account uses direct token")
-        return True
+        if hasattr(self, 'clerks') and self.clerks and hasattr(self, 'merchant_id'):
+            try:
+                # Use first clerk with PIN 1234 (from review request)
+                clerk_id = self.clerks[0]["clerk_id"]
+                
+                response = self.make_request(
+                    "POST",
+                    "/onboarding/login/step2",
+                    data={
+                        "merchant_id": self.merchant_id,
+                        "clerk_id": clerk_id,
+                        "pin": "1234"
+                    },
+                    auth_required=False
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get("success") and data.get("token"):
+                        self.auth_token = data["token"]
+                        self.log_test("Login Step 2", True, f"Token obtained for clerk")
+                        return True
+                    else:
+                        self.log_test("Login Step 2", False, f"No token in response: {data}")
+                        return False
+                else:
+                    self.log_test("Login Step 2", False, f"Status {response.status_code}: {response.text}")
+                    return False
+                    
+            except Exception as e:
+                self.log_test("Login Step 2", False, f"Exception: {str(e)}")
+                return False
+        else:
+            self.log_test("Login Step 2", True, "Skipped - no clerks from step 1")
+            return True
 
     def test_invalid_login(self):
         """Test login with invalid credentials"""
