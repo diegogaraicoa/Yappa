@@ -28,6 +28,7 @@ export default function AllMerchantsScreenCRUD() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentMerchant, setCurrentMerchant] = useState<any>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   
   // Form states
   const [formData, setFormData] = useState({
