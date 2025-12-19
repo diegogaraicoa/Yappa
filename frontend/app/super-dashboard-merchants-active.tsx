@@ -290,16 +290,28 @@ export default function AllMerchantsScreenCRUD() {
           filteredMerchants.map((merchant: any, index: number) => {
             const badge = getActivationBadge(merchant);
             const isExpanded = expandedId === merchant.id;
+            const isDeactivated = !merchant.activated_at;
             return (
               <TouchableOpacity 
                 key={index} 
-                style={[styles.card, isExpanded && styles.cardExpanded]}
+                style={[
+                  styles.card, 
+                  isExpanded && styles.cardExpanded,
+                  isDeactivated && styles.cardDeactivated
+                ]}
                 onPress={() => setExpandedId(isExpanded ? null : merchant.id)}
                 activeOpacity={0.7}
               >
+                {/* Deactivated Banner */}
+                {isDeactivated && (
+                  <View style={styles.deactivatedBanner}>
+                    <Ionicons name="alert-circle" size={14} color="#FFF" />
+                    <Text style={styles.deactivatedBannerText}>DESACTIVADO</Text>
+                  </View>
+                )}
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.cardTitle}>{merchant.nombre}</Text>
+                    <Text style={[styles.cardTitle, isDeactivated && styles.cardTitleDeactivated]}>{merchant.nombre}</Text>
                     <Text style={styles.cardSubtitle}>@{merchant.username}</Text>
                   </View>
                   <View style={styles.cardHeaderRight}>
