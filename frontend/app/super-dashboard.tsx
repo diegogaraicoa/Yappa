@@ -752,6 +752,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  exploreDataButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#9C27B0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  exploreDataButtonText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   refreshButton: {
     padding: 8,
   },
