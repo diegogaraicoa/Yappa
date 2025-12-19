@@ -611,26 +611,38 @@ export default function AdminOpsScreen() {
 
               {modalType === 'merchant' && (
                 <>
-                  <Text style={styles.label}>Admin *</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectorContainer}>
-                    {admins.map((admin: any) => (
-                      <TouchableOpacity
-                        key={admin.id}
-                        style={[
-                          styles.selectorOption,
-                          formData.admin_id === admin.id && styles.selectorOptionSelected
-                        ]}
-                        onPress={() => setFormData({ ...formData, admin_id: admin.id })}
-                      >
-                        <Text style={[
-                          styles.selectorText,
-                          formData.admin_id === admin.id && styles.selectorTextSelected
-                        ]}>
-                          {admin.nombre}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
+                  {/* Admin selector - only when creating, not editing */}
+                  {!isEditing ? (
+                    <>
+                      <Text style={styles.label}>Admin *</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectorContainer}>
+                        {admins.map((admin: any) => (
+                          <TouchableOpacity
+                            key={admin.id}
+                            style={[
+                              styles.selectorOption,
+                              formData.admin_id === admin.id && styles.selectorOptionSelected
+                            ]}
+                            onPress={() => setFormData({ ...formData, admin_id: admin.id })}
+                          >
+                            <Text style={[
+                              styles.selectorText,
+                              formData.admin_id === admin.id && styles.selectorTextSelected
+                            ]}>
+                              {admin.nombre}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </>
+                  ) : (
+                    <View style={styles.readOnlyField}>
+                      <Text style={styles.label}>Admin (no editable)</Text>
+                      <Text style={styles.readOnlyValue}>
+                        {admins.find((a: any) => a.id === formData.admin_id)?.nombre || 'N/A'}
+                      </Text>
+                    </View>
+                  )}
 
                   <Text style={styles.label}>Nombre *</Text>
                   <TextInput
