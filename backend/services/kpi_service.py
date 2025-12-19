@@ -37,10 +37,8 @@ async def get_active_merchants(
         if not merchant:
             continue
         
-        # IMPORTANTE: Solo incluir merchants ACTIVOS (con activated_at)
-        # Los inactivos solo se muestran en jerarquía
-        if not merchant.get("activated_at"):
-            continue
+        # Incluir TODOS los merchants (activos y desactivados)
+        # El frontend mostrará visualmente cuáles están desactivados
         
         # Contar eventos del merchant en el período
         event_count = await db.event_logs.count_documents({
@@ -54,14 +52,26 @@ async def get_active_merchants(
             sort=[("timestamp", -1)]
         )
         
+        # Obtener admin info
+        admin_id = merchant.get("admin_id")
+        admin = await db.admins.find_one({"_id": ObjectId(admin_id)}) if admin_id else None
+        admin_nombre = admin.get("nombre", "N/A") if admin else "N/A"
+        
+        # Contar clerks
+        clerks_count = await db.clerks.count_documents({"merchant_id": str(merchant["_id"])})
+        
         merchants_data.append({
             "id": str(merchant["_id"]),
             "nombre": merchant.get("nombre", "N/A"),
             "username": merchant.get("username", "N/A"),
             "last_activity": last_event["timestamp"] if last_event else None,
             "total_events": event_count,
-            "activated_at": merchant.get("activated_at"),  # Para verificar filtro
-            "fully_activated_at": merchant.get("fully_activated_at")  # Para verificar filtro
+            "activated_at": merchant.get("activated_at"),
+            "fully_activated_at": merchant.get("fully_activated_at"),
+            "created_at": merchant.get("created_at"),
+            "admin_nombre": admin_nombre,
+            "clerks_count": clerks_count,
+            "is_active": merchant.get("activated_at") is not None
         })
     
     # Ordenar por última actividad
