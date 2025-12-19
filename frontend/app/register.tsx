@@ -621,37 +621,291 @@ export default function RegisterScreen() {
   }
 
   // ============================================
-  // REGISTRO DE MÚLTIPLES TIENDAS (placeholder)
+  // REGISTRO DE MÚLTIPLES TIENDAS
   // ============================================
   if (step === 'multi') {
+    const addStore = () => {
+      setStoreNames([...storeNames, '']);
+    };
+    
+    const removeStore = (index: number) => {
+      if (storeNames.length > 2) {
+        setStoreNames(storeNames.filter((_, i) => i !== index));
+      }
+    };
+    
+    const updateStoreName = (index: number, name: string) => {
+      const newNames = [...storeNames];
+      newNames[index] = name;
+      setStoreNames(newNames);
+    };
+    
+    const handleRegisterMultiStore = async () => {
+      // Validaciones
+      if (!businessName.trim()) {
+        alert('Por favor ingresa el nombre de tu negocio');
+        return;
+      }
+      
+      const validStores = storeNames.filter(name => name.trim());
+      if (validStores.length < 2) {
+        alert('Debes agregar al menos 2 tiendas');
+        return;
+      }
+      
+      if (!email.trim() || !email.includes('@')) {
+        alert('Por favor ingresa un email válido');
+        return;
+      }
+      if (!password.trim() || password.length < 6) {
+        alert('La contraseña debe tener al menos 6 caracteres');
+        return;
+      }
+      if (!firstName.trim() || !lastName.trim()) {
+        alert('Por favor ingresa tu nombre completo');
+        return;
+      }
+      if (!phone.trim()) {
+        alert('Por favor ingresa tu número de WhatsApp');
+        return;
+      }
+      if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+        alert('El PIN debe ser de 4 dígitos numéricos');
+        return;
+      }
+      
+      setLoading(true);
+      try {
+        // Preparar datos de tiendas
+        const stores = validStores.map(name => ({
+          store_name: name,
+          phone: '',
+          address: ''
+        }));
+        
+        // Clerk para la primera tienda
+        const clerksPerStore: any = {
+          "0": [{
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            phone: phone,
+            pin: pin,
+            role: role
+          }]
+        };
+        
+        const response = await api.post('/api/onboarding/register-multi-store', {
+          business_name: businessName,
+          email: email,
+          password: password,
+          stores: stores,
+          clerks_per_store: clerksPerStore
+        });
+        
+        if (response.data.success) {
+          await AsyncStorage.setItem('@auth_token', response.data.token);
+          alert(`¡Registro exitoso! Se crearon ${response.data.merchants.length} tiendas`);
+          router.replace('/(tabs)');
+        }
+      } catch (error: any) {
+        const errorMsg = error.response?.data?.detail || 'Error en el registro';
+        alert(errorMsg);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     return (
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <TouchableOpacity style={styles.backButton} onPress={() => { resetForm(); setStep('single'); }}>
-            <Ionicons name="arrow-back" size={24} color="#333" />
-            <Text style={styles.backButtonText}>Atrás</Text>
-          </TouchableOpacity>
-
-          <View style={styles.header}>
-            <Text style={styles.stepTitle}>Múltiples tiendas</Text>
-            <Text style={styles.stepSubtitle}>Para negocios con más de una sucursal</Text>
-          </View>
-
-          <View style={styles.comingSoonCard}>
-            <Ionicons name="construct" size={48} color="#FF9800" />
-            <Text style={styles.comingSoonTitle}>Próximamente</Text>
-            <Text style={styles.comingSoonText}>
-              El registro de múltiples tiendas estará disponible pronto. 
-              Por ahora, puedes registrar una tienda y luego agregar más desde el panel de administración.
-            </Text>
-            <TouchableOpacity 
-              style={styles.primaryButton} 
-              onPress={() => setStep('single')}
-            >
-              <Text style={styles.primaryButtonText}>Registrar 1 tienda por ahora</Text>
+        <KeyboardAvoidingView 
+          style={{ flex: 1 }} 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <TouchableOpacity style={styles.backButton} onPress={() => { resetForm(); setStep('single'); }}>
+              <Ionicons name="arrow-back" size={24} color="#333" />
+              <Text style={styles.backButtonText}>Atrás</Text>
             </TouchableOpacity>
-          </View>
-        </ScrollView>
+
+            <View style={styles.header}>
+              <Text style={styles.stepTitle}>Múltiples tiendas</Text>
+              <Text style={styles.stepSubtitle}>Registra tu negocio con varias sucursales</Text>
+            </View>
+
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Nombre de tu negocio</Text>
+                <Text style={styles.labelHint}>Este es el nombre general (ej: "Fruterías Don Pepe")</Text>
+                <TextInput
+                  style={styles.input}
+                  value={businessName}
+                  onChangeText={setBusinessName}
+                  placeholder="Ej: Fruterías Don Pepe"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>Tus tiendas</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              {storeNames.map((name, index) => (
+                <View key={index} style={styles.storeInputRow}>
+                  <View style={styles.storeInputContainer}>
+                    <Text style={styles.storeLabel}>Tienda {index + 1}</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={name}
+                      onChangeText={(text) => updateStoreName(index, text)}
+                      placeholder={`Ej: Sucursal ${index === 0 ? 'Centro' : 'Norte'}`}
+                      placeholderTextColor="#999"
+                    />
+                  </View>
+                  {storeNames.length > 2 && (
+                    <TouchableOpacity 
+                      style={styles.removeStoreButton} 
+                      onPress={() => removeStore(index)}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#F44336" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+
+              <TouchableOpacity style={styles.addStoreButton} onPress={addStore}>
+                <Ionicons name="add-circle" size={20} color="#00D2FF" />
+                <Text style={styles.addStoreButtonText}>Agregar otra tienda</Text>
+              </TouchableOpacity>
+
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>Tu cuenta de administrador</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="tu@email.com"
+                  placeholderTextColor="#999"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Contraseña</Text>
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Mínimo 6 caracteres"
+                  placeholderTextColor="#999"
+                  secureTextEntry
+                />
+              </View>
+
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>Tus datos personales</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Tu nombre</Text>
+                <TextInput
+                  style={styles.input}
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="Nombre"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Tu apellido</Text>
+                <TextInput
+                  style={styles.input}
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Apellido"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>WhatsApp</Text>
+                <TextInput
+                  style={styles.input}
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="+593999123456"
+                  placeholderTextColor="#999"
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>PIN de acceso (4 dígitos)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={pin}
+                  onChangeText={(text) => setPin(text.replace(/[^0-9]/g, '').slice(0, 4))}
+                  placeholder="••••"
+                  placeholderTextColor="#999"
+                  keyboardType="number-pad"
+                  maxLength={4}
+                  secureTextEntry
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>¿Cuál es tu rol?</Text>
+                <View style={styles.roleContainer}>
+                  <TouchableOpacity
+                    style={[styles.roleOption, role === 'owner' && styles.roleOptionActive]}
+                    onPress={() => setRole('owner')}
+                  >
+                    <Ionicons name="person" size={20} color={role === 'owner' ? '#FFF' : '#666'} />
+                    <Text style={[styles.roleText, role === 'owner' && styles.roleTextActive]}>Soy dueño/a</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.roleOption, role === 'employee' && styles.roleOptionActive]}
+                    onPress={() => setRole('employee')}
+                  >
+                    <Ionicons name="people" size={20} color={role === 'employee' ? '#FFF' : '#666'} />
+                    <Text style={[styles.roleText, role === 'employee' && styles.roleTextActive]}>Soy empleado/a</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.infoBox}>
+                <Ionicons name="information-circle" size={20} color="#00D2FF" />
+                <Text style={styles.infoBoxText}>
+                  Tu perfil se creará en la primera tienda. Podrás agregar empleados a cada tienda después.
+                </Text>
+              </View>
+
+              <TouchableOpacity 
+                style={styles.primaryButton} 
+                onPress={handleRegisterMultiStore}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>Crear mi negocio</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
