@@ -761,7 +761,7 @@ export default function RegisterScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <ScrollView contentContainerStyle={styles.scrollContent}>
-            <TouchableOpacity style={styles.backButton} onPress={() => { resetForm(); setStep('single'); }}>
+            <TouchableOpacity style={styles.backButton} onPress={() => { resetForm(); setStep('how_many'); }}>
               <Ionicons name="arrow-back" size={24} color="#333" />
               <Text style={styles.backButtonText}>Atrás</Text>
             </TouchableOpacity>
