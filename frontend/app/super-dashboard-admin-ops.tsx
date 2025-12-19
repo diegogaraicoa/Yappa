@@ -637,7 +637,7 @@ export default function AdminOpsScreen() {
                     </>
                   ) : (
                     <View style={styles.readOnlyField}>
-                      <Text style={styles.label}>Admin (no editable)</Text>
+                      <Text style={styles.label}>Admin</Text>
                       <Text style={styles.readOnlyValue}>
                         {admins.find((a: any) => a.id === formData.admin_id)?.nombre || 'N/A'}
                       </Text>
