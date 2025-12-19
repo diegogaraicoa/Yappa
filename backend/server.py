@@ -2225,6 +2225,64 @@ async def get_categories():
         {"id": "reports", "name": "Reportes", "description": "Entiende tus datos"}
     ]
 
+# ========== EXPORT ENDPOINTS (for Admin Console) ==========
+@api_router.get("/export/sales")
+async def export_sales():
+    """Get all sales for export (uses default merchant for demo)"""
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
+    if not merchant:
+        # Fallback to dgaraicoa store_id
+        store_id = "690e264929f0c385565b3a1b"
+    else:
+        store_id = str(merchant["_id"])
+    
+    sales = await db.sales.find({"store_id": store_id}).sort("fecha", -1).to_list(1000)
+    for sale in sales:
+        sale["_id"] = str(sale["_id"])
+    return sales
+
+@api_router.get("/export/customers")
+async def export_customers():
+    """Get all customers for export"""
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
+    if not merchant:
+        store_id = "690e264929f0c385565b3a1b"
+    else:
+        store_id = str(merchant["_id"])
+    
+    customers = await db.customers.find({"store_id": store_id}).to_list(1000)
+    for customer in customers:
+        customer["_id"] = str(customer["_id"])
+    return customers
+
+@api_router.get("/export/products")
+async def export_products():
+    """Get all products for export"""
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
+    if not merchant:
+        store_id = "690e264929f0c385565b3a1b"
+    else:
+        store_id = str(merchant["_id"])
+    
+    products = await db.products.find({"store_id": store_id}).to_list(1000)
+    for product in products:
+        product["_id"] = str(product["_id"])
+    return products
+
+@api_router.get("/export/suppliers")
+async def export_suppliers():
+    """Get all suppliers for export"""
+    merchant = await db.merchants.find_one({"username": "tiendaclave"})
+    if not merchant:
+        store_id = "690e264929f0c385565b3a1b"
+    else:
+        store_id = str(merchant["_id"])
+    
+    suppliers = await db.suppliers.find({"store_id": store_id}).to_list(1000)
+    for supplier in suppliers:
+        supplier["_id"] = str(supplier["_id"])
+    return suppliers
+
 # Include routers
 app.include_router(api_router)
 
