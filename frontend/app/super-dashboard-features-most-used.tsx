@@ -24,7 +24,7 @@ export default function FeaturesMostUsedScreen() {
 
   const loadData = async () => {
     try {
-      const response = await api.get('/api/dashboard/feature-usage-detail?period=${period}');
+      const response = await api.get(`/api/dashboard/feature-usage-detail?period=${period}`);
       setFeatures(response.data.most_used || []);
     } catch (error) {
       console.error('Error loading features:', error);

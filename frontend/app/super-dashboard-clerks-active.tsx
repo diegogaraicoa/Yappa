@@ -50,7 +50,7 @@ export default function AllClerksScreenCRUD() {
   const loadData = async () => {
     try {
       const [clerksResponse, merchantsResponse] = await Promise.all([
-        api.get('/api/dashboard/clerks/active?period=${period}'),  // Solo activos
+        api.get(`/api/dashboard/clerks/active?period=${period}`),  // Solo activos
         api.get('/api/admin-ops/merchants')
       ]);
       setClerks(clerksResponse.data.clerks || []);

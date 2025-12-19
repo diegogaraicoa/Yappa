@@ -24,7 +24,7 @@ export default function ChurnMerchantsScreen() {
 
   const loadData = async () => {
     try {
-      const response = await api.get('/api/dashboard/churn?period=${period}');
+      const response = await api.get(`/api/dashboard/churn?period=${period}`);
       setData(response.data.merchants);
     } catch (error) {
       console.error('Error loading churn data:', error);
