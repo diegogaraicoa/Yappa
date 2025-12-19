@@ -187,6 +187,25 @@ export default function AllMerchantsScreenCRUD() {
     }
   };
 
+  const handleToggleActive = async (merchant: any) => {
+    const isActive = merchant.activated_at !== null;
+    const action = isActive ? 'desactivar' : 'activar';
+    const confirmed = window.confirm(
+      `¿Estás seguro de ${action} el merchant "${merchant.nombre}"?`
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      await api.patch(`/api/admin-ops/merchants/${merchant.id}/toggle-active`);
+      alert(`✅ Merchant ${isActive ? 'desactivado' : 'activado'} correctamente`);
+      loadData();
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.detail || 'Error al cambiar estado';
+      alert('❌ Error: ' + errorMsg);
+    }
+  };
+
   const fullCount = merchants.filter(m => m.fully_activated_at).length;
   const initialCount = merchants.filter(m => m.activated_at && !m.fully_activated_at).length;
   const inactiveCount = merchants.filter(m => !m.activated_at).length;
