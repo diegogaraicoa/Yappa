@@ -290,16 +290,28 @@ export default function AllClerksScreenCRUD() {
             const activationBadge = getActivationBadge(clerk);
             const roleBadge = getRoleBadge(clerk.role);
             const isExpanded = expandedId === clerk.id;
+            const isDeactivated = clerk.is_active === false || !clerk.activated_at;
             return (
               <TouchableOpacity 
                 key={index} 
-                style={[styles.card, isExpanded && styles.cardExpanded]}
+                style={[
+                  styles.card, 
+                  isExpanded && styles.cardExpanded,
+                  isDeactivated && styles.cardDeactivated
+                ]}
                 onPress={() => setExpandedId(isExpanded ? null : clerk.id)}
                 activeOpacity={0.7}
               >
+                {/* Deactivated Banner */}
+                {isDeactivated && (
+                  <View style={styles.deactivatedBanner}>
+                    <Ionicons name="alert-circle" size={14} color="#FFF" />
+                    <Text style={styles.deactivatedBannerText}>DESACTIVADO</Text>
+                  </View>
+                )}
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.cardTitle}>{clerk.nombre}</Text>
+                    <Text style={[styles.cardTitle, isDeactivated && styles.cardTitleDeactivated]}>{clerk.nombre}</Text>
                     <Text style={styles.cardSubtitle}>{clerk.email}</Text>
                   </View>
                   <View style={{ alignItems: 'flex-end', flexDirection: 'row', gap: 8 }}>
@@ -345,8 +357,15 @@ export default function AllClerksScreenCRUD() {
                     {/* Action Buttons - Only visible when expanded */}
                     <View style={styles.actionButtons}>
                       <TouchableOpacity
+                        style={[styles.actionButton, !isDeactivated ? styles.deactivateButton : styles.activateButton]}
+                        onPress={() => handleToggleActive(clerk)}
+                      >
+                        <Ionicons name={!isDeactivated ? "pause-circle" : "play-circle"} size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>{!isDeactivated ? "Desactivar" : "Activar"}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
                         style={[styles.actionButton, styles.editButton]}
-                        onPress={(e) => { e.stopPropagation(); openEditModal(clerk); }}
+                        onPress={() => openEditModal(clerk)}
                       >
                         <Ionicons name="pencil" size={16} color="#FFF" />
                         <Text style={styles.actionButtonText}>Editar</Text>
