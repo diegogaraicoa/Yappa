@@ -77,11 +77,14 @@ async def authenticate_merchant(db, username: str, password: str) -> Optional[Di
         Dict con info del merchant si auth exitoso, None si falla
     """
     merchant = await db.merchants.find_one({
-        "username": username,
-        "active": True
+        "username": username
     })
     
     if not merchant:
+        return None
+    
+    # Verificar si el merchant está desactivado (activated_at es None)
+    if merchant.get("activated_at") is None:
         return None
     
     if not verify_password(password, merchant["password"]):
