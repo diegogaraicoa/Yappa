@@ -724,6 +724,36 @@ async def delete_clerk(clerk_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.patch("/clerks/{clerk_id}/toggle-active")
+async def toggle_clerk_active(clerk_id: str):
+    """
+    Activar/Desactivar un clerk.
+    """
+    from main import get_database
+    db = get_database()
+    
+    try:
+        clerk = await db.clerks.find_one({"_id": ObjectId(clerk_id)})
+        if not clerk:
+            raise HTTPException(status_code=404, detail="Clerk no encontrado")
+        
+        is_active = clerk.get("activated_at") is not None
+        new_activated_at = None if is_active else datetime.utcnow()
+        
+        await db.clerks.update_one(
+            {"_id": ObjectId(clerk_id)},
+            {"$set": {"activated_at": new_activated_at, "updated_at": datetime.utcnow()}}
+        )
+        
+        status = "desactivado" if is_active else "activado"
+        return {"message": f"Clerk {status} exitosamente", "is_active": not is_active}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============================================
 # CRUD KYB (Vinculado a Admin)
 # ============================================
