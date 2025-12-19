@@ -233,6 +233,8 @@ export default function SuperDashboardScreen() {
         whatsapp: 'WhatsApp AI',
         training: 'Capacitación',
         dashboard: 'Dashboard',
+        export: 'Exportar CSV',
+        ai_reports: 'Reportes IA',
       };
       return names[section] || section;
     };
