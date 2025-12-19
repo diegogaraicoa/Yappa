@@ -618,12 +618,16 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
+  cardExpanded: { borderColor: '#FF9800', borderWidth: 2 },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 10,
   },
+  expandedContent: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F0F0F0' },
+  expandedRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 },
+  expandedLabel: { fontSize: 13, color: '#666', fontWeight: '500' },
+  expandedValue: { fontSize: 13, color: '#333', flex: 1 },
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
