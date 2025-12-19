@@ -717,10 +717,10 @@ async def get_super_dashboard_insights(
     
     # 1. ACTIVIDAD DE USUARIOS (event_logs)
     this_week_events = await db.event_logs.count_documents({
-        "timestamp": {"$gte": this_week_start}
+        "timestamp": {"$gte": current_start, "$lte": current_end}
     })
     last_week_events = await db.event_logs.count_documents({
-        "timestamp": {"$gte": last_week_start, "$lt": last_week_end}
+        "timestamp": {"$gte": previous_start, "$lte": previous_end}
     })
     
     events_change = 0
