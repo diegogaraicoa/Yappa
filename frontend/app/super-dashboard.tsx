@@ -247,7 +247,7 @@ export default function SuperDashboardScreen() {
           {/* Most Used */}
           <TouchableOpacity
             style={styles.featureUsageColumn}
-            onPress={() => router.push('/super-dashboard-features-most-used')}
+            onPress={() => router.push(`/super-dashboard-features-most-used?period=${selectedPeriod}`)}
             activeOpacity={0.7}
           >
             <View style={styles.featureUsageColumnHeader}>
@@ -265,7 +265,7 @@ export default function SuperDashboardScreen() {
           {/* Least Used */}
           <TouchableOpacity
             style={styles.featureUsageColumn}
-            onPress={() => router.push('/super-dashboard-features-least-used')}
+            onPress={() => router.push(`/super-dashboard-features-least-used?period=${selectedPeriod}`)}
             activeOpacity={0.7}
           >
             <View style={styles.featureUsageColumnHeader}>
