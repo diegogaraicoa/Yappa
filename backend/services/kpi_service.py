@@ -427,7 +427,16 @@ async def get_all_kpis(
     new_merchants = await get_new_merchants(db, start_date, end_date, previous_start_date, previous_end_date)
     active_clerks = await get_active_clerks(db, start_date, end_date)
     feature_usage = await get_feature_usage_stats(db, start_date, end_date)
-    churn = await get_churn_rate(db, start_date, end_date, previous_start_date, previous_end_date)
+    
+    # CHURN: Siempre mes actual vs mes anterior (ignora filtros)
+    now = datetime.utcnow()
+    first_day_this_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    churn_current_start = first_day_this_month
+    churn_current_end = now
+    churn_previous_end = first_day_this_month - timedelta(seconds=1)
+    churn_previous_start = churn_previous_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    churn = await get_churn_rate(db, churn_current_start, churn_current_end, churn_previous_start, churn_previous_end)
+    
     hierarchy = await get_hierarchy_breakdown(db)
     
     return {
