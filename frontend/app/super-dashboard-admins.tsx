@@ -248,56 +248,83 @@ export default function AllAdminsScreenCRUD() {
         ) : (
           filteredAdmins.map((admin: any, index: number) => {
             const badge = getActivationBadge(admin);
+            const isExpanded = expandedId === admin.id;
             return (
-              <View key={index} style={styles.card}>
+              <TouchableOpacity 
+                key={index} 
+                style={[styles.card, isExpanded && styles.cardExpanded]}
+                onPress={() => setExpandedId(isExpanded ? null : admin.id)}
+                activeOpacity={0.7}
+              >
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.cardTitle}>{admin.nombre}</Text>
                     <Text style={styles.cardSubtitle}>{admin.email}</Text>
+                  </View>
+                  <View style={styles.cardHeaderRight}>
+                    <View style={[styles.badge, { backgroundColor: badge.color }]}>
+                      <Text style={styles.badgeText}>{badge.label}</Text>
+                    </View>
+                    <Ionicons 
+                      name={isExpanded ? "chevron-up" : "chevron-down"} 
+                      size={20} 
+                      color="#666" 
+                      style={{ marginLeft: 8 }}
+                    />
+                  </View>
+                </View>
+                
+                {isExpanded && (
+                  <View style={styles.expandedContent}>
                     {admin.telefono && (
-                      <Text style={styles.phoneText}>📞 {admin.telefono}</Text>
+                      <View style={styles.expandedRow}>
+                        <Ionicons name="call" size={16} color="#666" />
+                        <Text style={styles.expandedLabel}>Teléfono:</Text>
+                        <Text style={styles.expandedValue}>{admin.telefono}</Text>
+                      </View>
                     )}
-                  </View>
-                  <View style={[styles.badge, { backgroundColor: badge.color }]}>
-                    <Text style={styles.badgeText}>{badge.label}</Text>
-                  </View>
-                </View>
-                <View style={styles.cardFooter}>
-                  <View style={styles.footerItem}>
-                    <Ionicons name="storefront" size={14} color="#666" />
-                    <Text style={styles.footerText}>{admin.merchants_count} merchants</Text>
-                  </View>
-                  <View style={styles.footerItem}>
-                    <Ionicons name="people" size={14} color="#666" />
-                    <Text style={styles.footerText}>{admin.clerks_count} clerks</Text>
-                  </View>
-                  <Text style={styles.dateText}>
-                    {formatDate(admin.created_at)}
-                  </Text>
-                </View>
-                {admin.has_kyb && (
-                  <View style={styles.kybBadge}>
-                    <Ionicons name="shield-checkmark" size={12} color="#FFF" />
-                    <Text style={styles.kybText}>KYB: {admin.kyb_status || 'pending'}</Text>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="storefront" size={16} color="#666" />
+                      <Text style={styles.expandedLabel}>Merchants:</Text>
+                      <Text style={styles.expandedValue}>{admin.merchants_count}</Text>
+                    </View>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="people" size={16} color="#666" />
+                      <Text style={styles.expandedLabel}>Clerks:</Text>
+                      <Text style={styles.expandedValue}>{admin.clerks_count}</Text>
+                    </View>
+                    <View style={styles.expandedRow}>
+                      <Ionicons name="calendar" size={16} color="#666" />
+                      <Text style={styles.expandedLabel}>Creado:</Text>
+                      <Text style={styles.expandedValue}>{formatDate(admin.created_at)}</Text>
+                    </View>
+                    {admin.has_kyb && (
+                      <View style={styles.expandedRow}>
+                        <Ionicons name="shield-checkmark" size={16} color="#4CAF50" />
+                        <Text style={styles.expandedLabel}>KYB:</Text>
+                        <Text style={styles.expandedValue}>{admin.kyb_status || 'pending'}</Text>
+                      </View>
+                    )}
+                    
+                    <View style={styles.actionButtons}>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.editButton]}
+                        onPress={(e) => { e.stopPropagation(); openEditModal(admin); }}
+                      >
+                        <Ionicons name="pencil" size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>Editar</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.deleteButton]}
+                        onPress={(e) => { e.stopPropagation(); handleDelete(admin); }}
+                      >
+                        <Ionicons name="trash" size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>Eliminar</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )}
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.editButton]}
-                    onPress={() => openEditModal(admin)}
-                  >
-                    <Ionicons name="pencil" size={16} color="#FFF" />
-                    <Text style={styles.actionButtonText}>Editar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.deleteButton]}
-                    onPress={() => handleDelete(admin)}
-                  >
-                    <Ionicons name="trash" size={16} color="#FFF" />
-                    <Text style={styles.actionButtonText}>Eliminar</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+              </TouchableOpacity>
             );
           })
         )}
