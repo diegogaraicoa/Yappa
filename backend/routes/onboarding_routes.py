@@ -252,6 +252,7 @@ async def create_clerks_step3(merchant_id: str, clerks: List[ClerkCreateRequest]
             "nombre": f"{clerk_data.first_name} {clerk_data.last_name}",  # Compatibilidad
             "pin": hashed_pin,
             "whatsapp_number": clerk_data.phone,
+            "role": clerk_data.role if hasattr(clerk_data, 'role') and clerk_data.role else "employee",  # owner o employee
             "created_at": datetime.utcnow(),
             "activated_at": datetime.utcnow(),
             "fully_activated_at": datetime.utcnow(),
