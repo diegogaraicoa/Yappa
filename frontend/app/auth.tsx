@@ -351,7 +351,7 @@ export default function AuthScreen() {
               <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.linkButton} onPress={() => setIsLogin(false)}>
+            <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/register')}>
               <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
             </TouchableOpacity>
           </View>
