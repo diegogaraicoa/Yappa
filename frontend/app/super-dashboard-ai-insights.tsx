@@ -78,7 +78,13 @@ export default function AIInsightsScreen() {
   const loadData = async () => {
     try {
       setError(null);
-      const response = await api.get('/api/ai/super-insights');
+      let url = `/api/ai/super-insights?period=${selectedPeriod}`;
+      
+      if (selectedPeriod === 'custom' && appliedCustomDates) {
+        url = `/api/ai/super-insights?period=custom&start_date=${appliedCustomDates.start}&end_date=${appliedCustomDates.end}`;
+      }
+      
+      const response = await api.get(url);
       setData(response.data);
     } catch (err: any) {
       console.error('Error loading AI insights:', err);
@@ -87,6 +93,47 @@ export default function AIInsightsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  const getPeriodLabel = (period: Period): string => {
+    if (period === 'custom' && appliedCustomDates) {
+      return `${appliedCustomDates.start} → ${appliedCustomDates.end}`;
+    }
+    const labels: Record<Period, string> = {
+      '30d': '30 días',
+      '7d': '7 días',
+      today: 'Hoy',
+      this_month: 'Este mes',
+      last_month: 'Mes pasado',
+      custom: 'Personalizado',
+    };
+    return labels[period];
+  };
+
+  const handleSelectCustomPeriod = () => {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    setCustomStartDate(thirtyDaysAgo.toISOString().split('T')[0]);
+    setCustomEndDate(today.toISOString().split('T')[0]);
+    setShowDateModal(true);
+  };
+
+  const handleApplyCustomDates = () => {
+    if (!customStartDate || !customEndDate) {
+      alert('❌ Error: Selecciona ambas fechas');
+      return;
+    }
+    
+    if (new Date(customStartDate) > new Date(customEndDate)) {
+      alert('❌ Error: La fecha de inicio debe ser anterior a la fecha de fin');
+      return;
+    }
+    
+    setAppliedCustomDates({ start: customStartDate, end: customEndDate });
+    setSelectedPeriod('custom');
+    setShowDateModal(false);
   };
 
   const onRefresh = () => {
