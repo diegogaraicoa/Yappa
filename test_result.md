@@ -415,3 +415,18 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "🎉 COMPREHENSIVE ONBOARDING ENDPOINTS TESTING COMPLETADO EXITOSAMENTE: Todos los 4 endpoints funcionando perfectamente con 100% success rate (16/16 tests pasados). TESTING EXHAUSTIVO REALIZADO: ✅ GET /api/onboarding/search-stores - Búsqueda de tiendas funcionando correctamente (encontró 10 tiendas, validación de query corta/vacía/inexistente correcta, estructura de respuesta válida con merchant_id, store_name, business_name, address), ✅ POST /api/onboarding/join-store - Unirse a tienda existente funcionando (validación de PIN 4 dígitos, email único, merchant_id válido, respuesta con success, token, user data completo), ✅ POST /api/onboarding/register-single-store - Registro tienda única funcionando (crea Admin + Merchant + Clerk correctamente, validación PIN/email, respuesta con admin_id, merchant_id, clerk_id, token), ✅ POST /api/onboarding/register-multi-store - Registro multi-tienda funcionando (crea Admin + múltiples Merchants + Clerks, acepta 1+ tiendas, validación email duplicado correcta), ✅ DATA PERSISTENCE - Datos correctamente guardados en MongoDB (verificado mediante búsqueda de tiendas recién creadas), ✅ JWT TOKEN GENERATION - Tokens JWT generados correctamente con formato válido (3 partes). VALIDACIONES VERIFICADAS: PIN exactamente 4 dígitos numéricos, emails únicos, merchant_id existente para join-store, estructura de respuesta JSON correcta, códigos de error apropiados (400/404/422). El nuevo flujo de registro está completamente funcional y listo para producción."
+
+  - agent: "main"
+    message: "TESTING EXHAUSTIVO PRE-DEPLOYMENT: Se requiere testing completo de TODOS los endpoints, flujos, botones, configuraciones. Bug arreglado: /api/admin_ops/alert-settings (guión bajo) cambiado a /api/admin-ops/alert-settings (guión). PRIORIDAD: Verificar que todas las funcionalidades críticas funcionen antes de publicar."
+
+  - task: "Alert Settings Fix"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/app/alert-settings.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Fixed URL from /api/admin_ops/alert-settings to /api/admin-ops/alert-settings (underscore to hyphen)"
