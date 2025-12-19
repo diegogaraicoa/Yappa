@@ -78,7 +78,7 @@ export default function ChurnClerksScreen() {
           <View style={styles.infoText}>
             <Text style={styles.infoTitle}>Tasa de Churn: {churnRate}%</Text>
             <Text style={styles.infoSubtitle}>
-              {data?.churned_count || 0} de {data?.total_previous || 0} clerks tuvieron actividad en el período anterior pero no en el actual.
+              {data?.churned_count || 0} clerks dejaron de tener actividad (de {data?.total_previous || 0} que estaban activos antes).
             </Text>
           </View>
         </View>
