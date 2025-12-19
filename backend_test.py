@@ -117,7 +117,7 @@ class BackendTester:
                 response = self.make_request(
                     "POST",
                     "/onboarding/login/step2",
-                    data={
+                    params={
                         "merchant_id": self.merchant_id,
                         "clerk_id": clerk_id,
                         "pin": "1234"
