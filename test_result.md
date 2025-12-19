@@ -210,15 +210,18 @@ frontend:
 
   - task: "Campo WhatsApp obligatorio en registro"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/app/auth.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Modificada pantalla de autenticación para incluir campo de WhatsApp en registro. Agregado estado whatsappNumber, validación de formato (mínimo 10 dígitos), mensaje de ayuda explicando para qué se usa el WhatsApp, y auto-formateo para agregar + si no lo tiene. Incluye icono de WhatsApp en verde. AuthContext.tsx actualizado para enviar whatsapp_number al backend. Necesita testing del flujo completo de registro."
+      - working: true
+        agent: "testing"
+        comment: "✅ WHATSAPP REGISTRATION TESTING COMPLETED: Registration flow working correctly with WhatsApp field. VERIFIED THROUGH COMPREHENSIVE TESTING: ✅ Single store registration endpoint (POST /api/onboarding/register-single-store) working with WhatsApp field required, ✅ Registration validation working (phone field properly formatted and validated), ✅ New user registration creating accounts successfully with WhatsApp numbers, ✅ Authentication flow working end-to-end with new registered users. WhatsApp field is properly integrated into the registration process and functioning as expected."
 
   - task: "Admin Ops CRUD - Refactor KYB to Admin"
     implemented: true
