@@ -339,6 +339,13 @@ export default function AllMerchantsScreenCRUD() {
                     {/* Action Buttons - Only visible when expanded */}
                     <View style={styles.actionButtons}>
                       <TouchableOpacity
+                        style={[styles.actionButton, merchant.activated_at ? styles.deactivateButton : styles.activateButton]}
+                        onPress={(e) => { e.stopPropagation(); handleToggleActive(merchant); }}
+                      >
+                        <Ionicons name={merchant.activated_at ? "pause-circle" : "play-circle"} size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>{merchant.activated_at ? "Desactivar" : "Activar"}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
                         style={[styles.actionButton, styles.editButton]}
                         onPress={(e) => { e.stopPropagation(); openEditModal(merchant); }}
                       >
