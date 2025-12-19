@@ -69,12 +69,12 @@ export default function AdminConsoleScreen() {
           setData({ tutorials: tutorials.data });
           break;
         case 'export':
-          // Load all data types for export
+          // Load all data types for export using public export endpoints
           const [exportSales, exportCustomers, exportProducts, exportSuppliers] = await Promise.all([
-            api.get('/api/sales'),
-            api.get('/api/customers'),
-            api.get('/api/products'),
-            api.get('/api/suppliers'),
+            api.get('/api/export/sales'),
+            api.get('/api/export/customers'),
+            api.get('/api/export/products'),
+            api.get('/api/export/suppliers'),
           ]);
           setData({ 
             sales: exportSales.data, 
