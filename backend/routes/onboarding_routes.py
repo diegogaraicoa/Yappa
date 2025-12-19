@@ -72,11 +72,45 @@ class ClerkCreateRequest(BaseModel):
     email: EmailStr
     phone: str  # Teléfono / WhatsApp
     pin: str  # PIN de 4 dígitos
+    role: Optional[str] = "employee"  # "owner" o "employee"
 
 class OnboardingCompleteRequest(BaseModel):
     admin: AdminSignupRequest
     merchants: List[MerchantCreateRequest]
     clerks_per_merchant: dict  # {merchant_index: [ClerkCreateRequest]}
+
+# Nuevos modelos para el flujo simplificado
+class SearchStoresRequest(BaseModel):
+    query: str
+
+class JoinStoreRequest(BaseModel):
+    merchant_id: str
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone: str
+    pin: str
+    role: str  # "owner" o "employee"
+
+class SingleStoreOnboardingRequest(BaseModel):
+    """Para el caso de 1 sola tienda (Admin = Merchant)"""
+    store_name: str
+    email: EmailStr
+    password: str
+    # Clerk data
+    first_name: str
+    last_name: str
+    phone: str
+    pin: str
+    role: str  # "owner" o "employee"
+
+class MultiStoreOnboardingRequest(BaseModel):
+    """Para el caso de 2+ tiendas (Admin separado de Merchants)"""
+    business_name: str  # Nombre del negocio (Admin)
+    email: EmailStr
+    password: str
+    stores: List[MerchantCreateRequest]  # Lista de tiendas
+    clerks_per_store: dict  # {store_index: [ClerkCreateRequest]}
 
 # ============================================
 # STEP 1: Create Admin
