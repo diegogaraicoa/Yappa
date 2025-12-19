@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../utils/api';
 
-type Step = 'initial' | 'search' | 'join' | 'single' | 'multi' | 'multi-stores' | 'multi-clerks';
+type Step = 'initial' | 'search' | 'join' | 'how_many' | 'single' | 'multi';
 
 interface Store {
   merchant_id: string;
