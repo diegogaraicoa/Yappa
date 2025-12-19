@@ -21,7 +21,9 @@ VALID_SECTIONS = [
     "admin_console",   # Admin Console
     "training",        # Capacitación
     "settings",        # Configuración
-    "dashboard"        # Dashboard principal
+    "dashboard",       # Dashboard principal
+    "export",          # Exportar CSV
+    "ai_reports",      # Reportes IA mensuales
 ]
 
 # Acciones válidas
