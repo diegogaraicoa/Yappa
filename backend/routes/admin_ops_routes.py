@@ -520,6 +520,7 @@ async def delete_merchant(merchant_id: str):
 async def toggle_merchant_active(merchant_id: str):
     """
     Activar/Desactivar un merchant.
+    CASCADA: Si se desactiva, también se desactivan todos sus clerks.
     """
     from main import get_database
     db = get_database()
@@ -538,7 +539,20 @@ async def toggle_merchant_active(merchant_id: str):
             {"$set": {"activated_at": new_activated_at, "updated_at": datetime.utcnow()}}
         )
         
-        status = "desactivado" if is_active else "activado"
+        # CASCADA: Si se desactiva el merchant, desactivar todos sus clerks
+        if new_activated_at is None:
+            clerks_count = await db.clerks.count_documents({"merchant_id": merchant_id})
+            await db.clerks.update_many(
+                {"merchant_id": merchant_id},
+                {"$set": {"activated_at": None, "updated_at": datetime.utcnow()}}
+            )
+            return {
+                "message": f"Merchant desactivado exitosamente. También se desactivaron {clerks_count} clerk(s) asociado(s).",
+                "is_active": False,
+                "clerks_deactivated": clerks_count
+            }
+        
+        status = "activado"
         return {"message": f"Merchant {status} exitosamente", "is_active": not is_active}
         
     except HTTPException:
