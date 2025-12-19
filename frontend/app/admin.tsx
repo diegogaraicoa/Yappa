@@ -2626,4 +2626,21 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 22,
   },
+  // Quick Stats
+  quickStatsCard: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    gap: 14,
+  },
+  quickStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  quickStatText: {
+    fontSize: 15,
+    color: '#333',
+    flex: 1,
+  },
 });
