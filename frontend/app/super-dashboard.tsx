@@ -78,6 +78,12 @@ export default function SuperDashboardScreen() {
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('30d');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Custom date range states
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [appliedCustomDates, setAppliedCustomDates] = useState<{start: string, end: string} | null>(null);
 
   useEffect(() => {
     checkAuthentication();
