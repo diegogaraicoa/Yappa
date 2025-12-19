@@ -102,25 +102,50 @@ async def get_new_merchants(
             "count": int,
             "previous_count": int (opcional),
             "change_percentage": float (opcional),
-            "merchants": [{"id", "nombre", "activated_at"}]
+            "merchants": [{"id", "nombre", "activated_at", "admin_nombre", "clerks_count", "created_at"}]
         }
     """
+    from bson import ObjectId
+    
     # Merchants con activated_at en el período
     current_merchants = await db.merchants.find({
         "activated_at": {"$gte": start_date, "$lte": end_date}
     }).to_list(1000)
     
+    # Enriquecer con info de admin y clerks
+    merchants_data = []
+    for m in current_merchants:
+        merchant_id = str(m["_id"])
+        
+        # Obtener nombre del admin
+        admin_nombre = "N/A"
+        if m.get("admin_id"):
+            try:
+                admin = await db.admins.find_one({"_id": ObjectId(m["admin_id"])})
+                if admin:
+                    admin_nombre = admin.get("nombre", "N/A")
+            except:
+                pass
+        
+        # Contar clerks
+        clerks_count = await db.clerks.count_documents({"merchant_id": merchant_id})
+        
+        merchants_data.append({
+            "id": merchant_id,
+            "nombre": m.get("nombre", "N/A"),
+            "username": m.get("username", "N/A"),
+            "admin_id": m.get("admin_id"),
+            "admin_nombre": admin_nombre,
+            "clerks_count": clerks_count,
+            "activated_at": m.get("activated_at"),
+            "fully_activated_at": m.get("fully_activated_at"),
+            "created_at": m.get("created_at"),
+            "is_active": m.get("activated_at") is not None
+        })
+    
     result = {
         "count": len(current_merchants),
-        "merchants": [
-            {
-                "id": str(m["_id"]),
-                "nombre": m.get("nombre", "N/A"),
-                "username": m.get("username", "N/A"),
-                "activated_at": m.get("activated_at")
-            }
-            for m in current_merchants
-        ]
+        "merchants": merchants_data
     }
     
     # Si se proporciona período anterior, calcular comparación
