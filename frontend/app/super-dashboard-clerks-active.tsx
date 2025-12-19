@@ -173,6 +173,21 @@ export default function AllClerksScreenCRUD() {
     }
   };
 
+  const handleToggleActive = async (clerk: any) => {
+    const isActive = clerk.activated_at !== null;
+    const action = isActive ? 'desactivar' : 'activar';
+    const confirmed = window.confirm(`¿Estás seguro de ${action} el clerk "${clerk.nombre}"?`);
+    if (!confirmed) return;
+    try {
+      await api.patch(`/api/admin-ops/clerks/${clerk.id}/toggle-active`);
+      alert(`✅ Clerk ${isActive ? 'desactivado' : 'activado'} correctamente`);
+      loadData();
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.detail || 'Error al cambiar estado';
+      alert('❌ Error: ' + errorMsg);
+    }
+  };
+
   const handleDelete = async (clerk: any) => {
     const confirmed = window.confirm(
       `¿Estás seguro de eliminar el clerk "${clerk.nombre}"?`
