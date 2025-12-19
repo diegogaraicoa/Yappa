@@ -681,18 +681,6 @@ async def register_single_store(request: SingleStoreOnboardingRequest):
         clerk_result = await db.clerks.insert_one(clerk_doc)
         clerk_id = str(clerk_result.inserted_id)
         
-        # Enviar PIN por correo
-        try:
-            from services.email_service import send_clerk_pin_email
-            send_clerk_pin_email(
-                clerk_email=request.email,
-                clerk_name=clerk_doc["full_name"],
-                pin=request.pin,  # PIN sin hashear para el email
-                store_name=request.store_name
-            )
-        except Exception as e:
-            print(f"[FALLBACK] No se pudo enviar email. PIN para {request.email}: {request.pin}")
-        
         # Generar token
         token = create_access_token(
             data={
