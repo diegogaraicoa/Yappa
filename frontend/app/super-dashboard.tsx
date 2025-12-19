@@ -306,7 +306,7 @@ export default function SuperDashboardScreen() {
         <View style={styles.churnRow}>
           <TouchableOpacity
             style={[styles.churnCard, { borderLeftColor: getChurnColor(merchantChurn.churned_count) }]}
-            onPress={() => router.push('/super-dashboard-churn-merchants')}
+            onPress={() => router.push(`/super-dashboard-churn-merchants?period=${selectedPeriod}`)}
             activeOpacity={0.7}
           >
             <View style={styles.churnCardHeader}>
@@ -323,7 +323,7 @@ export default function SuperDashboardScreen() {
 
           <TouchableOpacity
             style={[styles.churnCard, { borderLeftColor: getChurnColor(clerkChurn.churned_count) }]}
-            onPress={() => router.push('/super-dashboard-churn-clerks')}
+            onPress={() => router.push(`/super-dashboard-churn-clerks?period=${selectedPeriod}`)}
             activeOpacity={0.7}
           >
             <View style={styles.churnCardHeader}>
