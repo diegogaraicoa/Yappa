@@ -478,3 +478,362 @@ async def login_step2_clerk(merchant_id: str, clerk_id: str, pin: str):
             "store_name": merchant.get("store_name", merchant.get("nombre")),
         }
     }
+
+
+# ============================================
+# NUEVO FLUJO SIMPLIFICADO DE REGISTRO
+# ============================================
+
+@router.get("/search-stores")
+async def search_stores(query: str):
+    """
+    Buscar tiendas por nombre para unirse a una existente.
+    Retorna lista de tiendas que coinciden con la búsqueda.
+    """
+    db = await get_database()
+    
+    if not query or len(query) < 2:
+        return {"stores": []}
+    
+    # Buscar merchants que coincidan con el query (case-insensitive)
+    stores = await db.merchants.find({
+        "$or": [
+            {"store_name": {"$regex": query, "$options": "i"}},
+            {"nombre": {"$regex": query, "$options": "i"}}
+        ],
+        "activated_at": {"$ne": None}  # Solo tiendas activas
+    }).to_list(20)
+    
+    result = []
+    for store in stores:
+        # Obtener info del admin para mostrar ubicación/contexto
+        admin_info = None
+        if store.get("admin_id"):
+            admin = await db.admins.find_one({"_id": ObjectId(store["admin_id"])})
+            if admin:
+                admin_info = admin.get("company_name")
+        
+        result.append({
+            "merchant_id": str(store["_id"]),
+            "store_name": store.get("store_name", store.get("nombre", "Sin nombre")),
+            "business_name": admin_info,  # Nombre del negocio padre (si aplica)
+            "address": store.get("direccion", store.get("address")),
+        })
+    
+    return {"stores": result}
+
+
+@router.post("/join-store")
+async def join_existing_store(request: JoinStoreRequest):
+    """
+    Unirse a una tienda existente como nuevo clerk.
+    El usuario ya buscó y seleccionó la tienda.
+    """
+    db = await get_database()
+    
+    # Verificar que el merchant existe y está activo
+    merchant = await db.merchants.find_one({
+        "_id": ObjectId(request.merchant_id),
+        "activated_at": {"$ne": None}
+    })
+    
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Tienda no encontrada o inactiva")
+    
+    # Verificar que el email no esté ya registrado
+    existing_clerk = await db.clerks.find_one({"email": request.email})
+    if existing_clerk:
+        raise HTTPException(status_code=400, detail="Este email ya está registrado")
+    
+    # Verificar PIN de 4 dígitos
+    if len(request.pin) != 4 or not request.pin.isdigit():
+        raise HTTPException(status_code=400, detail="El PIN debe ser de 4 dígitos numéricos")
+    
+    # Crear el clerk
+    hashed_pin = get_password_hash(request.pin)
+    
+    clerk_doc = {
+        "merchant_id": request.merchant_id,
+        "email": request.email,
+        "first_name": request.first_name,
+        "last_name": request.last_name,
+        "full_name": f"{request.first_name} {request.last_name}",
+        "nombre": f"{request.first_name} {request.last_name}",
+        "pin": hashed_pin,
+        "whatsapp_number": request.phone,
+        "role": request.role,  # "owner" o "employee"
+        "created_at": datetime.utcnow(),
+        "activated_at": datetime.utcnow(),
+        "fully_activated_at": datetime.utcnow(),
+    }
+    
+    result = await db.clerks.insert_one(clerk_doc)
+    clerk_id = str(result.inserted_id)
+    
+    # Generar token para login automático
+    token = create_access_token(
+        data={
+            "admin_id": merchant.get("admin_id"),
+            "merchant_id": request.merchant_id,
+            "clerk_id": clerk_id,
+            "username": merchant["username"]
+        }
+    )
+    
+    return {
+        "success": True,
+        "message": "Te has unido a la tienda exitosamente",
+        "clerk_id": clerk_id,
+        "token": token,
+        "user": {
+            "admin_id": merchant.get("admin_id"),
+            "merchant_id": request.merchant_id,
+            "clerk_id": clerk_id,
+            "clerk_name": clerk_doc["full_name"],
+            "store_name": merchant.get("store_name", merchant.get("nombre")),
+            "role": request.role
+        }
+    }
+
+
+@router.post("/register-single-store")
+async def register_single_store(request: SingleStoreOnboardingRequest):
+    """
+    Registro simplificado para 1 sola tienda.
+    Admin y Merchant tienen el mismo nombre.
+    Crea: Admin + Merchant (mismo nombre) + Clerk (dueño o empleado)
+    """
+    db = await get_database()
+    
+    # Verificar email no duplicado
+    existing_admin = await db.admins.find_one({"email": request.email})
+    if existing_admin:
+        raise HTTPException(status_code=400, detail="Este email ya está registrado como administrador")
+    
+    existing_clerk = await db.clerks.find_one({"email": request.email})
+    if existing_clerk:
+        raise HTTPException(status_code=400, detail="Este email ya está registrado como empleado")
+    
+    # Verificar PIN
+    if len(request.pin) != 4 or not request.pin.isdigit():
+        raise HTTPException(status_code=400, detail="El PIN debe ser de 4 dígitos numéricos")
+    
+    try:
+        # 1. Crear Admin (con el nombre de la tienda)
+        hashed_password = get_password_hash(request.password)
+        
+        admin_doc = {
+            "company_name": request.store_name,  # Mismo nombre que la tienda
+            "nombre": request.store_name,
+            "email": request.email,
+            "password": hashed_password,
+            "num_stores": 1,
+            "is_active": True,
+            "created_at": datetime.utcnow(),
+            "activated_at": datetime.utcnow(),
+            "fully_activated_at": datetime.utcnow(),
+        }
+        
+        admin_result = await db.admins.insert_one(admin_doc)
+        admin_id = str(admin_result.inserted_id)
+        
+        # 2. Crear Merchant (mismo nombre que admin)
+        base_username = request.store_name.lower().replace(" ", "").replace(".", "")
+        username = base_username
+        counter = 1
+        while await db.merchants.find_one({"username": username}):
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        merchant_doc = {
+            "admin_id": admin_id,
+            "username": username,
+            "password": hashed_password,  # Misma contraseña que admin
+            "store_name": request.store_name,
+            "nombre": request.store_name,
+            "is_active": True,
+            "created_at": datetime.utcnow(),
+            "activated_at": datetime.utcnow(),
+            "fully_activated_at": datetime.utcnow(),
+        }
+        
+        merchant_result = await db.merchants.insert_one(merchant_doc)
+        merchant_id = str(merchant_result.inserted_id)
+        
+        # 3. Crear Clerk
+        hashed_pin = get_password_hash(request.pin)
+        
+        clerk_doc = {
+            "merchant_id": merchant_id,
+            "email": request.email,
+            "first_name": request.first_name,
+            "last_name": request.last_name,
+            "full_name": f"{request.first_name} {request.last_name}",
+            "nombre": f"{request.first_name} {request.last_name}",
+            "pin": hashed_pin,
+            "whatsapp_number": request.phone,
+            "role": request.role,  # "owner" o "employee"
+            "created_at": datetime.utcnow(),
+            "activated_at": datetime.utcnow(),
+            "fully_activated_at": datetime.utcnow(),
+        }
+        
+        clerk_result = await db.clerks.insert_one(clerk_doc)
+        clerk_id = str(clerk_result.inserted_id)
+        
+        # Generar token
+        token = create_access_token(
+            data={
+                "admin_id": admin_id,
+                "merchant_id": merchant_id,
+                "clerk_id": clerk_id,
+                "username": username
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": "Registro completado exitosamente",
+            "admin_id": admin_id,
+            "merchant_id": merchant_id,
+            "clerk_id": clerk_id,
+            "username": username,
+            "token": token,
+            "user": {
+                "admin_id": admin_id,
+                "merchant_id": merchant_id,
+                "clerk_id": clerk_id,
+                "clerk_name": clerk_doc["full_name"],
+                "store_name": request.store_name,
+                "role": request.role
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en registro: {str(e)}")
+
+
+@router.post("/register-multi-store")
+async def register_multi_store(request: MultiStoreOnboardingRequest):
+    """
+    Registro para 2+ tiendas.
+    Crea: Admin (negocio) + Merchants (tiendas) + Clerks
+    """
+    db = await get_database()
+    
+    # Verificar email no duplicado
+    existing_admin = await db.admins.find_one({"email": request.email})
+    if existing_admin:
+        raise HTTPException(status_code=400, detail="Este email ya está registrado")
+    
+    try:
+        # 1. Crear Admin (nombre del negocio)
+        hashed_password = get_password_hash(request.password)
+        
+        admin_doc = {
+            "company_name": request.business_name,
+            "nombre": request.business_name,
+            "email": request.email,
+            "password": hashed_password,
+            "num_stores": len(request.stores),
+            "is_active": True,
+            "created_at": datetime.utcnow(),
+            "activated_at": datetime.utcnow(),
+            "fully_activated_at": None,  # Se activa cuando complete el onboarding
+        }
+        
+        admin_result = await db.admins.insert_one(admin_doc)
+        admin_id = str(admin_result.inserted_id)
+        
+        # 2. Crear Merchants (tiendas)
+        merchants_created = []
+        for idx, store in enumerate(request.stores):
+            base_username = store.store_name.lower().replace(" ", "").replace(".", "")
+            username = base_username
+            counter = 1
+            while await db.merchants.find_one({"username": username}):
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            temp_password = f"{base_username}123"
+            hashed_merchant_password = get_password_hash(temp_password)
+            
+            merchant_doc = {
+                "admin_id": admin_id,
+                "username": username,
+                "password": hashed_merchant_password,
+                "store_name": store.store_name,
+                "nombre": store.store_name,
+                "direccion": store.address,
+                "telefono": store.phone,
+                "is_active": True,
+                "created_at": datetime.utcnow(),
+                "activated_at": datetime.utcnow(),
+                "fully_activated_at": None,
+            }
+            
+            merchant_result = await db.merchants.insert_one(merchant_doc)
+            merchant_id = str(merchant_result.inserted_id)
+            
+            merchants_created.append({
+                "merchant_id": merchant_id,
+                "store_name": store.store_name,
+                "username": username,
+                "temp_password": temp_password
+            })
+            
+            # 3. Crear Clerks para este merchant
+            clerks_data = request.clerks_per_store.get(str(idx), [])
+            for clerk_data in clerks_data:
+                if isinstance(clerk_data, dict):
+                    # Verificar PIN
+                    pin = clerk_data.get("pin", "")
+                    if len(pin) != 4 or not pin.isdigit():
+                        continue
+                    
+                    hashed_pin = get_password_hash(pin)
+                    
+                    clerk_doc = {
+                        "merchant_id": merchant_id,
+                        "email": clerk_data.get("email"),
+                        "first_name": clerk_data.get("first_name"),
+                        "last_name": clerk_data.get("last_name"),
+                        "full_name": f"{clerk_data.get('first_name')} {clerk_data.get('last_name')}",
+                        "nombre": f"{clerk_data.get('first_name')} {clerk_data.get('last_name')}",
+                        "pin": hashed_pin,
+                        "whatsapp_number": clerk_data.get("phone"),
+                        "role": clerk_data.get("role", "employee"),
+                        "created_at": datetime.utcnow(),
+                        "activated_at": datetime.utcnow(),
+                        "fully_activated_at": datetime.utcnow(),
+                    }
+                    
+                    await db.clerks.insert_one(clerk_doc)
+        
+        # Marcar admin como fully activated
+        await db.admins.update_one(
+            {"_id": ObjectId(admin_id)},
+            {"$set": {"fully_activated_at": datetime.utcnow()}}
+        )
+        
+        # Generar token para el primer merchant
+        first_merchant = merchants_created[0]
+        token = create_access_token(
+            data={
+                "admin_id": admin_id,
+                "merchant_id": first_merchant["merchant_id"],
+                "username": first_merchant["username"]
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": f"Registro completado: {len(merchants_created)} tiendas creadas",
+            "admin_id": admin_id,
+            "business_name": request.business_name,
+            "merchants": merchants_created,
+            "token": token
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en registro: {str(e)}")
