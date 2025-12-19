@@ -599,6 +599,13 @@ export default function SuperDashboardScreen() {
           <Text style={styles.headerSubtitle}>KPIs y Métricas del Negocio</Text>
         </View>
         <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.exploreDataButton} 
+            onPress={() => router.push('/super-dashboard-ai-insights')}
+          >
+            <Ionicons name="sparkles" size={18} color="#FFF" />
+            <Text style={styles.exploreDataButtonText}>Explore Data</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
             <Ionicons name="refresh" size={24} color="#00D2FF" />
           </TouchableOpacity>
