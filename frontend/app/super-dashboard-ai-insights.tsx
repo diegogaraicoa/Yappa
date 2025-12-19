@@ -46,9 +46,11 @@ interface TopFeature {
 
 interface InsightsData {
   generated_at: string;
+  period_label: string;
+  selected_period: string;
   period: {
-    this_week: { start: string; end: string };
-    last_week: { start: string; end: string };
+    current: { start: string; end: string };
+    previous: { start: string; end: string };
   };
   insights: Insight[];
   top_features: TopFeature[];
@@ -61,10 +63,17 @@ export default function AIInsightsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<InsightsData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Period filter states
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>('this_month');
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [appliedCustomDates, setAppliedCustomDates] = useState<{start: string, end: string} | null>(null);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [selectedPeriod, appliedCustomDates]);
 
   const loadData = async () => {
     try {
