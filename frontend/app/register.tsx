@@ -1041,6 +1041,36 @@ const styles = StyleSheet.create({
   multiStoreLink: { padding: 16, alignItems: 'center' },
   multiStoreLinkText: { fontSize: 14, color: '#666' },
   
+  // Multi-store styles
+  labelHint: { fontSize: 12, color: '#999', marginBottom: 8 },
+  storeInputRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12, gap: 8 },
+  storeInputContainer: { flex: 1 },
+  storeLabel: { fontSize: 13, fontWeight: '500', color: '#666', marginBottom: 6 },
+  removeStoreButton: { padding: 12, backgroundColor: '#FFEBEE', borderRadius: 8 },
+  addStoreButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    padding: 12, 
+    borderRadius: 8, 
+    borderWidth: 1, 
+    borderColor: '#00D2FF', 
+    borderStyle: 'dashed',
+    gap: 8,
+    marginBottom: 16,
+  },
+  addStoreButtonText: { fontSize: 14, color: '#00D2FF', fontWeight: '500' },
+  infoBox: { 
+    flexDirection: 'row', 
+    backgroundColor: '#E3F2FD', 
+    padding: 12, 
+    borderRadius: 8, 
+    gap: 10,
+    marginBottom: 16,
+    alignItems: 'flex-start',
+  },
+  infoBoxText: { flex: 1, fontSize: 13, color: '#1976D2', lineHeight: 18 },
+  
   comingSoonCard: { 
     backgroundColor: '#FFF', 
     borderRadius: 16, 
