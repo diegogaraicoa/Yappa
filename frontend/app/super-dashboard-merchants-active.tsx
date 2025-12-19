@@ -51,7 +51,7 @@ export default function AllMerchantsScreenCRUD() {
   const loadData = async () => {
     try {
       const [merchantsResponse, adminsResponse] = await Promise.all([
-        api.get('/api/dashboard/merchants/active?period=30d'),  // Solo activos
+        api.get(`/api/dashboard/merchants/active?period=${period}`),
         api.get('/api/admin-ops/admins')
       ]);
       setMerchants(merchantsResponse.data.merchants || []);
