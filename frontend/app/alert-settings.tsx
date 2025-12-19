@@ -44,7 +44,7 @@ export default function AlertSettingsScreen() {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/admin_ops/alert-settings');
+      const response = await api.get('/api/admin-ops/alert-settings');
       
       if (response.data) {
         // WhatsApp settings
