@@ -174,10 +174,8 @@ async def get_active_clerks(
         if not clerk:
             continue
         
-        # IMPORTANTE: Solo incluir clerks ACTIVOS (con activated_at)
-        # Los inactivos solo se muestran en jerarquía
-        if not clerk.get("activated_at"):
-            continue
+        # Incluir TODOS los clerks (activos y desactivados)
+        # El frontend mostrará visualmente cuáles están desactivados
         
         # Contar eventos
         event_count = await db.event_logs.count_documents({
@@ -204,10 +202,14 @@ async def get_active_clerks(
             "email": clerk.get("email", "N/A"),
             "role": clerk.get("role", "employee"),
             "merchant_nombre": merchant_nombre,
+            "merchant_id": clerk.get("merchant_id"),
+            "whatsapp_number": clerk.get("whatsapp_number"),
             "total_events": event_count,
             "status": clerk_status,
-            "activated_at": clerk.get("activated_at"),  # Para verificar filtro
-            "fully_activated_at": clerk.get("fully_activated_at")  # Para verificar filtro
+            "activated_at": clerk.get("activated_at"),
+            "fully_activated_at": clerk.get("fully_activated_at"),
+            "created_at": clerk.get("created_at"),
+            "is_active": clerk.get("activated_at") is not None
         })
     
     # Ordenar por total_events
