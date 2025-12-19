@@ -26,6 +26,7 @@ export default function AllAdminsScreenCRUD() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState<any>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   
   // Form states
   const [formData, setFormData] = useState({
