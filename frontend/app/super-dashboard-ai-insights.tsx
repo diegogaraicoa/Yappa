@@ -8,10 +8,15 @@ import {
   ActivityIndicator,
   SafeAreaView,
   RefreshControl,
+  Modal,
+  Platform,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api from '../utils/api';
+
+type Period = '30d' | '7d' | 'today' | 'this_month' | 'last_month' | 'custom';
 
 interface Insight {
   id: string;
