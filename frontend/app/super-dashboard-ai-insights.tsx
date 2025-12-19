@@ -391,6 +391,93 @@ export default function AIInsightsScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Custom Date Modal */}
+      <Modal
+        visible={showDateModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowDateModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.dateModalContent}>
+            <View style={styles.dateModalHeader}>
+              <Text style={styles.dateModalTitle}>📅 Seleccionar Rango de Fechas</Text>
+              <TouchableOpacity onPress={() => setShowDateModal(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.dateModalBody}>
+              <Text style={styles.dateLabel}>Fecha de Inicio</Text>
+              {Platform.OS === 'web' ? (
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: 12,
+                    fontSize: 16,
+                    borderRadius: 8,
+                    border: '1px solid #E0E0E0',
+                    marginBottom: 16,
+                  }}
+                />
+              ) : (
+                <TextInput
+                  style={styles.dateInput}
+                  value={customStartDate}
+                  onChangeText={setCustomStartDate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#999"
+                />
+              )}
+              
+              <Text style={styles.dateLabel}>Fecha de Fin</Text>
+              {Platform.OS === 'web' ? (
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: 12,
+                    fontSize: 16,
+                    borderRadius: 8,
+                    border: '1px solid #E0E0E0',
+                    marginBottom: 16,
+                  }}
+                />
+              ) : (
+                <TextInput
+                  style={styles.dateInput}
+                  value={customEndDate}
+                  onChangeText={setCustomEndDate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#999"
+                />
+              )}
+            </View>
+            
+            <View style={styles.dateModalFooter}>
+              <TouchableOpacity
+                style={[styles.dateModalButton, styles.cancelButton]}
+                onPress={() => setShowDateModal(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.dateModalButton, styles.applyButton]}
+                onPress={handleApplyCustomDates}
+              >
+                <Ionicons name="checkmark" size={20} color="#FFF" />
+                <Text style={styles.applyButtonText}>Aplicar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
