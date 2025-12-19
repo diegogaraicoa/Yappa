@@ -226,6 +226,7 @@ async def delete_admin(admin_id: str):
 async def toggle_admin_active(admin_id: str):
     """
     Activar/Desactivar un admin.
+    CASCADA: Si se desactiva, también se desactivan todos sus merchants y clerks.
     """
     from main import get_database
     db = get_database()
@@ -235,16 +236,42 @@ async def toggle_admin_active(admin_id: str):
         if not admin:
             raise HTTPException(status_code=404, detail="Admin no encontrado")
         
-        is_active = admin.get("activated_at") is not None
-        new_activated_at = None if is_active else datetime.utcnow()
+        is_active = admin.get("is_active", True)
+        new_is_active = not is_active
         
+        # Actualizar admin
         await db.admins.update_one(
             {"_id": ObjectId(admin_id)},
-            {"$set": {"activated_at": new_activated_at, "updated_at": datetime.utcnow()}}
+            {"$set": {"is_active": new_is_active, "updated_at": datetime.utcnow()}}
         )
         
-        status = "desactivado" if is_active else "activado"
-        return {"message": f"Admin {status} exitosamente", "is_active": not is_active}
+        # CASCADA: Si se desactiva el admin, desactivar todos sus merchants y clerks
+        if not new_is_active:
+            # Obtener todos los merchants del admin
+            merchants = await db.merchants.find({"admin_id": admin_id}).to_list(1000)
+            merchant_ids = [str(m["_id"]) for m in merchants]
+            
+            # Desactivar todos los merchants del admin
+            await db.merchants.update_many(
+                {"admin_id": admin_id},
+                {"$set": {"activated_at": None, "updated_at": datetime.utcnow()}}
+            )
+            
+            # Desactivar todos los clerks de esos merchants
+            if merchant_ids:
+                await db.clerks.update_many(
+                    {"merchant_id": {"$in": merchant_ids}},
+                    {"$set": {"activated_at": None, "updated_at": datetime.utcnow()}}
+                )
+            
+            return {
+                "message": f"Admin desactivado exitosamente. También se desactivaron {len(merchant_ids)} merchant(s) y sus clerks asociados.",
+                "is_active": False,
+                "merchants_deactivated": len(merchant_ids)
+            }
+        
+        status = "activado"
+        return {"message": f"Admin {status} exitosamente", "is_active": new_is_active}
         
     except HTTPException:
         raise
