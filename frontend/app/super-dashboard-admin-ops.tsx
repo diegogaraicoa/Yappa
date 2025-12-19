@@ -742,26 +742,38 @@ export default function AdminOpsScreen() {
 
               {modalType === 'clerk' && (
                 <>
-                  <Text style={styles.label}>Merchant *</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectorContainer}>
-                    {merchants.map((merchant: any) => (
-                      <TouchableOpacity
-                        key={merchant.id}
-                        style={[
-                          styles.selectorOption,
-                          formData.merchant_id === merchant.id && styles.selectorOptionSelected
-                        ]}
-                        onPress={() => setFormData({ ...formData, merchant_id: merchant.id })}
-                      >
-                        <Text style={[
-                          styles.selectorText,
-                          formData.merchant_id === merchant.id && styles.selectorTextSelected
-                        ]}>
-                          {merchant.nombre}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
+                  {/* Merchant selector - only when creating, not editing */}
+                  {!isEditing ? (
+                    <>
+                      <Text style={styles.label}>Merchant *</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectorContainer}>
+                        {merchants.map((merchant: any) => (
+                          <TouchableOpacity
+                            key={merchant.id}
+                            style={[
+                              styles.selectorOption,
+                              formData.merchant_id === merchant.id && styles.selectorOptionSelected
+                            ]}
+                            onPress={() => setFormData({ ...formData, merchant_id: merchant.id })}
+                          >
+                            <Text style={[
+                              styles.selectorText,
+                              formData.merchant_id === merchant.id && styles.selectorTextSelected
+                            ]}>
+                              {merchant.nombre}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </>
+                  ) : (
+                    <View style={styles.readOnlyField}>
+                      <Text style={styles.label}>Merchant (no editable)</Text>
+                      <Text style={styles.readOnlyValue}>
+                        {merchants.find((m: any) => m.id === formData.merchant_id)?.nombre || 'N/A'}
+                      </Text>
+                    </View>
+                  )}
 
                   <Text style={styles.label}>Nombre *</Text>
                   <TextInput
