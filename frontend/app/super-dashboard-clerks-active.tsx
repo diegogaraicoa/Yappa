@@ -353,11 +353,6 @@ export default function AllClerksScreenCRUD() {
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* Floating Action Button */}
-      <TouchableOpacity style={styles.fab} onPress={openCreateModal}>
-        <Ionicons name="add" size={28} color="#FFF" />
-      </TouchableOpacity>
-
       {/* Modal for Create/Edit */}
       <Modal
         visible={modalVisible}
