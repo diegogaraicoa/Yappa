@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://tienda-manager-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://join-onboard.preview.emergentagent.com/api"
 
 # Test credentials
 USERNAME = "tiendaclave"

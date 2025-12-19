@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import Markdown from 'react-native-markdown-display';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://tienda-manager-3.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://join-onboard.preview.emergentagent.com';
 
 interface Tutorial {
   _id: string;

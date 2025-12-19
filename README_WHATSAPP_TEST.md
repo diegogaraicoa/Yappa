@@ -91,7 +91,7 @@ python3 check_my_sales.py
 ```
 
 O desde la Admin Console web:
-https://tienda-manager-3.preview.emergentagent.com/admin
+https://join-onboard.preview.emergentagent.com/admin
 
 ---
 

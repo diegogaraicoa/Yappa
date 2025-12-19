@@ -117,7 +117,7 @@ After registering sales/expenses via WhatsApp:
 - Look for entries with note: "Registrado vía WhatsApp"
 
 ### Option 2: Admin Console
-- Go to: https://tienda-manager-3.preview.emergentagent.com/admin
+- Go to: https://join-onboard.preview.emergentagent.com/admin
 - Check the sales/expenses tables
 - Filter by recent entries
 
