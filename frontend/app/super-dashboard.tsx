@@ -622,6 +622,16 @@ export default function SuperDashboardScreen() {
         {/* Period Filters */}
         {renderPeriodFilters()}
 
+        {/* Period Info Card */}
+        {kpiData?.period && (
+          <View style={styles.periodInfoCard}>
+            <Ionicons name="calendar-outline" size={18} color="#666" />
+            <Text style={styles.periodInfoText}>
+              {getPeriodLabel(selectedPeriod)}: {formatDateShort(kpiData.period.start)} - {formatDateShort(kpiData.period.end)}
+            </Text>
+          </View>
+        )}
+
         {/* Main KPI Cards */}
         <View style={styles.kpiGrid}>
           {renderKPICard(
