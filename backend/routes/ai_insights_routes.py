@@ -798,17 +798,17 @@ async def get_super_dashboard_insights(
     
     # 4. FUNCIONALIDADES MÁS USADAS
     pipeline = [
-        {"$match": {"timestamp": {"$gte": this_week_start}}},
+        {"$match": {"timestamp": {"$gte": current_start, "$lte": current_end}}},
         {"$group": {"_id": "$section", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
         {"$limit": 5}
     ]
     top_features = await db.event_logs.aggregate(pipeline).to_list(5)
     
-    # 5. CLERKS EN RIESGO DE CHURN (sin actividad en 7+ días)
+    # 5. CLERKS EN RIESGO DE CHURN (sin actividad en el período actual)
     active_clerk_ids = await db.event_logs.distinct(
         "clerk_id",
-        {"timestamp": {"$gte": this_week_start}}
+        {"timestamp": {"$gte": current_start, "$lte": current_end}}
     )
     total_clerks = await db.clerks.count_documents({"activated_at": {"$ne": None}})
     inactive_clerks = total_clerks - len(active_clerk_ids)
