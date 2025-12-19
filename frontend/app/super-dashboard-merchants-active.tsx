@@ -12,11 +12,12 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../utils/api';
 
 export default function AllMerchantsScreenCRUD() {
   const router = useRouter();
+  const { period = '30d' } = useLocalSearchParams<{ period?: string }>();
   const [loading, setLoading] = useState(true);
   const [merchants, setMerchants] = useState([]);
   const [admins, setAdmins] = useState([]);
