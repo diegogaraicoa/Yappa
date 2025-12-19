@@ -768,7 +768,7 @@ export default function AdminOpsScreen() {
                     </>
                   ) : (
                     <View style={styles.readOnlyField}>
-                      <Text style={styles.label}>Merchant (no editable)</Text>
+                      <Text style={styles.label}>Merchant</Text>
                       <Text style={styles.readOnlyValue}>
                         {merchants.find((m: any) => m.id === formData.merchant_id)?.nombre || 'N/A'}
                       </Text>
