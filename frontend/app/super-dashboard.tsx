@@ -658,6 +658,9 @@ export default function SuperDashboardScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      
+      {/* Custom Date Modal */}
+      {renderDatePickerModal()}
     </SafeAreaView>
   );
 }
