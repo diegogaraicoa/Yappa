@@ -993,6 +993,8 @@ const styles = StyleSheet.create({
   selectorOptionSelected: { backgroundColor: '#2196F3', borderColor: '#2196F3' },
   selectorText: { fontSize: 14, color: '#666', fontWeight: '500' },
   selectorTextSelected: { color: '#FFF', fontWeight: '600' },
+  readOnlyField: { marginBottom: 16, padding: 12, backgroundColor: '#F5F5F5', borderRadius: 8, borderWidth: 1, borderColor: '#E0E0E0' },
+  readOnlyValue: { fontSize: 15, color: '#333', fontWeight: '500', marginTop: 4 },
   roleContainer: { flexDirection: 'row', gap: 12 },
   roleOption: { flex: 1, paddingVertical: 12, backgroundColor: '#F5F5F5', borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#E0E0E0' },
   roleOptionSelected: { backgroundColor: '#9C27B0', borderColor: '#9C27B0' },
