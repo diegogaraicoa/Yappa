@@ -224,13 +224,54 @@ export default function AIInsightsScreen() {
         style={styles.scrollView}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
+        {/* Period Filters */}
+        <View style={styles.filtersContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {(['this_month', 'last_month', '30d', '7d', 'today'] as Period[]).map((period) => (
+              <TouchableOpacity
+                key={period}
+                style={[styles.filterButton, selectedPeriod === period && styles.filterButtonActive]}
+                onPress={() => {
+                  setSelectedPeriod(period);
+                  setAppliedCustomDates(null);
+                  setLoading(true);
+                }}
+              >
+                <Text style={[styles.filterButtonText, selectedPeriod === period && styles.filterButtonTextActive]}>
+                  {getPeriodLabel(period)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={[
+                styles.filterButton, 
+                styles.customDateButton,
+                selectedPeriod === 'custom' && styles.filterButtonActive
+              ]}
+              onPress={handleSelectCustomPeriod}
+            >
+              <Ionicons 
+                name="calendar" 
+                size={16} 
+                color={selectedPeriod === 'custom' ? '#FFF' : '#666'} 
+                style={{ marginRight: 6 }}
+              />
+              <Text style={[styles.filterButtonText, selectedPeriod === 'custom' && styles.filterButtonTextActive]}>
+                {selectedPeriod === 'custom' && appliedCustomDates 
+                  ? `${appliedCustomDates.start} → ${appliedCustomDates.end}`
+                  : 'Personalizado'}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+
         {/* Period Info */}
         <View style={styles.periodCard}>
           <Ionicons name="calendar-outline" size={20} color="#666" />
           <Text style={styles.periodText}>
-            Comparando: {formatDate(data?.period.this_week.start || '')} - {formatDate(data?.period.this_week.end || '')}
+            {data?.period_label || 'Este mes'}: {formatDate(data?.period.current.start || '')} - {formatDate(data?.period.current.end || '')}
           </Text>
-          <Text style={styles.periodVsText}>vs semana anterior</Text>
+          <Text style={styles.periodVsText}>vs período anterior</Text>
         </View>
 
         {/* AI Recommendations */}
