@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://smarte-reports.preview.emergentagent.com/api"
+BACKEND_URL = "https://tienda-manager-3.preview.emergentagent.com/api"
 TEST_EMAIL = "test@example.com"
 TEST_PASSWORD = "testpass123"
 

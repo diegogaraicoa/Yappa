@@ -277,7 +277,7 @@ yarn add expo-notifications
 
 ## 📱 URLs de Acceso
 
-- **Frontend:** https://smarte-reports.preview.emergentagent.com
+- **Frontend:** https://tienda-manager-3.preview.emergentagent.com
 - **Backend:** Puerto 8001 (interno)
 - **Database:** MongoDB localhost:27017
 

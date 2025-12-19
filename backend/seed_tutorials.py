@@ -715,7 +715,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://smarte-reports.preview.emergentagent.com/admin
+**URL:** https://tienda-manager-3.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet

@@ -22,13 +22,11 @@ export default function AllAdminsScreenCRUD() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all');
   
-  // Modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState<any>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   
-  // Form states
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -58,7 +56,6 @@ export default function AllAdminsScreenCRUD() {
   const applyFilters = () => {
     let filtered = [...admins];
 
-    // Admin filters based on merchants/clerks count
     if (filter === 'full') {
       filtered = filtered.filter(a => a.merchants_count > 0 && a.clerks_count > 5);
     } else if (filter === 'initial') {
@@ -67,7 +64,6 @@ export default function AllAdminsScreenCRUD() {
       filtered = filtered.filter(a => a.merchants_count === 0);
     }
 
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(a => 
@@ -80,6 +76,9 @@ export default function AllAdminsScreenCRUD() {
   };
 
   const getActivationBadge = (admin: any) => {
+    if (admin.is_active === false) {
+      return { label: 'Desactivado', color: '#F44336' };
+    }
     if (admin.merchants_count > 0 && admin.clerks_count > 5) {
       return { label: 'Full', color: '#00D2FF' };
     } else if (admin.merchants_count > 0) {
@@ -156,6 +155,20 @@ export default function AllAdminsScreenCRUD() {
     } catch (error: any) {
       const errorMsg = error.response?.data?.detail || 'Error al eliminar';
       alert('❌ Error: ' + errorMsg);
+    }
+  };
+
+  const handleToggleActive = async (admin: any) => {
+    const isActive = admin.is_active !== false;
+    const action = isActive ? 'desactivar' : 'activar';
+    const confirmed = window.confirm(`¿Estás seguro de ${action} el admin "${admin.nombre}"?`);
+    if (!confirmed) return;
+    try {
+      await api.patch(`/api/admin-ops/admins/${admin.id}/toggle-active`);
+      alert(`✅ Admin ${isActive ? 'desactivado' : 'activado'} correctamente`);
+      loadData();
+    } catch (error: any) {
+      alert('❌ Error: ' + (error.response?.data?.detail || 'Error al cambiar estado'));
     }
   };
 
@@ -249,16 +262,27 @@ export default function AllAdminsScreenCRUD() {
           filteredAdmins.map((admin: any, index: number) => {
             const badge = getActivationBadge(admin);
             const isExpanded = expandedId === admin.id;
+            const isDeactivated = admin.is_active === false;
             return (
               <TouchableOpacity 
                 key={index} 
-                style={[styles.card, isExpanded && styles.cardExpanded]}
+                style={[
+                  styles.card, 
+                  isExpanded && styles.cardExpanded,
+                  isDeactivated && styles.cardDeactivated
+                ]}
                 onPress={() => setExpandedId(isExpanded ? null : admin.id)}
                 activeOpacity={0.7}
               >
+                {isDeactivated && (
+                  <View style={styles.deactivatedBanner}>
+                    <Ionicons name="alert-circle" size={14} color="#FFF" />
+                    <Text style={styles.deactivatedBannerText}>DESACTIVADO</Text>
+                  </View>
+                )}
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.cardTitle}>{admin.nombre}</Text>
+                    <Text style={[styles.cardTitle, isDeactivated && styles.cardTitleDeactivated]}>{admin.nombre}</Text>
                     <Text style={styles.cardSubtitle}>{admin.email}</Text>
                   </View>
                   <View style={styles.cardHeaderRight}>
@@ -308,15 +332,22 @@ export default function AllAdminsScreenCRUD() {
                     
                     <View style={styles.actionButtons}>
                       <TouchableOpacity
+                        style={[styles.actionButton, !isDeactivated ? styles.deactivateButton : styles.activateButton]}
+                        onPress={() => handleToggleActive(admin)}
+                      >
+                        <Ionicons name={!isDeactivated ? "pause-circle" : "play-circle"} size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>{!isDeactivated ? "Desactivar" : "Activar"}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
                         style={[styles.actionButton, styles.editButton]}
-                        onPress={(e) => { e.stopPropagation(); openEditModal(admin); }}
+                        onPress={() => openEditModal(admin)}
                       >
                         <Ionicons name="pencil" size={16} color="#FFF" />
                         <Text style={styles.actionButtonText}>Editar</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.actionButton, styles.deleteButton]}
-                        onPress={(e) => { e.stopPropagation(); handleDelete(admin); }}
+                        onPress={() => handleDelete(admin)}
                       >
                         <Ionicons name="trash" size={16} color="#FFF" />
                         <Text style={styles.actionButtonText}>Eliminar</Text>
@@ -431,6 +462,7 @@ const styles = StyleSheet.create({
   emptyText: { marginTop: 16, fontSize: 16, color: '#999' },
   card: { backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 },
   cardExpanded: { borderColor: '#9C27B0', borderWidth: 2 },
+  cardDeactivated: { backgroundColor: '#FFF5F5', borderColor: '#F44336', borderWidth: 2, opacity: 0.85 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   cardHeaderRight: { flexDirection: 'row', alignItems: 'center' },
   expandedContent: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F0F0F0' },
@@ -438,20 +470,18 @@ const styles = StyleSheet.create({
   expandedLabel: { fontSize: 13, color: '#666', fontWeight: '500' },
   expandedValue: { fontSize: 13, color: '#333', flex: 1 },
   cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+  cardTitleDeactivated: { textDecorationLine: 'line-through', color: '#999' },
   cardSubtitle: { fontSize: 13, color: '#666', marginTop: 3 },
-  phoneText: { fontSize: 12, color: '#999', marginTop: 3 },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
   badgeText: { fontSize: 11, fontWeight: '600', color: '#FFF' },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, marginBottom: 10, borderTopWidth: 1, borderTopColor: '#F5F5F5' },
-  footerItem: { flexDirection: 'row', alignItems: 'center', marginRight: 12 },
-  footerText: { fontSize: 12, color: '#666', marginLeft: 5 },
-  dateText: { fontSize: 11, color: '#999' },
-  kybBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#2196F3', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginBottom: 8, alignSelf: 'flex-start' },
-  kybText: { fontSize: 11, color: '#FFF', marginLeft: 4, fontWeight: '600' },
+  deactivatedBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F44336', paddingVertical: 4, paddingHorizontal: 8, borderRadius: 4, marginBottom: 8, gap: 6 },
+  deactivatedBannerText: { color: '#FFF', fontSize: 11, fontWeight: 'bold', letterSpacing: 1 },
   actionButtons: { flexDirection: 'row', gap: 8, marginTop: 8 },
   actionButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 6, gap: 6 },
   editButton: { backgroundColor: '#2196F3' },
   deleteButton: { backgroundColor: '#F44336' },
+  activateButton: { backgroundColor: '#4CAF50' },
+  deactivateButton: { backgroundColor: '#FF9800' },
   actionButtonText: { color: '#FFF', fontSize: 13, fontWeight: '600' },
   fab: { position: 'absolute', right: 20, bottom: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: '#9C27B0', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'flex-end' },

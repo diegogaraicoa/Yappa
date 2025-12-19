@@ -75,14 +75,14 @@ Todos deben estar en estado **RUNNING**:
 
 **Test 1: Auth**
 ```bash
-curl -X POST https://smarte-reports.preview.emergentagent.com/api/auth/login \
+curl -X POST https://tienda-manager-3.preview.emergentagent.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"dgaraicoa@hotmail.com","password":"PASSWORD_AQUI"}'
 ```
 
 **Test 2: WhatsApp Webhook**
 ```bash
-curl -X POST https://smarte-reports.preview.emergentagent.com/api/whatsapp/webhook \
+curl -X POST https://tienda-manager-3.preview.emergentagent.com/api/whatsapp/webhook \
   -d "From=whatsapp:+593992913093" \
   -d "Body=ayuda" \
   -d "NumMedia=0"
@@ -90,7 +90,7 @@ curl -X POST https://smarte-reports.preview.emergentagent.com/api/whatsapp/webho
 
 **Test 3: Admin Console**
 ```
-https://smarte-reports.preview.emergentagent.com/admin
+https://tienda-manager-3.preview.emergentagent.com/admin
 ```
 
 ### 7. Datos del Usuario (Migración)

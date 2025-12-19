@@ -22,15 +22,13 @@ export default function AllMerchantsScreenCRUD() {
   const [admins, setAdmins] = useState([]);
   const [filteredMerchants, setFilteredMerchants] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('all'); // 'all', 'full', 'initial', 'inactive'
+  const [filter, setFilter] = useState('all');
   
-  // Modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentMerchant, setCurrentMerchant] = useState<any>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   
-  // Form states
   const [formData, setFormData] = useState({
     admin_id: '',
     username: '',
@@ -67,7 +65,6 @@ export default function AllMerchantsScreenCRUD() {
   const applyFilters = () => {
     let filtered = [...merchants];
 
-    // Filter by status
     if (filter === 'full') {
       filtered = filtered.filter(m => m.fully_activated_at);
     } else if (filter === 'initial') {
@@ -76,7 +73,6 @@ export default function AllMerchantsScreenCRUD() {
       filtered = filtered.filter(m => !m.activated_at);
     }
 
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(m => 
@@ -124,7 +120,7 @@ export default function AllMerchantsScreenCRUD() {
     setFormData({
       admin_id: merchant.admin_id || '',
       username: merchant.username || '',
-      password: '', // No mostramos la contraseña actual
+      password: '',
       nombre: merchant.nombre || '',
       direccion: merchant.direccion || '',
       telefono: merchant.telefono || '',
@@ -133,7 +129,6 @@ export default function AllMerchantsScreenCRUD() {
   };
 
   const handleSave = async () => {
-    // Validaciones
     if (!formData.nombre.trim()) {
       alert('❌ Error: El nombre es obligatorio');
       return;
@@ -153,11 +148,9 @@ export default function AllMerchantsScreenCRUD() {
 
     try {
       if (isEditing) {
-        // Actualizar
         await api.patch(`/api/admin-ops/merchants/${currentMerchant.id}`, formData);
         alert('✅ Merchant actualizado correctamente');
       } else {
-        // Crear
         await api.post('/api/admin-ops/merchants', formData);
         alert('✅ Merchant creado correctamente');
       }
@@ -183,6 +176,20 @@ export default function AllMerchantsScreenCRUD() {
     } catch (error: any) {
       const errorMsg = error.response?.data?.detail || 'Error al eliminar';
       alert('❌ Error: ' + errorMsg);
+    }
+  };
+
+  const handleToggleActive = async (merchant: any) => {
+    const isActive = merchant.is_active !== false && merchant.activated_at !== null;
+    const action = isActive ? 'desactivar' : 'activar';
+    const confirmed = window.confirm(`¿Estás seguro de ${action} el merchant "${merchant.nombre}"?`);
+    if (!confirmed) return;
+    try {
+      await api.patch(`/api/admin-ops/merchants/${merchant.id}/toggle-active`);
+      alert(`✅ Merchant ${isActive ? 'desactivado' : 'activado'} correctamente`);
+      loadData();
+    } catch (error: any) {
+      alert('❌ Error: ' + (error.response?.data?.detail || 'Error al cambiar estado'));
     }
   };
 
@@ -215,7 +222,6 @@ export default function AllMerchantsScreenCRUD() {
         </View>
       </View>
 
-      {/* Search Bar */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
         <TextInput
@@ -232,7 +238,6 @@ export default function AllMerchantsScreenCRUD() {
         )}
       </View>
 
-      {/* Filter Buttons */}
       <View style={styles.filtersContainer}>
         <TouchableOpacity
           style={[styles.filterButton, filter === 'all' && styles.filterButtonActive]}
@@ -278,16 +283,27 @@ export default function AllMerchantsScreenCRUD() {
           filteredMerchants.map((merchant: any, index: number) => {
             const badge = getActivationBadge(merchant);
             const isExpanded = expandedId === merchant.id;
+            const isDeactivated = merchant.is_active === false || !merchant.activated_at;
             return (
               <TouchableOpacity 
                 key={index} 
-                style={[styles.card, isExpanded && styles.cardExpanded]}
+                style={[
+                  styles.card, 
+                  isExpanded && styles.cardExpanded,
+                  isDeactivated && styles.cardDeactivated
+                ]}
                 onPress={() => setExpandedId(isExpanded ? null : merchant.id)}
                 activeOpacity={0.7}
               >
+                {isDeactivated && (
+                  <View style={styles.deactivatedBanner}>
+                    <Ionicons name="alert-circle" size={14} color="#FFF" />
+                    <Text style={styles.deactivatedBannerText}>DESACTIVADO</Text>
+                  </View>
+                )}
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.cardTitle}>{merchant.nombre}</Text>
+                    <Text style={[styles.cardTitle, isDeactivated && styles.cardTitleDeactivated]}>{merchant.nombre}</Text>
                     <Text style={styles.cardSubtitle}>@{merchant.username}</Text>
                   </View>
                   <View style={styles.cardHeaderRight}>
@@ -325,15 +341,22 @@ export default function AllMerchantsScreenCRUD() {
                     
                     <View style={styles.actionButtons}>
                       <TouchableOpacity
+                        style={[styles.actionButton, !isDeactivated ? styles.deactivateButton : styles.activateButton]}
+                        onPress={() => handleToggleActive(merchant)}
+                      >
+                        <Ionicons name={!isDeactivated ? "pause-circle" : "play-circle"} size={16} color="#FFF" />
+                        <Text style={styles.actionButtonText}>{!isDeactivated ? "Desactivar" : "Activar"}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
                         style={[styles.actionButton, styles.editButton]}
-                        onPress={(e) => { e.stopPropagation(); openEditModal(merchant); }}
+                        onPress={() => openEditModal(merchant)}
                       >
                         <Ionicons name="pencil" size={16} color="#FFF" />
                         <Text style={styles.actionButtonText}>Editar</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[styles.actionButton, styles.deleteButton]}
-                        onPress={(e) => { e.stopPropagation(); handleDelete(merchant); }}
+                        onPress={() => handleDelete(merchant)}
                       >
                         <Ionicons name="trash" size={16} color="#FFF" />
                         <Text style={styles.actionButtonText}>Eliminar</Text>
@@ -348,12 +371,10 @@ export default function AllMerchantsScreenCRUD() {
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* Floating Action Button */}
       <TouchableOpacity style={styles.fab} onPress={openCreateModal}>
         <Ionicons name="add" size={28} color="#FFF" />
       </TouchableOpacity>
 
-      {/* Modal for Create/Edit */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -372,29 +393,41 @@ export default function AllMerchantsScreenCRUD() {
             </View>
 
             <ScrollView style={styles.modalBody}>
-              {/* Admin Selector */}
-              <Text style={styles.label}>Admin *</Text>
-              <View style={styles.pickerContainer}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {admins.map((admin: any) => (
-                    <TouchableOpacity
-                      key={admin.id}
-                      style={[
-                        styles.adminOption,
-                        formData.admin_id === admin.id && styles.adminOptionSelected
-                      ]}
-                      onPress={() => setFormData({ ...formData, admin_id: admin.id })}
-                    >
-                      <Text style={[
-                        styles.adminOptionText,
-                        formData.admin_id === admin.id && styles.adminOptionTextSelected
-                      ]}>
-                        {admin.nombre}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
+              {isEditing ? (
+                <>
+                  <Text style={styles.label}>Admin (no editable)</Text>
+                  <View style={styles.disabledInput}>
+                    <Text style={styles.disabledInputText}>
+                      {admins.find((a: any) => a.id === formData.admin_id)?.nombre || 'N/A'}
+                    </Text>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.label}>Admin *</Text>
+                  <View style={styles.pickerContainer}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      {admins.map((admin: any) => (
+                        <TouchableOpacity
+                          key={admin.id}
+                          style={[
+                            styles.adminOption,
+                            formData.admin_id === admin.id && styles.adminOptionSelected
+                          ]}
+                          onPress={() => setFormData({ ...formData, admin_id: admin.id })}
+                        >
+                          <Text style={[
+                            styles.adminOptionText,
+                            formData.admin_id === admin.id && styles.adminOptionTextSelected
+                          ]}>
+                            {admin.nombre}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                </>
+              )}
 
               <Text style={styles.label}>Nombre *</Text>
               <TextInput
@@ -471,314 +504,67 @@ export default function AllMerchantsScreenCRUD() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTextContainer: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    marginHorizontal: 16,
-    marginTop: 16,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: 44,
-    fontSize: 15,
-    color: '#333',
-  },
-  filtersContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    marginTop: 12,
-    gap: 8,
-  },
-  filterButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  filterButtonActive: {
-    backgroundColor: '#00D2FF',
-    borderColor: '#00D2FF',
-  },
-  filterButtonText: {
-    fontSize: 13,
-    color: '#666',
-    fontWeight: '500',
-  },
-  filterButtonTextActive: {
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 80,
-  },
-  emptyText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#999',
-  },
-  card: {
-    backgroundColor: '#FFF',
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 12,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 16, fontSize: 16, color: '#666' },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 16, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#E0E0E0' },
+  backButton: { padding: 8 },
+  headerTextContainer: { flex: 1, marginLeft: 8 },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
+  headerSubtitle: { fontSize: 14, color: '#666', marginTop: 2 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 16, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#E0E0E0' },
+  searchIcon: { marginRight: 8 },
+  searchInput: { flex: 1, height: 44, fontSize: 15, color: '#333' },
+  filtersContainer: { flexDirection: 'row', paddingHorizontal: 16, marginTop: 12, gap: 8 },
+  filterButton: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#FFF', borderRadius: 20, borderWidth: 1, borderColor: '#E0E0E0' },
+  filterButtonActive: { backgroundColor: '#00D2FF', borderColor: '#00D2FF' },
+  filterButtonText: { fontSize: 13, color: '#666', fontWeight: '500' },
+  filterButtonTextActive: { color: '#FFF', fontWeight: '600' },
+  scrollView: { flex: 1 },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 80 },
+  emptyText: { marginTop: 16, fontSize: 16, color: '#999' },
+  card: { backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 },
   cardExpanded: { borderColor: '#00D2FF', borderWidth: 2 },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
+  cardDeactivated: { backgroundColor: '#FFF5F5', borderColor: '#F44336', borderWidth: 2, opacity: 0.85 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   cardHeaderRight: { flexDirection: 'row', alignItems: 'center' },
   expandedContent: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#F0F0F0' },
   expandedRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 },
   expandedLabel: { fontSize: 13, color: '#666', fontWeight: '500' },
   expandedValue: { fontSize: 13, color: '#333', flex: 1 },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  cardSubtitle: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 3,
-  },
-  adminText: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 3,
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FFF',
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 10,
-    marginBottom: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
-  },
-  footerItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 5,
-  },
-  dateText: {
-    fontSize: 11,
-    color: '#999',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 6,
-    gap: 6,
-  },
-  editButton: {
-    backgroundColor: '#2196F3',
-  },
-  deleteButton: {
-    backgroundColor: '#F44336',
-  },
-  actionButtonText: {
-    color: '#FFF',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#00D2FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalBody: {
-    padding: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  input: {
-    backgroundColor: '#F5F5F5',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#333',
-  },
-  pickerContainer: {
-    marginBottom: 12,
-  },
-  adminOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 20,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  adminOptionSelected: {
-    backgroundColor: '#00D2FF',
-    borderColor: '#00D2FF',
-  },
-  adminOptionText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
-  adminOptionTextSelected: {
-    color: '#FFF',
-    fontWeight: '600',
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    padding: 20,
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#F5F5F5',
-  },
-  saveButton: {
-    backgroundColor: '#00D2FF',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFF',
-  },
+  cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+  cardTitleDeactivated: { textDecorationLine: 'line-through', color: '#999' },
+  cardSubtitle: { fontSize: 13, color: '#666', marginTop: 3 },
+  badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
+  badgeText: { fontSize: 11, fontWeight: '600', color: '#FFF' },
+  deactivatedBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F44336', paddingVertical: 4, paddingHorizontal: 8, borderRadius: 4, marginBottom: 8, gap: 6 },
+  deactivatedBannerText: { color: '#FFF', fontSize: 11, fontWeight: 'bold', letterSpacing: 1 },
+  actionButtons: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  actionButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 6, gap: 6 },
+  editButton: { backgroundColor: '#2196F3' },
+  deleteButton: { backgroundColor: '#F44336' },
+  activateButton: { backgroundColor: '#4CAF50' },
+  deactivateButton: { backgroundColor: '#FF9800' },
+  actionButtonText: { color: '#FFF', fontSize: 13, fontWeight: '600' },
+  fab: { position: 'absolute', right: 20, bottom: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: '#00D2FF', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4, elevation: 5 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#FFF', borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '90%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#E0E0E0' },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
+  modalBody: { padding: 20 },
+  label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8, marginTop: 12 },
+  input: { backgroundColor: '#F5F5F5', borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, fontSize: 15, color: '#333' },
+  disabledInput: { backgroundColor: '#EEEEEE', borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12 },
+  disabledInputText: { fontSize: 15, color: '#999' },
+  pickerContainer: { marginBottom: 12 },
+  adminOption: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#F5F5F5', borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: '#E0E0E0' },
+  adminOptionSelected: { backgroundColor: '#00D2FF', borderColor: '#00D2FF' },
+  adminOptionText: { fontSize: 14, color: '#666', fontWeight: '500' },
+  adminOptionTextSelected: { color: '#FFF', fontWeight: '600' },
+  modalFooter: { flexDirection: 'row', padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: '#E0E0E0' },
+  modalButton: { flex: 1, paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
+  cancelButton: { backgroundColor: '#F5F5F5' },
+  saveButton: { backgroundColor: '#00D2FF' },
+  cancelButtonText: { fontSize: 16, fontWeight: '600', color: '#666' },
+  saveButtonText: { fontSize: 16, fontWeight: '600', color: '#FFF' },
 });
