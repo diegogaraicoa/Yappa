@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://join-onboard.preview.emergentagent.com/api"
+BASE_URL = "https://playstore-prep-9.preview.emergentagent.com/api"
 TEST_CREDENTIALS = {
     "username": "tiendaclave",
     "password": "Chifle98."

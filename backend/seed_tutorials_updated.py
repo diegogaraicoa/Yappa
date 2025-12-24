@@ -513,7 +513,7 @@ La deuda se actualizará automáticamente.
 
 Interfaz web profesional para analytics profundos, comparaciones temporales, exportación de datos y gestión masiva.
 
-**URL:** https://join-onboard.preview.emergentagent.com/admin
+**URL:** https://playstore-prep-9.preview.emergentagent.com/admin
 
 ---
 

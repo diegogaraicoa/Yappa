@@ -715,7 +715,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://join-onboard.preview.emergentagent.com/admin
+**URL:** https://playstore-prep-9.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet

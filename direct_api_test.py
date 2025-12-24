@@ -14,7 +14,7 @@ load_dotenv('/app/backend/.env')
 load_dotenv('/app/frontend/.env')
 
 # Configuration from environment
-BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://join-onboard.preview.emergentagent.com') + "/api"
+BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://playstore-prep-9.preview.emergentagent.com') + "/api"
 TEST_EMAIL = "direct.test@test.com"
 TEST_PASSWORD = "DirectTest2025!"
 TEST_STORE_NAME = "Direct Test Store"

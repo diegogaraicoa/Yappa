@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://join-onboard.preview.emergentagent.com/api"
+BACKEND_URL = "https://playstore-prep-9.preview.emergentagent.com/api"
 TEST_EMAIL = "test@example.com"
 TEST_PASSWORD = "testpass123"
 
