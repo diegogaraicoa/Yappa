@@ -9,12 +9,18 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://playstore-prep-9.preview.emergentagent.com"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://playstore-prep-9.preview.emergentagent.com"
       }
     },
     "production": {
@@ -23,6 +29,9 @@
       },
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://playstore-prep-9.preview.emergentagent.com"
       }
     }
   },
