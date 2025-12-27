@@ -30,6 +30,7 @@
       "ios": {
         "resourceClass": "m-medium"
       },
+      "node": "22.12.0",
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://playstore-prep-9.preview.emergentagent.com"
       }
