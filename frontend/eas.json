@@ -41,6 +41,11 @@
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
         "track": "internal"
+      },
+      "ios": {
+        "appleId": "dgaraicoa@hotmail.com",
+        "ascAppId": "PENDING",
+        "appleTeamId": "R2KY6589AQ"
       }
     }
   }
