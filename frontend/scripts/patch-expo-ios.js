@@ -31,8 +31,16 @@ if (content.includes('// PATCHED FOR RN 0.79')) {
   process.exit(0);
 }
 
-// Find and replace the problematic init method
-const oldInit = `  public convenience init(delegate: any RCTReactNativeFactoryDelegate) {
+// Check if needs patching
+if (!content.includes('RCTReleaseLevel')) {
+  console.log('No RCTReleaseLevel found, file may already be compatible');
+  process.exit(0);
+}
+
+// Replace the problematic init block
+const oldBlock = `  // TODO: Remove check when react-native-macos 0.81 is released
+  #if !os(macOS)
+  @objc public override init(delegate: any RCTReactNativeFactoryDelegate) {
     let releaseLevel = (Bundle.main.object(forInfoDictionaryKey: "ReactNativeReleaseLevel") as? String)
       .flatMap { [
         "canary": RCTReleaseLevel.Canary,
@@ -43,25 +51,53 @@ const oldInit = `  public convenience init(delegate: any RCTReactNativeFactoryDe
     ?? RCTReleaseLevel.Stable
 
     super.init(delegate: delegate, releaseLevel: releaseLevel)
-  }`;
-
-const newInit = `  // PATCHED FOR RN 0.79 - RCTReleaseLevel not available
-  public convenience init(delegate: any RCTReactNativeFactoryDelegate) {
-    self.init(delegate: delegate, bundleURLBlock: nil)
-  }`;
-
-if (content.includes('RCTReleaseLevel')) {
-  content = content.replace(oldInit, newInit);
-  
-  // Also try alternative patterns if the exact match fails
-  if (content.includes('RCTReleaseLevel')) {
-    // More aggressive replacement - remove the entire init block that uses RCTReleaseLevel
-    const regex = /public convenience init\(delegate: any RCTReactNativeFactoryDelegate\) \{[\s\S]*?RCTReleaseLevel[\s\S]*?super\.init\(delegate: delegate, releaseLevel: releaseLevel\)\s*\}/;
-    content = content.replace(regex, newInit);
   }
-  
+  #endif`;
+
+const newBlock = `  // PATCHED FOR RN 0.79 - RCTReleaseLevel not available in RN < 0.80
+  #if !os(macOS)
+  @objc public convenience init(delegate: any RCTReactNativeFactoryDelegate) {
+    self.init(delegate: delegate, bundleURLBlock: nil)
+  }
+  #endif`;
+
+if (content.includes(oldBlock)) {
+  content = content.replace(oldBlock, newBlock);
   fs.writeFileSync(filePath, content);
   console.log('✅ ExpoReactNativeFactory.swift patched successfully');
 } else {
-  console.log('No RCTReleaseLevel found, file may already be compatible');
+  // Try line-by-line replacement as fallback
+  const lines = content.split('\n');
+  let startIndex = -1;
+  let endIndex = -1;
+  
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes('TODO: Remove check when react-native-macos 0.81')) {
+      startIndex = i;
+    }
+    if (startIndex !== -1 && lines[i].trim() === '#endif' && i > startIndex) {
+      endIndex = i;
+      break;
+    }
+  }
+  
+  if (startIndex !== -1 && endIndex !== -1) {
+    const newLines = [
+      '  // PATCHED FOR RN 0.79 - RCTReleaseLevel not available in RN < 0.80',
+      '  #if !os(macOS)',
+      '  @objc public convenience init(delegate: any RCTReactNativeFactoryDelegate) {',
+      '    self.init(delegate: delegate, bundleURLBlock: nil)',
+      '  }',
+      '  #endif'
+    ];
+    
+    lines.splice(startIndex, endIndex - startIndex + 1, ...newLines);
+    content = lines.join('\n');
+    fs.writeFileSync(filePath, content);
+    console.log('✅ ExpoReactNativeFactory.swift patched successfully (fallback method)');
+  } else {
+    console.log('❌ Could not find the exact block to patch. Manual intervention may be needed.');
+    console.log('Start index:', startIndex, 'End index:', endIndex);
+    process.exit(1);
+  }
 }
