@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { Platform, AppState, AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
-import pushNotificationService from '../utils/pushNotifications';
 
 interface NotificationContextData {
   expoPushToken: string | null;
@@ -24,32 +23,42 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const checkInterval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Registrar para push notifications
-    registerForPushNotifications();
+    let isMounted = true;
+    
+    const initNotifications = async () => {
+      try {
+        // Registrar para push notifications
+        await registerForPushNotifications();
 
-    // Listener cuando se recibe una notificación
-    notificationListener.current = pushNotificationService.addNotificationReceivedListener(
-      (notification) => {
-        console.log('📬 Notification received:', notification.request.content.title);
-        setNotification(notification);
-      }
-    );
+        if (!isMounted) return;
 
-    // Listener cuando el usuario toca una notificación
-    responseListener.current = pushNotificationService.addNotificationResponseReceivedListener(
-      (response) => {
-        console.log('👆 Notification tapped:', response.notification.request.content.data);
-        handleNotificationResponse(response);
+        // Listener cuando se recibe una notificación
+        notificationListener.current = Notifications.addNotificationReceivedListener(
+          (notification) => {
+            console.log('📬 Notification received:', notification.request.content.title);
+            setNotification(notification);
+          }
+        );
+
+        // Listener cuando el usuario toca una notificación
+        responseListener.current = Notifications.addNotificationResponseReceivedListener(
+          (response) => {
+            console.log('👆 Notification tapped:', response.notification.request.content.data);
+            handleNotificationResponse(response);
+          }
+        );
+      } catch (error) {
+        console.log('⚠️ Error initializing notifications:', error);
       }
-    );
+    };
+
+    initNotifications();
 
     // Listener para cambios de estado de la app
     const subscription = AppState.addEventListener('change', handleAppStateChange);
 
-    // Verificar insights periódicamente (cada 5 minutos)
-    startPeriodicCheck();
-
     return () => {
+      isMounted = false;
       notificationListener.current?.remove();
       responseListener.current?.remove();
       subscription.remove();
@@ -60,18 +69,40 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const registerForPushNotifications = async () => {
-    const token = await pushNotificationService.registerForPushNotifications();
-    if (token) {
-      setExpoPushToken(token);
+    try {
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'default',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#FF231F7C',
+        });
+      }
+
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        console.log('⚠️ Push notification permissions not granted');
+        return;
+      }
+
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId: '1d4993ea-b1c2-456d-bcf1-928c0dc0b80a',
+      });
+      setExpoPushToken(tokenData.data);
+      console.log('📱 Push token:', tokenData.data);
+    } catch (error) {
+      console.log('⚠️ Error getting push token:', error);
     }
   };
 
   const handleAppStateChange = (nextAppState: AppStateStatus) => {
-    // Cuando la app vuelve al primer plano, verificar insights
-    if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-      console.log('📱 App came to foreground, checking insights...');
-      pushNotificationService.checkAndNotifyInsights();
-    }
     appState.current = nextAppState;
   };
 
@@ -88,35 +119,34 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  const startPeriodicCheck = () => {
-    // Verificar insights cada 5 minutos
-    checkInterval.current = setInterval(() => {
-      if (appState.current === 'active') {
-        pushNotificationService.checkAndNotifyInsights();
-      }
-    }, 5 * 60 * 1000); // 5 minutos
-
-    // También verificar al inicio
-    setTimeout(() => {
-      pushNotificationService.checkAndNotifyInsights();
-    }, 10000); // 10 segundos después de iniciar
-  };
-
   const requestPermissions = async (): Promise<boolean> => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    return status === 'granted';
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      return status === 'granted';
+    } catch (error) {
+      console.log('⚠️ Error requesting permissions:', error);
+      return false;
+    }
   };
 
   const sendTestNotification = async () => {
-    await pushNotificationService.scheduleLocalNotification(
-      '🔔 Notificación de Prueba',
-      'Las notificaciones de Yappa están funcionando correctamente.',
-      { test: true }
-    );
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🔔 Notificación de Prueba',
+          body: 'Las notificaciones de Yappa están funcionando correctamente.',
+          data: { test: true },
+        },
+        trigger: null,
+      });
+    } catch (error) {
+      console.log('⚠️ Error sending test notification:', error);
+    }
   };
 
   const checkInsightsAndNotify = async () => {
-    await pushNotificationService.checkAndNotifyInsights();
+    // Placeholder - can be implemented later
+    console.log('Checking insights...');
   };
 
   return (
