@@ -7,7 +7,7 @@ import requests
 import json
 from datetime import datetime
 
-BASE_URL = "https://playstore-prep-9.preview.emergentagent.com/api"
+BASE_URL = "https://store-launch-fix.preview.emergentagent.com/api"
 
 def log(message, level="INFO"):
     timestamp = datetime.now().strftime("%H:%M:%S")

@@ -91,7 +91,7 @@ python3 check_my_sales.py
 ```
 
 O desde la Admin Console web:
-https://playstore-prep-9.preview.emergentagent.com/admin
+https://store-launch-fix.preview.emergentagent.com/admin
 
 ---
 

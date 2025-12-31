@@ -3,7 +3,7 @@
 # Script de prueba completo para Admin Ops CRUD
 # Prueba todo el flujo: Admin → Merchant → Clerk → KYB
 
-BASE_URL="https://playstore-prep-9.preview.emergentagent.com/api"
+BASE_URL="https://store-launch-fix.preview.emergentagent.com/api"
 
 echo "=========================================="
 echo "🚀 INICIANDO PRUEBAS DE ADMIN OPS"
