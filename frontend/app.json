@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.yappa.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
