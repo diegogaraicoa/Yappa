@@ -47,7 +47,8 @@
           "icon": "./assets/images/icon.png",
           "color": "#082E72"
         }
-      ]
+      ],
+      "./plugins/withPatchExpoFactory.js"
     ],
     "experiments": {
       "typedRoutes": true
