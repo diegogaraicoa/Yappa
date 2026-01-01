@@ -5,6 +5,9 @@ const path = require('path');
 /**
  * Expo Config Plugin to patch ExpoReactNativeFactory.swift
  * This fixes the RCTReleaseLevel error for React Native < 0.80
+ * 
+ * Strategy: Completely remove the problematic init block since the parent class
+ * RCTReactNativeFactory already has a proper init(delegate:) method
  */
 function withPatchExpoFactory(config) {
   return withDangerousMod(config, [
@@ -27,7 +30,7 @@ function withPatchExpoFactory(config) {
       let content = fs.readFileSync(filePath, 'utf8');
 
       // Check if already patched
-      if (content.includes('// PATCHED FOR RN 0.79')) {
+      if (content.includes('// PATCHED: Removed RCTReleaseLevel block')) {
         console.log('[patch-expo-factory] Already patched');
         return config;
       }
@@ -38,22 +41,44 @@ function withPatchExpoFactory(config) {
         return config;
       }
 
-      // Replace the problematic init block
-      const oldBlockRegex = /\/\/ TODO: Remove check when react-native-macos 0\.81 is released\s*\n\s*#if !os\(macOS\)\s*\n\s*@objc public override init\(delegate: any RCTReactNativeFactoryDelegate\) \{[\s\S]*?super\.init\(delegate: delegate, releaseLevel: releaseLevel\)\s*\n\s*\}\s*\n\s*#endif/;
-
-      const newBlock = `// PATCHED FOR RN 0.79 - RCTReleaseLevel not available in RN < 0.80
-  #if !os(macOS)
-  @objc public convenience init(delegate: any RCTReactNativeFactoryDelegate) {
-    self.init(delegate: delegate, bundleURLBlock: nil)
-  }
-  #endif`;
+      // Simply remove the entire problematic block including #if/#endif
+      // The parent class RCTReactNativeFactory already has a suitable init
+      const oldBlockRegex = /\s*\/\/ TODO: Remove check when react-native-macos 0\.81 is released\s*\n\s*#if !os\(macOS\)[\s\S]*?#endif\s*\n/;
 
       if (oldBlockRegex.test(content)) {
-        content = content.replace(oldBlockRegex, newBlock);
+        content = content.replace(oldBlockRegex, '\n  // PATCHED: Removed RCTReleaseLevel block for RN 0.79 compatibility\n\n');
         fs.writeFileSync(filePath, content);
-        console.log('[patch-expo-factory] ✅ Patched successfully');
+        console.log('[patch-expo-factory] ✅ Patched successfully - removed RCTReleaseLevel block');
       } else {
-        console.log('[patch-expo-factory] ⚠️ Could not find block to patch');
+        console.log('[patch-expo-factory] ⚠️ Could not find block to patch, trying alternative approach');
+        
+        // Alternative: try to find and remove just the RCTReleaseLevel lines
+        const lines = content.split('\n');
+        const filteredLines = [];
+        let skipUntilEndif = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          
+          if (line.includes('TODO: Remove check when react-native-macos 0.81')) {
+            skipUntilEndif = true;
+            filteredLines.push('  // PATCHED: Removed RCTReleaseLevel block for RN 0.79 compatibility');
+            continue;
+          }
+          
+          if (skipUntilEndif) {
+            if (line.trim() === '#endif') {
+              skipUntilEndif = false;
+            }
+            continue;
+          }
+          
+          filteredLines.push(line);
+        }
+        
+        content = filteredLines.join('\n');
+        fs.writeFileSync(filePath, content);
+        console.log('[patch-expo-factory] ✅ Patched successfully (alternative method)');
       }
 
       return config;
