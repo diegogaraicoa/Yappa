@@ -45,7 +45,10 @@
       "ios": {
         "appleId": "dgaraicoa@hotmail.com",
         "ascAppId": "6757207017",
-        "appleTeamId": "R2KY6589AQ"
+        "appleTeamId": "R2KY6589AQ",
+        "ascApiKeyPath": "./AuthKey_PDXP2JPLP3.p8",
+        "ascApiKeyIssuerId": "ab1cd414-4d68-4301-83de-03edd6f59370",
+        "ascApiKeyId": "PDXP2JPLP3"
       }
     }
   }
