@@ -9,82 +9,145 @@ interface NotificationContextData {
   requestPermissions: () => Promise<boolean>;
   sendTestNotification: () => Promise<void>;
   checkInsightsAndNotify: () => Promise<void>;
+  isInitialized: boolean;
 }
 
 const NotificationContext = createContext<NotificationContextData>({} as NotificationContextData);
+
+// Configure notification handler at module level with error handling
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+} catch (error) {
+  console.log('⚠️ Notification handler setup failed:', error);
+}
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const router = useRouter();
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [notification, setNotification] = useState<Notifications.Notification | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const notificationListener = useRef<Notifications.EventSubscription>();
   const responseListener = useRef<Notifications.EventSubscription>();
   const appState = useRef(AppState.currentState);
-  const checkInterval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     
     const initNotifications = async () => {
       try {
-        // Registrar para push notifications
+        // Only initialize notifications if we're on a real device (not web)
+        if (Platform.OS === 'web') {
+          console.log('📱 Notifications not supported on web');
+          setIsInitialized(true);
+          return;
+        }
+
+        // Register for push notifications with comprehensive error handling
         await registerForPushNotifications();
 
         if (!isMounted) return;
 
-        // Listener cuando se recibe una notificación
-        notificationListener.current = Notifications.addNotificationReceivedListener(
-          (notification) => {
-            console.log('📬 Notification received:', notification.request.content.title);
-            setNotification(notification);
-          }
-        );
+        // Listener when notification is received (app in foreground)
+        try {
+          notificationListener.current = Notifications.addNotificationReceivedListener(
+            (notification) => {
+              console.log('📬 Notification received:', notification.request.content.title);
+              if (isMounted) {
+                setNotification(notification);
+              }
+            }
+          );
+        } catch (listenerError) {
+          console.log('⚠️ Error setting up notification listener:', listenerError);
+        }
 
-        // Listener cuando el usuario toca una notificación
-        responseListener.current = Notifications.addNotificationResponseReceivedListener(
-          (response) => {
-            console.log('👆 Notification tapped:', response.notification.request.content.data);
-            handleNotificationResponse(response);
-          }
-        );
+        // Listener when user taps notification
+        try {
+          responseListener.current = Notifications.addNotificationResponseReceivedListener(
+            (response) => {
+              console.log('👆 Notification tapped:', response.notification.request.content.data);
+              handleNotificationResponse(response);
+            }
+          );
+        } catch (responseError) {
+          console.log('⚠️ Error setting up response listener:', responseError);
+        }
+
+        setIsInitialized(true);
       } catch (error) {
-        console.log('⚠️ Error initializing notifications:', error);
+        console.log('⚠️ Error initializing notifications (non-fatal):', error);
+        // Mark as initialized even on error to prevent blocking the app
+        if (isMounted) {
+          setIsInitialized(true);
+        }
       }
     };
 
-    initNotifications();
+    // Wrap in try-catch and setTimeout to prevent blocking app startup
+    setTimeout(() => {
+      initNotifications().catch((err) => {
+        console.log('⚠️ Notification init failed (non-fatal):', err);
+        setIsInitialized(true);
+      });
+    }, 100);
 
-    // Listener para cambios de estado de la app
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    // Listener for app state changes
+    let subscription: any;
+    try {
+      subscription = AppState.addEventListener('change', handleAppStateChange);
+    } catch (error) {
+      console.log('⚠️ AppState listener error:', error);
+    }
 
     return () => {
       isMounted = false;
-      notificationListener.current?.remove();
-      responseListener.current?.remove();
-      subscription.remove();
-      if (checkInterval.current) {
-        clearInterval(checkInterval.current);
+      try {
+        notificationListener.current?.remove();
+        responseListener.current?.remove();
+        subscription?.remove();
+      } catch (error) {
+        console.log('⚠️ Cleanup error:', error);
       }
     };
   }, []);
 
   const registerForPushNotifications = async () => {
     try {
+      // Set up Android notification channel
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'default',
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF231F7C',
-        });
+        try {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#FF231F7C',
+          });
+        } catch (channelError) {
+          console.log('⚠️ Error setting notification channel:', channelError);
+        }
       }
 
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
+      // Check/request permissions
+      let finalStatus = 'undetermined';
+      try {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        finalStatus = existingStatus;
 
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+      } catch (permError) {
+        console.log('⚠️ Error checking permissions:', permError);
+        return;
       }
 
       if (finalStatus !== 'granted') {
@@ -92,13 +155,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: '1d4993ea-b1c2-456d-bcf1-928c0dc0b80a',
-      });
-      setExpoPushToken(tokenData.data);
-      console.log('📱 Push token:', tokenData.data);
+      // Get push token - this can fail if Firebase is not configured
+      // We catch this specifically to prevent crashes
+      try {
+        const tokenData = await Notifications.getExpoPushTokenAsync({
+          projectId: '1d4993ea-b1c2-456d-bcf1-928c0dc0b80a',
+        });
+        setExpoPushToken(tokenData.data);
+        console.log('📱 Push token:', tokenData.data);
+      } catch (tokenError: any) {
+        // This is expected to fail if Firebase is not configured
+        // The app should continue to work without push notifications
+        console.log('⚠️ Push token unavailable (Firebase may not be configured):', tokenError?.message || tokenError);
+      }
     } catch (error) {
-      console.log('⚠️ Error getting push token:', error);
+      console.log('⚠️ Error in registerForPushNotifications:', error);
     }
   };
 
@@ -107,15 +178,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const handleNotificationResponse = (response: Notifications.NotificationResponse) => {
-    const data = response.notification.request.content.data;
-    
-    // Navegar según el tipo de notificación
-    if (data.screen === 'customers') {
-      router.push('/customers?from=notification');
-    } else if (data.screen === 'inventory') {
-      router.push('/(tabs)/inventory?from=notification');
-    } else if (data.screen === 'insights') {
-      router.push('/insights');
+    try {
+      const data = response.notification.request.content.data;
+      
+      // Navigate based on notification type
+      if (data?.screen === 'customers') {
+        router.push('/customers?from=notification');
+      } else if (data?.screen === 'inventory') {
+        router.push('/(tabs)/inventory?from=notification');
+      } else if (data?.screen === 'insights') {
+        router.push('/insights');
+      }
+    } catch (error) {
+      console.log('⚠️ Error handling notification response:', error);
     }
   };
 
@@ -133,8 +208,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: '🔔 Notificación de Prueba',
-          body: 'Las notificaciones de Yappa están funcionando correctamente.',
+          title: '🔔 Notificacion de Prueba',
+          body: 'Las notificaciones de Yappa estan funcionando correctamente.',
           data: { test: true },
         },
         trigger: null,
@@ -145,7 +220,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const checkInsightsAndNotify = async () => {
-    // Placeholder - can be implemented later
     console.log('Checking insights...');
   };
 
@@ -157,6 +231,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         requestPermissions,
         sendTestNotification,
         checkInsightsAndNotify,
+        isInitialized,
       }}
     >
       {children}
