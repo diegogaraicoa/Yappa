@@ -2,29 +2,28 @@
   "expo": {
     "name": "YAPPA",
     "slug": "yappa",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "yappa",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yappaec.app",
-      "newArchEnabled": false
+      "bundleIdentifier": "com.yappaec.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#082E72"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.yappa.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
-      ]
+      ],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -40,6 +39,13 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#082E72"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#082E72"
         }
       ]
     ],
