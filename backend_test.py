@@ -51,16 +51,20 @@ class AdminConsoleTest:
             
             if response.status_code == 200:
                 data = response.json()
-                if "access_token" in data:
-                    self.token = data["access_token"]
+                # Check for both 'access_token' and 'token' field names
+                token = data.get("access_token") or data.get("token")
+                if token:
+                    self.token = token
                     self.session.headers.update({
                         'Authorization': f'Bearer {self.token}'
                     })
                     self.log("✅ Login Step 2 successful - JWT token obtained")
                     self.log(f"Token preview: {self.token[:50]}...")
+                    user_info = data.get("user", {})
+                    self.log(f"Logged in as: {user_info.get('clerk_name', 'Unknown')} - {user_info.get('store_name', 'Unknown Store')}")
                     return True
                 else:
-                    self.log("❌ Login Step 2 failed - No access_token in response")
+                    self.log("❌ Login Step 2 failed - No access_token or token in response")
                     self.log(f"Response: {data}")
                     return False
             else:
