@@ -674,23 +674,23 @@ function DashboardView({ data, selectedMerchant, merchantName }: any) {
             <View style={styles.comparisonCol}>
               <Text style={styles.comparisonLabel}>Esta Semana</Text>
               <Text style={styles.comparisonValue}>
-                ${comparisons.week_comparison?.this_week?.toFixed(2) || '0.00'}
+                ${comparisons.weekly?.this_week?.toFixed(2) || '0.00'}
               </Text>
             </View>
             <View style={styles.comparisonCol}>
               <Text style={styles.comparisonLabel}>Semana Pasada</Text>
               <Text style={styles.comparisonValue}>
-                ${comparisons.week_comparison?.last_week?.toFixed(2) || '0.00'}
+                ${comparisons.weekly?.last_week?.toFixed(2) || '0.00'}
               </Text>
             </View>
             <View style={styles.comparisonCol}>
               <Text style={styles.comparisonLabel}>Cambio</Text>
               <Text style={[
                 styles.comparisonValue,
-                { color: comparisons.week_comparison?.change_percent >= 0 ? '#00D2FF' : '#f44336' }
+                { color: comparisons.weekly?.change_percent >= 0 ? '#00D2FF' : '#f44336' }
               ]}>
-                {comparisons.week_comparison?.change_percent >= 0 ? '+' : ''}
-                {comparisons.week_comparison?.change_percent?.toFixed(1) || '0'}%
+                {comparisons.weekly?.change_percent >= 0 ? '+' : ''}
+                {comparisons.weekly?.change_percent?.toFixed(1) || '0'}%
               </Text>
             </View>
           </View>
@@ -702,23 +702,23 @@ function DashboardView({ data, selectedMerchant, merchantName }: any) {
             <View style={styles.comparisonCol}>
               <Text style={styles.comparisonLabel}>Este Mes</Text>
               <Text style={styles.comparisonValue}>
-                ${comparisons.month_comparison?.this_month?.toFixed(2) || '0.00'}
+                ${comparisons.monthly?.this_month?.toFixed(2) || '0.00'}
               </Text>
             </View>
             <View style={styles.comparisonCol}>
               <Text style={styles.comparisonLabel}>Mes Pasado</Text>
               <Text style={styles.comparisonValue}>
-                ${comparisons.month_comparison?.last_month?.toFixed(2) || '0.00'}
+                ${comparisons.monthly?.last_month?.toFixed(2) || '0.00'}
               </Text>
             </View>
             <View style={styles.comparisonCol}>
               <Text style={styles.comparisonLabel}>Cambio</Text>
               <Text style={[
                 styles.comparisonValue,
-                { color: comparisons.month_comparison?.change_percent >= 0 ? '#00D2FF' : '#f44336' }
+                { color: comparisons.monthly?.change_percent >= 0 ? '#00D2FF' : '#f44336' }
               ]}>
-                {comparisons.month_comparison?.change_percent >= 0 ? '+' : ''}
-                {comparisons.month_comparison?.change_percent?.toFixed(1) || '0'}%
+                {comparisons.monthly?.change_percent >= 0 ? '+' : ''}
+                {comparisons.monthly?.change_percent?.toFixed(1) || '0'}%
               </Text>
             </View>
           </View>
