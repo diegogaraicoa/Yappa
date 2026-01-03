@@ -1476,37 +1476,37 @@ async def get_admin_analytics(
     low_stock_query = {**store_filter, "$expr": {"$lte": ["$quantity", "$min_stock_alert"]}, "alert_enabled": True}
     low_stock_count = await db.products.count_documents(low_stock_query)
     
-    # Sales analytics
+    # Sales analytics - Include paid=True and paid=None (legacy data) but exclude paid=False
     sales_today = await db.sales.find({
         **store_filter,
         "date": {"$gte": today_start},
-        "paid": True
+        "paid": {"$ne": False}  # Include True and None
     }).to_list(10000)
     
     sales_week = await db.sales.find({
         **store_filter,
         "date": {"$gte": week_start},
-        "paid": True
+        "paid": {"$ne": False}
     }).to_list(10000)
     
     sales_month = await db.sales.find({
         **store_filter,
         "date": {"$gte": month_start},
-        "paid": True
+        "paid": {"$ne": False}
     }).to_list(10000)
     
-    total_sales_today = sum(s["total"] for s in sales_today)
-    total_sales_week = sum(s["total"] for s in sales_week)
-    total_sales_month = sum(s["total"] for s in sales_month)
+    total_sales_today = sum(s.get("total", 0) for s in sales_today)
+    total_sales_week = sum(s.get("total", 0) for s in sales_week)
+    total_sales_month = sum(s.get("total", 0) for s in sales_month)
     
-    # Expenses analytics
+    # Expenses analytics - Include paid=True and paid=None
     expenses_month = await db.expenses.find({
         **store_filter,
         "date": {"$gte": month_start},
-        "paid": True
+        "paid": {"$ne": False}
     }).to_list(10000)
     
-    total_expenses_month = sum(e["amount"] for e in expenses_month)
+    total_expenses_month = sum(e.get("amount", 0) for e in expenses_month)
     
     # Customers and suppliers count
     total_customers = await db.customers.count_documents(store_filter)
@@ -1518,22 +1518,30 @@ async def get_admin_analytics(
         "paid": False
     }).to_list(10000)
     
-    total_pending_debts = sum(d["amount"] for d in pending_debts)
+    total_pending_debts = sum(d.get("amount", 0) for d in pending_debts)
     
-    # Top selling products (this month)
+    # Top selling products (this month) - Handle both 'products' and 'items' field names
     product_sales = {}
     for sale in sales_month:
-        for product in sale.get("products", []):
-            pid = product["product_id"]
-            if pid not in product_sales:
-                product_sales[pid] = {
-                    "product_id": pid,
-                    "product_name": product["product_name"],
-                    "quantity_sold": 0,
-                    "revenue": 0
-                }
-            product_sales[pid]["quantity_sold"] += product["quantity"]
-            product_sales[pid]["revenue"] += product["total"]
+        # Support both 'products' and 'items' field names
+        sale_items = sale.get("products") or sale.get("items") or []
+        for product in sale_items:
+            # Support different field naming conventions
+            pid = product.get("product_id") or product.get("productId") or product.get("id")
+            pname = product.get("product_name") or product.get("productName") or product.get("name") or product.get("nombre") or "Producto"
+            qty = product.get("quantity") or product.get("qty") or product.get("cantidad") or 1
+            item_total = product.get("total") or product.get("subtotal") or (product.get("price", 0) * qty)
+            
+            if pid:
+                if pid not in product_sales:
+                    product_sales[pid] = {
+                        "product_id": pid,
+                        "product_name": pname,
+                        "quantity_sold": 0,
+                        "revenue": 0
+                    }
+                product_sales[pid]["quantity_sold"] += qty
+                product_sales[pid]["revenue"] += item_total
     
     top_products = sorted(product_sales.values(), key=lambda x: x["revenue"], reverse=True)[:5]
     
