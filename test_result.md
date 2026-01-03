@@ -261,7 +261,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "AI Reports - FASE 4 Implementation"
+    - "Admin Console Dashboard - Comparisons and Top Products Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
