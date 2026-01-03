@@ -627,6 +627,34 @@ function DashboardView({ data, selectedMerchant, merchantName }: any) {
     downloadCSV(`temporada_${filterText.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`, csvContent);
   };
 
+  // Download Top Products
+  const downloadTopProducts = () => {
+    const filterText = selectedMerchant ? merchantName : 'Todos los locales';
+    const products = analytics.top_products || [];
+    let productRows = products.map((p: any, idx: number) => 
+      `${idx + 1},${p.product_name || 'Sin nombre'},${p.quantity_sold || 0},$${(p.revenue || 0).toFixed(2)}`
+    ).join('\n');
+    
+    const csvContent = `Top Productos del Mes - ${filterText}\n` +
+      `Fecha de exportación,${new Date().toLocaleString()}\n\n` +
+      `#,Producto,Cantidad Vendida,Ingresos\n` +
+      productRows;
+    downloadCSV(`top_productos_${filterText.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`, csvContent);
+  };
+
+  // Download Quick Stats
+  const downloadQuickStats = () => {
+    const filterText = selectedMerchant ? merchantName : 'Todos los locales';
+    const csvContent = `Resumen Rápido - ${filterText}\n` +
+      `Fecha de exportación,${new Date().toLocaleString()}\n\n` +
+      `Métrica,Valor\n` +
+      `Ventas este mes,${analytics.sales?.count_month || 0}\n` +
+      `Clientes registrados,${analytics.customers?.total || 0}\n` +
+      `Productos en inventario,${analytics.products?.total || 0}\n` +
+      `Proveedores,${analytics.suppliers?.total || 0}\n`;
+    downloadCSV(`resumen_${filterText.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`, csvContent);
+  };
+
   return (
     <ScrollView style={styles.scrollContent}>
       <Text style={styles.pageTitle}>Dashboard Ejecutivo</Text>
