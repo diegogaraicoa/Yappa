@@ -549,15 +549,85 @@ function SupportModal({ visible, onClose }: { visible: boolean; onClose: () => v
 }
 
 // Dashboard View Component
-function DashboardView({ data }: any) {
+function DashboardView({ data, selectedMerchant, merchantName }: any) {
   const analytics = data?.analytics || {};
   const comparisons = data?.comparisons || {};
+
+  // Function to download data as CSV
+  const downloadCSV = (filename: string, csvContent: string) => {
+    if (Platform.OS === 'web') {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      Alert.alert('Descarga', 'La descarga solo está disponible en la versión web');
+    }
+  };
+
+  // Download KPIs
+  const downloadKPIs = () => {
+    const filterText = selectedMerchant ? merchantName : 'Todos los locales';
+    const csvContent = `KPIs Dashboard - ${filterText}\n` +
+      `Fecha de exportación,${new Date().toLocaleString()}\n\n` +
+      `Métrica,Valor,Detalle\n` +
+      `Ventas del Mes,$${analytics.sales?.month?.toFixed(2) || '0.00'},${analytics.sales?.count_month || 0} transacciones\n` +
+      `Balance Mensual,$${analytics.balance?.month?.toFixed(2) || '0.00'},Ventas - Gastos\n` +
+      `Total Productos,${analytics.products?.total || 0},${analytics.products?.low_stock || 0} con stock bajo\n` +
+      `Deudas Pendientes,$${analytics.debts?.total?.toFixed(2) || '0.00'},${analytics.debts?.count || 0} deudas\n` +
+      `Total Clientes,${analytics.customers?.total || 0},\n` +
+      `Total Proveedores,${analytics.suppliers?.total || 0},\n`;
+    downloadCSV(`kpis_${filterText.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`, csvContent);
+  };
+
+  // Download Comparisons
+  const downloadComparisons = () => {
+    const filterText = selectedMerchant ? merchantName : 'Todos los locales';
+    const csvContent = `Comparaciones de Período - ${filterText}\n` +
+      `Fecha de exportación,${new Date().toLocaleString()}\n\n` +
+      `Período,Actual,Anterior,Cambio %,Cambio $\n` +
+      `Semanal,$${comparisons.weekly?.this_week?.toFixed(2) || '0.00'},$${comparisons.weekly?.last_week?.toFixed(2) || '0.00'},${comparisons.weekly?.change_percent?.toFixed(1) || '0'}%,$${comparisons.weekly?.change_amount?.toFixed(2) || '0.00'}\n` +
+      `Mensual,$${comparisons.monthly?.this_month?.toFixed(2) || '0.00'},$${comparisons.monthly?.last_month?.toFixed(2) || '0.00'},${comparisons.monthly?.change_percent?.toFixed(1) || '0'}%,$${comparisons.monthly?.change_amount?.toFixed(2) || '0.00'}\n`;
+    downloadCSV(`comparaciones_${filterText.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`, csvContent);
+  };
+
+  // Download Seasonality
+  const downloadSeasonality = () => {
+    const filterText = selectedMerchant ? merchantName : 'Todos los locales';
+    const byDay = comparisons.seasonality?.by_day_of_week || {};
+    let dayRows = Object.entries(byDay).map(([day, total]) => `${day},$${(total as number).toFixed(2)}`).join('\n');
+    
+    const csvContent = `Análisis de Temporada - ${filterText}\n` +
+      `Fecha de exportación,${new Date().toLocaleString()}\n\n` +
+      `Análisis,Valor,Detalle\n` +
+      `Mejor Día,${comparisons.seasonality?.best_day?.day || 'N/A'},$${comparisons.seasonality?.best_day?.total?.toFixed(2) || '0.00'}\n` +
+      `Peor Día,${comparisons.seasonality?.worst_day?.day || 'N/A'},$${comparisons.seasonality?.worst_day?.total?.toFixed(2) || '0.00'}\n` +
+      `Promedio por Venta,$${comparisons.seasonality?.avg_sale?.toFixed(2) || '0.00'},\n` +
+      `Hora Pico,${comparisons.seasonality?.peak_hour || '12'}:00,\n` +
+      `Total Transacciones,${comparisons.seasonality?.total_transactions || 0},\n\n` +
+      `Ventas por Día de la Semana\n` +
+      `Día,Total\n` +
+      dayRows;
+    downloadCSV(`temporada_${filterText.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`, csvContent);
+  };
 
   return (
     <ScrollView style={styles.scrollContent}>
       <Text style={styles.pageTitle}>Dashboard Ejecutivo</Text>
 
       {/* KPI Cards */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>📈 KPIs Principales</Text>
+        <TouchableOpacity style={styles.downloadButton} onPress={downloadKPIs}>
+          <Ionicons name="download-outline" size={18} color="#00D2FF" />
+          <Text style={styles.downloadText}>CSV</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.kpiGrid}>
         <View style={[styles.kpiCard, { borderLeftColor: '#00D2FF' }]}>
           <Text style={styles.kpiLabel}>Ventas del Mes</Text>
@@ -590,7 +660,13 @@ function DashboardView({ data }: any) {
 
       {/* Comparisons */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📊 Comparaciones de Período</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>📊 Comparaciones de Período</Text>
+          <TouchableOpacity style={styles.downloadButton} onPress={downloadComparisons}>
+            <Ionicons name="download-outline" size={18} color="#00D2FF" />
+            <Text style={styles.downloadText}>CSV</Text>
+          </TouchableOpacity>
+        </View>
         
         <View style={styles.comparisonCard}>
           <Text style={styles.comparisonTitle}>Semana Actual vs Anterior</Text>
