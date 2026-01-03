@@ -1972,8 +1972,8 @@ async def get_period_comparisons(
         if sale_date:
             hour = sale_date.hour
             if hour not in hour_sales:
-            hour_sales[hour] = 0
-        hour_sales[hour] += 1
+                hour_sales[hour] = 0
+            hour_sales[hour] += 1
     
     peak_hour = max(hour_sales.items(), key=lambda x: x[1])[0] if hour_sales else 12
     
