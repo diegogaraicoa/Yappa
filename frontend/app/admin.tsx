@@ -141,11 +141,11 @@ export default function AdminConsoleScreen() {
       try {
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('user');
-        // Force reload for web to clear any cached state
+        // Redirect back to admin login page
         if (Platform.OS === 'web') {
-          window.location.href = '/';
+          window.location.href = '/admin-login';
         } else {
-          router.replace('/');
+          router.replace('/admin-login');
         }
       } catch (error) {
         console.error('Error logging out:', error);
