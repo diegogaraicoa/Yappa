@@ -48,44 +48,103 @@ class AdminConsoleTestSuite:
         print()
 
     def test_admin_login(self):
-        """Test 1: Login as admin user to get token"""
+        """Test 1: Login as admin user to get token (two-step process)"""
         print("🔐 Testing Admin Login...")
         
         try:
-            url = f"{self.base_url}/api/onboarding/login/step1"
+            # Step 1: Get merchant and clerks
+            url_step1 = f"{self.base_url}/api/onboarding/login/step1"
             params = {
                 "username": ADMIN_CREDENTIALS["username"],
                 "password": ADMIN_CREDENTIALS["password"]
             }
             
-            response = requests.post(url, params=params, timeout=30)
+            response1 = requests.post(url_step1, params=params, timeout=30)
             
-            if response.status_code == 200:
-                data = response.json()
-                if "access_token" in data:
-                    self.token = data["access_token"]
-                    user_info = data.get("user", {})
+            if response1.status_code != 200:
+                self.log_test(
+                    "Admin Login", 
+                    False, 
+                    f"Step 1 failed with status {response1.status_code}",
+                    {"status_code": response1.status_code, "response": response1.text}
+                )
+                return False
+            
+            data1 = response1.json()
+            
+            # Check if it's a legacy account (direct token)
+            if data1.get("legacy_account") and "token" in data1:
+                self.token = data1["token"]
+                user_info = data1.get("user", {})
+                self.log_test(
+                    "Admin Login", 
+                    True, 
+                    f"Successfully logged in as legacy account. Token obtained.",
+                    {"status_code": response1.status_code, "user": user_info}
+                )
+                return True
+            
+            # New system - need step 2
+            if not data1.get("success") or "clerks" not in data1:
+                self.log_test(
+                    "Admin Login", 
+                    False, 
+                    "Step 1 response invalid - missing clerks",
+                    data1
+                )
+                return False
+            
+            # Get first clerk (Carlos Dueño based on response)
+            clerks = data1["clerks"]
+            if not clerks:
+                self.log_test(
+                    "Admin Login", 
+                    False, 
+                    "No clerks available for login",
+                    data1
+                )
+                return False
+            
+            merchant_id = data1["merchant_id"]
+            clerk_id = clerks[0]["clerk_id"]  # Use first clerk
+            clerk_name = clerks[0]["name"]
+            
+            # Step 2: Login with clerk and PIN
+            url_step2 = f"{self.base_url}/api/onboarding/login/step2"
+            step2_data = {
+                "merchant_id": merchant_id,
+                "clerk_id": clerk_id,
+                "pin": "1234"  # PIN from review request
+            }
+            
+            response2 = requests.post(url_step2, json=step2_data, timeout=30)
+            
+            if response2.status_code == 200:
+                data2 = response2.json()
+                if "token" in data2:
+                    self.token = data2["token"]
+                    user_info = data2.get("user", {})
                     self.log_test(
                         "Admin Login", 
                         True, 
-                        f"Successfully logged in as {user_info.get('username', 'admin')}. Token obtained.",
-                        {"status_code": response.status_code, "user": user_info}
+                        f"Successfully logged in as {clerk_name} with PIN. Token obtained.",
+                        {"status_code": response2.status_code, "user": user_info}
                     )
                     return True
                 else:
                     self.log_test(
                         "Admin Login", 
                         False, 
-                        "Login response missing access_token",
-                        data
+                        "Step 2 response missing token",
+                        data2
                     )
                     return False
             else:
                 self.log_test(
                     "Admin Login", 
                     False, 
-                    f"Login failed with status {response.status_code}",
-                    {"status_code": response.status_code, "response": response.text}
+                    f"Step 2 failed with status {response2.status_code}",
+                    {"status_code": response2.status_code, "response": response2.text}
                 )
                 return False
                 
