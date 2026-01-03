@@ -1,22 +1,28 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "yappa-app",
-    "storage_bucket": "yappa-app.appspot.com"
+    "project_number": "546436480056",
+    "project_id": "yappa-app-d3108",
+    "storage_bucket": "yappa-app-d3108.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+        "mobilesdk_app_id": "1:546436480056:android:700ae144e90b9c21687acd",
         "android_client_info": {
           "package_name": "com.yappa.app"
         }
       },
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDummyKeyForExpoNotifications"
+          "current_key": "AIzaSyAfVcvWAWP9azkFiGy6uXRWBeNspUFBk_g"
         }
-      ]
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"
