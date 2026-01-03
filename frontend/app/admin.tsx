@@ -830,18 +830,36 @@ function DashboardView({ data, selectedMerchant, merchantName }: any) {
 
       {/* Top Products */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>⭐ Top Productos del Mes</Text>
-        {analytics.top_products?.slice(0, 5).map((product: any, index: number) => (
-          <View key={index} style={styles.topItemCard}>
-            <Text style={styles.topItemRank}>#{index + 1}</Text>
-            <View style={styles.topItemContent}>
-              <Text style={styles.topItemName}>{product.product_name}</Text>
-              <Text style={styles.topItemStats}>
-                Cantidad: {product.quantity_sold} | Ingresos: ${product.revenue.toFixed(2)}
-              </Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>⭐ Top Productos del Mes</Text>
+          {analytics.top_products && analytics.top_products.length > 0 && (
+            <TouchableOpacity 
+              style={styles.downloadBtn}
+              onPress={() => downloadCSV('top_products', analytics.top_products)}
+            >
+              <Ionicons name="download-outline" size={16} color="#00D2FF" />
+              <Text style={styles.downloadBtnText}>CSV</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        {analytics.top_products && analytics.top_products.length > 0 ? (
+          analytics.top_products.slice(0, 5).map((product: any, index: number) => (
+            <View key={index} style={styles.topItemCard}>
+              <Text style={styles.topItemRank}>#{index + 1}</Text>
+              <View style={styles.topItemContent}>
+                <Text style={styles.topItemName}>{product.product_name || 'Sin nombre'}</Text>
+                <Text style={styles.topItemStats}>
+                  Cantidad: {product.quantity_sold || 0} | Ingresos: ${(product.revenue || 0).toFixed(2)}
+                </Text>
+              </View>
             </View>
+          ))
+        ) : (
+          <View style={styles.emptyStateCard}>
+            <Ionicons name="cube-outline" size={32} color="#ccc" />
+            <Text style={styles.emptyStateText}>No hay datos de productos este mes</Text>
           </View>
-        ))}
+        )}
       </View>
 
       {/* Quick Stats Summary */}
