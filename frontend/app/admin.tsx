@@ -2255,6 +2255,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  emptyStateCard: {
+    backgroundColor: '#f9f9f9',
+    padding: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+    textAlign: 'center',
+  },
   tabs: {
     flexDirection: 'row',
     paddingHorizontal: 16,
