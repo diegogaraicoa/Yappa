@@ -889,7 +889,13 @@ function DashboardView({ data, selectedMerchant, merchantName }: any) {
 
       {/* Quick Stats Summary */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📋 Resumen Rápido</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>📋 Resumen Rápido</Text>
+          <TouchableOpacity style={styles.downloadButton} onPress={downloadQuickStats}>
+            <Ionicons name="download-outline" size={18} color="#00D2FF" />
+            <Text style={styles.downloadText}>CSV</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.quickStatsCard}>
           <View style={styles.quickStatRow}>
             <Ionicons name="cart" size={20} color="#00D2FF" />
@@ -910,9 +916,9 @@ function DashboardView({ data, selectedMerchant, merchantName }: any) {
             </Text>
           </View>
           <View style={styles.quickStatRow}>
-            <Ionicons name="download" size={20} color="#4CAF50" />
+            <Ionicons name="business" size={20} color="#4CAF50" />
             <Text style={styles.quickStatText}>
-              Exporta todos tus datos a CSV desde el menú lateral
+              {analytics.suppliers?.total || 0} proveedores registrados
             </Text>
           </View>
         </View>
