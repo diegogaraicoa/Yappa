@@ -1732,6 +1732,73 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 8,
   },
+  // Merchant Filter Styles
+  merchantFilterContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  merchantFilterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 8,
+    alignSelf: 'flex-start',
+  },
+  merchantFilterText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  merchantPickerModal: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    width: '80%',
+    maxWidth: 400,
+    maxHeight: '70%',
+  },
+  merchantPickerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  merchantOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#f9f9f9',
+    gap: 12,
+  },
+  merchantOptionSelected: {
+    backgroundColor: '#E3F2FD',
+    borderWidth: 1,
+    borderColor: '#00D2FF',
+  },
+  merchantOptionText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#333',
+  },
+  merchantOptionTextSelected: {
+    color: '#00D2FF',
+    fontWeight: '600',
+  },
   body: {
     flex: 1,
     flexDirection: 'row',
