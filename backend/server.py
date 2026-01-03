@@ -1950,23 +1950,52 @@ async def get_period_comparisons(
         day_of_week_sales[day_name] += sale["total"]
     
     best_day = max(day_of_week_sales.items(), key=lambda x: x[1]) if day_of_week_sales else ("N/A", 0)
+    worst_day = min(day_of_week_sales.items(), key=lambda x: x[1]) if day_of_week_sales else ("N/A", 0)
+    
+    # Average sale
+    avg_sale = this_month_total / len(this_month_sales) if this_month_sales else 0
+    
+    # Peak hour analysis
+    hour_sales = {}
+    for sale in this_month_sales:
+        hour = sale["date"].hour
+        if hour not in hour_sales:
+            hour_sales[hour] = 0
+        hour_sales[hour] += 1
+    
+    peak_hour = max(hour_sales.items(), key=lambda x: x[1])[0] if hour_sales else 12
+    
+    # Translate day names to Spanish
+    day_translation = {
+        "Monday": "Lunes",
+        "Tuesday": "Martes",
+        "Wednesday": "Miércoles",
+        "Thursday": "Jueves",
+        "Friday": "Viernes",
+        "Saturday": "Sábado",
+        "Sunday": "Domingo"
+    }
     
     return {
-        "week_comparison": {
+        "weekly": {
             "this_week": this_week_total,
             "last_week": last_week_total,
             "change_percent": week_change,
             "change_amount": this_week_total - last_week_total
         },
-        "month_comparison": {
+        "monthly": {
             "this_month": this_month_total,
             "last_month": last_month_total,
             "change_percent": month_change,
             "change_amount": this_month_total - last_month_total
         },
         "seasonality": {
-            "by_day_of_week": day_of_week_sales,
-            "best_day": {"day": best_day[0], "total": best_day[1]}
+            "by_day_of_week": {day_translation.get(k, k): v for k, v in day_of_week_sales.items()},
+            "best_day": {"day": day_translation.get(best_day[0], best_day[0]), "total": best_day[1]},
+            "worst_day": {"day": day_translation.get(worst_day[0], worst_day[0]), "total": worst_day[1]},
+            "avg_sale": avg_sale,
+            "peak_hour": peak_hour,
+            "total_transactions": len(this_month_sales)
         }
     }
 
