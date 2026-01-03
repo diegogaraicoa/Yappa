@@ -1852,7 +1852,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 8,
+    gap: 4,
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
   },
   closeButton: {
     padding: 8,
@@ -1879,6 +1887,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: '500',
+  },
+  merchantFilterHint: {
+    fontSize: 11,
+    color: '#999',
+    marginTop: 4,
   },
   modalOverlay: {
     flex: 1,
