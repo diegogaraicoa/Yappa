@@ -1914,29 +1914,29 @@ async def get_period_comparisons(
         last_month_start = datetime(now.year, now.month - 1, 1)
         last_month_end = this_month_start
     
-    # Get sales
+    # Get sales - Include paid=True and paid=None (legacy data) but exclude paid=False
     this_week_sales = await db.sales.find({
         **store_filter,
         "date": {"$gte": this_week_start},
-        "paid": True
+        "paid": {"$ne": False}
     }).to_list(10000)
     
     last_week_sales = await db.sales.find({
         **store_filter,
         "date": {"$gte": last_week_start, "$lt": this_week_start},
-        "paid": True
+        "paid": {"$ne": False}
     }).to_list(10000)
     
     this_month_sales = await db.sales.find({
         **store_filter,
         "date": {"$gte": this_month_start},
-        "paid": True
+        "paid": {"$ne": False}
     }).to_list(10000)
     
     last_month_sales = await db.sales.find({
         **store_filter,
         "date": {"$gte": last_month_start, "$lt": last_month_end},
-        "paid": True
+        "paid": {"$ne": False}
     }).to_list(10000)
     
     # Calculate totals
