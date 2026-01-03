@@ -1471,32 +1471,29 @@ async def get_admin_analytics(
     week_start = today_start - timedelta(days=7)
     month_start = datetime(now.year, now.month, 1)
     
-    # Total products
-    total_products = await db.products.count_documents({"store_id": store_id})
-    low_stock_count = await db.products.count_documents({
-        "store_id": store_id,
-        "$expr": {"$lte": ["$quantity", "$min_stock_alert"]},
-        "alert_enabled": True
-    })
+    # Total products - using store_filter for multi-merchant support
+    total_products = await db.products.count_documents(store_filter)
+    low_stock_query = {**store_filter, "$expr": {"$lte": ["$quantity", "$min_stock_alert"]}, "alert_enabled": True}
+    low_stock_count = await db.products.count_documents(low_stock_query)
     
     # Sales analytics
     sales_today = await db.sales.find({
-        "store_id": store_id,
+        **store_filter,
         "date": {"$gte": today_start},
         "paid": True
-    }).to_list(1000)
+    }).to_list(10000)
     
     sales_week = await db.sales.find({
-        "store_id": store_id,
+        **store_filter,
         "date": {"$gte": week_start},
         "paid": True
-    }).to_list(1000)
+    }).to_list(10000)
     
     sales_month = await db.sales.find({
-        "store_id": store_id,
+        **store_filter,
         "date": {"$gte": month_start},
         "paid": True
-    }).to_list(1000)
+    }).to_list(10000)
     
     total_sales_today = sum(s["total"] for s in sales_today)
     total_sales_week = sum(s["total"] for s in sales_week)
