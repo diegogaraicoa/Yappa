@@ -23,31 +23,102 @@ export default function AdminConsoleScreen() {
   const [data, setData] = useState<any>({});
   const [showSidebar, setShowSidebar] = useState(true);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  
+  // Merchant filter state
+  const [merchants, setMerchants] = useState<any[]>([]);
+  const [selectedMerchant, setSelectedMerchant] = useState<string | null>(null);
+  const [hasMultipleMerchants, setHasMultipleMerchants] = useState(false);
+  const [showMerchantPicker, setShowMerchantPicker] = useState(false);
+
+  // Load merchants on mount
+  useEffect(() => {
+    loadMerchants();
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, [activeSection]);
+  }, [activeSection, selectedMerchant]);
+
+  const loadMerchants = async () => {
+    try {
+      const response = await api.get('/api/admin/my-merchants');
+      setMerchants(response.data.merchants || []);
+      setHasMultipleMerchants(response.data.has_multiple || false);
+    } catch (error) {
+      console.error('Error loading merchants:', error);
+    }
+  };
+
+  const getSelectedMerchantName = () => {
+    if (!selectedMerchant) return 'Todos los locales';
+    const merchant = merchants.find(m => m.id === selectedMerchant);
+    return merchant?.name || 'Seleccionar local';
+  };
 
   const loadData = async () => {
     setLoading(true);
     try {
+      // Build query params with merchant filter
+      const merchantParam = selectedMerchant ? `?merchant_id=${selectedMerchant}` : '';
+      
       switch (activeSection) {
         case 'dashboard':
           const [analytics, comparisons] = await Promise.all([
-            api.get('/api/admin/analytics'),
-            api.get('/api/admin/comparisons')
+            api.get(`/api/admin/analytics${merchantParam}`),
+            api.get(`/api/admin/comparisons${merchantParam}`)
           ]);
           setData({ analytics: analytics.data, comparisons: comparisons.data });
           break;
         case 'products':
           const [products, prodAnalytics] = await Promise.all([
-            api.get('/api/products'),
-            api.get('/api/admin/products/analytics')
+            api.get(`/api/products${merchantParam}`),
+            api.get(`/api/admin/products/analytics${merchantParam}`)
           ]);
           setData({ products: products.data, analytics: prodAnalytics.data });
           break;
         case 'customers':
           const [customers, custAnalytics] = await Promise.all([
+            api.get(`/api/customers${merchantParam}`),
+            api.get(`/api/admin/customers/analytics${merchantParam}`)
+          ]);
+          setData({ customers: customers.data, analytics: custAnalytics.data });
+          break;
+        case 'suppliers':
+          const [suppliers, suppAnalytics] = await Promise.all([
+            api.get(`/api/suppliers${merchantParam}`),
+            api.get(`/api/admin/suppliers/analytics${merchantParam}`)
+          ]);
+          setData({ suppliers: suppliers.data, analytics: suppAnalytics.data });
+          break;
+        case 'reports':
+          const history = await api.get(`/api/insights/history${merchantParam ? merchantParam + '&' : '?'}limit=20`);
+          setData({ history: history.data });
+          break;
+        case 'training':
+          const tutorials = await api.get('/api/training');
+          setData({ tutorials: tutorials.data });
+          break;
+        case 'export':
+          const [exportSales, exportCustomers, exportProducts, exportSuppliers] = await Promise.all([
+            api.get(`/api/export/sales${merchantParam}`),
+            api.get(`/api/export/customers${merchantParam}`),
+            api.get(`/api/export/products${merchantParam}`),
+            api.get(`/api/export/suppliers${merchantParam}`),
+          ]);
+          setData({ 
+            sales: exportSales.data, 
+            customers: exportCustomers.data,
+            products: exportProducts.data,
+            suppliers: exportSuppliers.data 
+          });
+          break;
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
             api.get('/api/customers'),
             api.get('/api/admin/customers/analytics')
           ]);
