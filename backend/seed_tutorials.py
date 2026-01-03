@@ -715,7 +715,7 @@ Una interfaz web profesional para:
 
 ## Acceso
 
-**URL:** https://store-launch-fix.preview.emergentagent.com/admin
+**URL:** https://bug-hunter-126.preview.emergentagent.com/admin
 
 **Requisitos:**
 - Computadora o tablet

@@ -14,7 +14,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://store-launch-fix.preview.emergentagent.com"
+BASE_URL = "https://bug-hunter-126.preview.emergentagent.com"
 ADMIN_CREDENTIALS = {
     "username": "tiendaclave",
     "password": "Chifle98."

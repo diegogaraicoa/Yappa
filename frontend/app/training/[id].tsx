@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import Markdown from 'react-native-markdown-display';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://store-launch-fix.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://bug-hunter-126.preview.emergentagent.com';
 
 interface Tutorial {
   _id: string;
