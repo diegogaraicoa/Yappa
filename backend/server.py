@@ -1399,10 +1399,71 @@ async def send_insight_to_whatsapp(current_user: dict = Depends(get_current_user
 
 # ==================== ADMIN CONSOLE ENDPOINTS ====================
 
+@api_router.get("/admin/my-merchants")
+async def get_my_merchants(current_user: dict = Depends(get_current_user)):
+    """
+    Get all merchants for the current admin.
+    Used for the merchant filter dropdown in Admin Console.
+    """
+    admin_id = current_user.get("admin_id")
+    
+    if not admin_id:
+        # If no admin_id, the user might be a single-merchant admin
+        # Return just their own merchant
+        return {
+            "merchants": [{
+                "id": current_user["store_id"],
+                "name": current_user.get("username", "Mi Tienda"),
+                "is_current": True
+            }],
+            "has_multiple": False
+        }
+    
+    # Get all merchants for this admin
+    merchants = await db.merchants.find({"admin_id": admin_id}).to_list(1000)
+    
+    merchants_list = []
+    for m in merchants:
+        merchants_list.append({
+            "id": str(m["_id"]),
+            "name": m.get("business_name") or m.get("username") or "Sin nombre",
+            "is_current": str(m["_id"]) == current_user["store_id"]
+        })
+    
+    # Sort alphabetically, but put current first
+    merchants_list.sort(key=lambda x: (not x["is_current"], x["name"].lower()))
+    
+    return {
+        "merchants": merchants_list,
+        "has_multiple": len(merchants_list) > 1
+    }
+
 @api_router.get("/admin/analytics")
-async def get_admin_analytics(current_user: dict = Depends(get_current_user)):
-    """Get analytics for admin console dashboard"""
-    store_id = current_user["store_id"]
+async def get_admin_analytics(
+    current_user: dict = Depends(get_current_user),
+    merchant_id: Optional[str] = None
+):
+    """
+    Get analytics for admin console dashboard.
+    If merchant_id is provided, filter by that merchant.
+    If not provided, show aggregate data for all merchants of the admin.
+    """
+    admin_id = current_user.get("admin_id")
+    
+    # Determine which store_ids to query
+    if merchant_id:
+        # Filter by specific merchant
+        store_ids = [merchant_id]
+    elif admin_id:
+        # Get all merchants for this admin
+        merchants = await db.merchants.find({"admin_id": admin_id}).to_list(1000)
+        store_ids = [str(m["_id"]) for m in merchants]
+    else:
+        # Single merchant admin
+        store_ids = [current_user["store_id"]]
+    
+    # Build query filter for store_id
+    store_filter = {"store_id": {"$in": store_ids}} if len(store_ids) > 1 else {"store_id": store_ids[0]}
     
     # Get date ranges
     now = datetime.utcnow()
