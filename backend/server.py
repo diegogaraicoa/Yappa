@@ -1875,9 +1875,24 @@ async def get_suppliers_analytics(current_user: dict = Depends(get_current_user)
     }
 
 @api_router.get("/admin/comparisons")
-async def get_period_comparisons(current_user: dict = Depends(get_current_user)):
+async def get_period_comparisons(
+    current_user: dict = Depends(get_current_user),
+    merchant_id: Optional[str] = None
+):
     """Get week-over-week and month-over-month comparisons"""
-    store_id = current_user["store_id"]
+    admin_id = current_user.get("admin_id")
+    
+    # Determine which store_ids to query
+    if merchant_id:
+        store_ids = [merchant_id]
+    elif admin_id:
+        merchants = await db.merchants.find({"admin_id": admin_id}).to_list(1000)
+        store_ids = [str(m["_id"]) for m in merchants]
+    else:
+        store_ids = [current_user["store_id"]]
+    
+    store_filter = {"store_id": {"$in": store_ids}} if len(store_ids) > 1 else {"store_id": store_ids[0]}
+    
     now = datetime.utcnow()
     
     # Define periods
@@ -1893,28 +1908,28 @@ async def get_period_comparisons(current_user: dict = Depends(get_current_user))
     
     # Get sales
     this_week_sales = await db.sales.find({
-        "store_id": store_id,
+        **store_filter,
         "date": {"$gte": this_week_start},
         "paid": True
-    }).to_list(5000)
+    }).to_list(10000)
     
     last_week_sales = await db.sales.find({
-        "store_id": store_id,
+        **store_filter,
         "date": {"$gte": last_week_start, "$lt": this_week_start},
         "paid": True
-    }).to_list(5000)
+    }).to_list(10000)
     
     this_month_sales = await db.sales.find({
-        "store_id": store_id,
+        **store_filter,
         "date": {"$gte": this_month_start},
         "paid": True
-    }).to_list(5000)
+    }).to_list(10000)
     
     last_month_sales = await db.sales.find({
-        "store_id": store_id,
+        **store_filter,
         "date": {"$gte": last_month_start, "$lt": last_month_end},
         "paid": True
-    }).to_list(5000)
+    }).to_list(10000)
     
     # Calculate totals
     this_week_total = sum(s["total"] for s in this_week_sales)
