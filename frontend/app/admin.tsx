@@ -194,20 +194,26 @@ export default function AdminConsoleScreen() {
           <Ionicons name="menu" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Admin Console</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={22} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Ionicons name="log-out-outline" size={24} color="#fff" />
+          <Text style={styles.logoutText}>Salir</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Merchant Filter - Only show if has multiple merchants */}
-      {hasMultipleMerchants && (
-        <View style={styles.merchantFilterContainer}>
-          <TouchableOpacity 
+      {/* Merchant Filter - Always show for testing, remove condition temporarily */}
+      <View style={styles.merchantFilterContainer}>
+        <TouchableOpacity 
+          style={styles.merchantFilterButton}
+          onPress={() => setShowMerchantPicker(true)}
+        >
+          <Ionicons name="business" size={18} color="#00D2FF" />
+          <Text style={styles.merchantFilterText}>{getSelectedMerchantName()}</Text>
+          <Ionicons name="chevron-down" size={18} color="#666" />
+        </TouchableOpacity>
+        <Text style={styles.merchantFilterHint}>
+          {merchants.length} local(es) disponible(s)
+        </Text>
+      </View> 
             style={styles.merchantFilterButton}
             onPress={() => setShowMerchantPicker(true)}
           >
