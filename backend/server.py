@@ -1940,10 +1940,10 @@ async def get_period_comparisons(
     }).to_list(10000)
     
     # Calculate totals
-    this_week_total = sum(s["total"] for s in this_week_sales)
-    last_week_total = sum(s["total"] for s in last_week_sales)
-    this_month_total = sum(s["total"] for s in this_month_sales)
-    last_month_total = sum(s["total"] for s in last_month_sales)
+    this_week_total = sum(s.get("total", 0) for s in this_week_sales)
+    last_week_total = sum(s.get("total", 0) for s in last_week_sales)
+    this_month_total = sum(s.get("total", 0) for s in this_month_sales)
+    last_month_total = sum(s.get("total", 0) for s in last_month_sales)
     
     # Calculate changes
     week_change = ((this_week_total - last_week_total) / last_week_total * 100) if last_week_total > 0 else 0
