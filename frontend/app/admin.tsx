@@ -727,7 +727,13 @@ function DashboardView({ data, selectedMerchant, merchantName }: any) {
 
       {/* Seasonality - Enhanced AI Analysis */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📅 Análisis de Temporada (AI)</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>📅 Análisis de Temporada (AI)</Text>
+          <TouchableOpacity style={styles.downloadButton} onPress={downloadSeasonality}>
+            <Ionicons name="download-outline" size={18} color="#00D2FF" />
+            <Text style={styles.downloadText}>CSV</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.seasonalityCard}>
           {/* Best Day */}
           <View style={styles.seasonalityRow}>
