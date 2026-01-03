@@ -164,7 +164,7 @@ export default function AdminConsoleScreen() {
 
     switch (activeSection) {
       case 'dashboard':
-        return <DashboardView data={data} />;
+        return <DashboardView data={data} selectedMerchant={selectedMerchant} merchantName={getSelectedMerchantName()} />;
       case 'products':
         return <ProductsView data={data} onReload={loadData} />;
       case 'customers':
@@ -180,7 +180,7 @@ export default function AdminConsoleScreen() {
       case 'export':
         return <ExportDataView data={data} />;
       default:
-        return <DashboardView data={data} />;
+        return <DashboardView data={data} selectedMerchant={selectedMerchant} merchantName={getSelectedMerchantName()} />;
     }
   };
 
