@@ -1501,22 +1501,22 @@ async def get_admin_analytics(
     
     # Expenses analytics
     expenses_month = await db.expenses.find({
-        "store_id": store_id,
+        **store_filter,
         "date": {"$gte": month_start},
         "paid": True
-    }).to_list(1000)
+    }).to_list(10000)
     
     total_expenses_month = sum(e["amount"] for e in expenses_month)
     
     # Customers and suppliers count
-    total_customers = await db.customers.count_documents({"store_id": store_id})
-    total_suppliers = await db.suppliers.count_documents({"store_id": store_id})
+    total_customers = await db.customers.count_documents(store_filter)
+    total_suppliers = await db.suppliers.count_documents(store_filter)
     
     # Debts
     pending_debts = await db.debts.find({
-        "store_id": store_id,
+        **store_filter,
         "paid": False
-    }).to_list(1000)
+    }).to_list(10000)
     
     total_pending_debts = sum(d["amount"] for d in pending_debts)
     
