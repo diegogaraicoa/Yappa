@@ -177,6 +177,21 @@ backend:
         agent: "testing"
         comment: "🎉 FINAL END-TO-END VERIFICATION COMPLETADO EXITOSAMENTE: WhatsApp Conversational AI funcionando completamente. CORRECCIONES FINALES: 1) Agregada lógica de confirmación faltante en expense flow, 2) Implementado debugging completo para rastrear flujo. RESULTADOS VERIFICADOS: ✅ Sale Flow: 'venta' → 'vendí 2 aguas a Juan por $2 total' → 'efectivo y ya pagó' → 'sí' = Sale inserted with ID: 691504cc22affdf80c8dee9e. ✅ Expense Flow: 'gasto' → 'pagué $50 de luz' → 'efectivo, servicios' → 'sí' = Expense inserted with ID: 691504e922affdf80c8deea0. COMPONENTES VERIFICADOS: Webhook (200 responses), Claude integration (JSON structured output), conversation data extraction, product resolution, database insertion, conversation completion. Twilio rate limits (429) no afectan funcionalidad core. Sistema completamente operacional end-to-end."
 
+  - task: "Admin Console Backend Endpoints with Merchant Filter Support"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "user"
+        comment: "Usuario solicita testing de Admin Console backend endpoints con soporte para filtro de merchant: 1) Login como admin (tiendaclave/Chifle98.), 2) GET /api/admin/my-merchants (debe retornar merchants con has_multiple flag), 3) GET /api/admin/analytics sin filtro (analytics para todos los merchants), 4) GET /api/admin/analytics?merchant_id={id} (analytics para merchant específico), 5) GET /api/admin/comparisons sin filtro (comparaciones de período), 6) GET /api/admin/comparisons?merchant_id={id} (comparaciones para merchant específico). Backend URL: https://store-launch-fix.preview.emergentagent.com. Endpoints requieren autenticación con Bearer token."
+      - working: true
+        agent: "testing"
+        comment: "🎉 ADMIN CONSOLE BACKEND ENDPOINTS TESTING COMPLETADO EXITOSAMENTE: Todos los 6 endpoints funcionando perfectamente con 100% success rate. TESTING EXHAUSTIVO REALIZADO: ✅ AUTHENTICATION FLOW: Login exitoso con tiendaclave/Chifle98. usando 2-step process (step1 → clerk selection → step2 con PIN 1234), token JWT generado correctamente para Carlos Dueño. ✅ GET /api/admin/my-merchants: Endpoint funcionando correctamente, retorna 1 merchant (tiendaclave) con has_multiple=false (correcto para single merchant), estructura de respuesta válida con merchants array y has_multiple flag. ✅ GET /api/admin/analytics (sin filtro): Analytics para todos los merchants funcionando, retorna estructura completa con products (20 total), sales ($0.00 monthly), expenses, balance, customers, suppliers, debts - todos los campos requeridos presentes. ✅ GET /api/admin/analytics?merchant_id={id} (con filtro): Analytics filtrado por merchant específico funcionando correctamente, misma estructura de respuesta pero datos específicos del merchant seleccionado. ✅ GET /api/admin/comparisons (sin filtro): Comparaciones de período funcionando, retorna week_comparison, month_comparison, y seasonality con todos los campos requeridos (this_week, last_week, change_percent, best_day, etc.). ✅ GET /api/admin/comparisons?merchant_id={id} (con filtro): Comparaciones filtradas por merchant funcionando correctamente, estructura idéntica pero datos específicos del merchant. FUNCIONALIDADES VERIFICADAS: Autenticación 2-step con clerk/PIN, merchant filtering logic, response structure validation, all required fields present, proper HTTP status codes (200 OK). Los endpoints del Admin Console con soporte para filtro de merchant están completamente funcionales y listos para producción."
+
 frontend:
   - task: "Pantalla de alertas (/alerts.tsx)"
     implemented: true
