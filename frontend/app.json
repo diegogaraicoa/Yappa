@@ -18,7 +18,7 @@
         "backgroundColor": "#082E72"
       },
       "package": "com.yappa.app",
-      "versionCode": 5,
+      "versionCode": 6,
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
