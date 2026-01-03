@@ -1952,10 +1952,12 @@ async def get_period_comparisons(
     # Day of week analysis
     day_of_week_sales = {}
     for sale in this_month_sales:
-        day_name = sale["date"].strftime("%A")
-        if day_name not in day_of_week_sales:
-            day_of_week_sales[day_name] = 0
-        day_of_week_sales[day_name] += sale["total"]
+        sale_date = sale.get("date")
+        if sale_date:
+            day_name = sale_date.strftime("%A")
+            if day_name not in day_of_week_sales:
+                day_of_week_sales[day_name] = 0
+            day_of_week_sales[day_name] += sale.get("total", 0)
     
     best_day = max(day_of_week_sales.items(), key=lambda x: x[1]) if day_of_week_sales else ("N/A", 0)
     worst_day = min(day_of_week_sales.items(), key=lambda x: x[1]) if day_of_week_sales else ("N/A", 0)
@@ -1966,8 +1968,10 @@ async def get_period_comparisons(
     # Peak hour analysis
     hour_sales = {}
     for sale in this_month_sales:
-        hour = sale["date"].hour
-        if hour not in hour_sales:
+        sale_date = sale.get("date")
+        if sale_date:
+            hour = sale_date.hour
+            if hour not in hour_sales:
             hour_sales[hour] = 0
         hour_sales[hour] += 1
     
