@@ -2023,20 +2023,43 @@ const styles = StyleSheet.create({
   },
   seasonalityCard: {
     backgroundColor: '#fff',
-    padding: 20,
+    padding: 16,
     borderRadius: 12,
+  },
+  seasonalityRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  seasonalityIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  seasonalityContent: {
+    flex: 1,
+  },
+  seasonalityLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
   },
   seasonalityBest: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 8,
   },
   seasonalityValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '500',
     color: '#00D2FF',
+    marginTop: 2,
   },
   topItemCard: {
     flexDirection: 'row',
