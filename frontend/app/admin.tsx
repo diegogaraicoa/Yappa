@@ -121,6 +121,29 @@ export default function AdminConsoleScreen() {
     }
   };
 
+  const handleLogout = async () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro que deseas cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('token');
+              await AsyncStorage.removeItem('user');
+              router.replace('/');
+            } catch (error) {
+              console.error('Error logging out:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderContent = () => {
     if (loading) {
       return (
