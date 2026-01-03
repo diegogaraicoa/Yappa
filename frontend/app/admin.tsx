@@ -119,48 +119,6 @@ export default function AdminConsoleScreen() {
       setLoading(false);
     }
   };
-            api.get('/api/customers'),
-            api.get('/api/admin/customers/analytics')
-          ]);
-          setData({ customers: customers.data, analytics: custAnalytics.data });
-          break;
-        case 'suppliers':
-          const [suppliers, suppAnalytics] = await Promise.all([
-            api.get('/api/suppliers'),
-            api.get('/api/admin/suppliers/analytics')
-          ]);
-          setData({ suppliers: suppliers.data, analytics: suppAnalytics.data });
-          break;
-        case 'reports':
-          const history = await api.get('/api/insights/history?limit=20');
-          setData({ history: history.data });
-          break;
-        case 'training':
-          const tutorials = await api.get('/api/training');
-          setData({ tutorials: tutorials.data });
-          break;
-        case 'export':
-          // Load all data types for export using public export endpoints
-          const [exportSales, exportCustomers, exportProducts, exportSuppliers] = await Promise.all([
-            api.get('/api/export/sales'),
-            api.get('/api/export/customers'),
-            api.get('/api/export/products'),
-            api.get('/api/export/suppliers'),
-          ]);
-          setData({ 
-            sales: exportSales.data, 
-            customers: exportCustomers.data,
-            products: exportProducts.data,
-            suppliers: exportSuppliers.data 
-          });
-          break;
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const renderContent = () => {
     if (loading) {
