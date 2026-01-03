@@ -111,13 +111,13 @@ class AdminConsoleTestSuite:
             
             # Step 2: Login with clerk and PIN
             url_step2 = f"{self.base_url}/api/onboarding/login/step2"
-            step2_data = {
+            step2_params = {
                 "merchant_id": merchant_id,
                 "clerk_id": clerk_id,
                 "pin": "1234"  # PIN from review request
             }
             
-            response2 = requests.post(url_step2, json=step2_data, timeout=30)
+            response2 = requests.post(url_step2, params=step2_params, timeout=30)
             
             if response2.status_code == 200:
                 data2 = response2.json()
