@@ -89,13 +89,18 @@ export default function AdminLoginScreen() {
       }
 
       // Step 2: Complete login with owner PIN (1234 is default)
+      console.log('Attempting step2 with:', { merchant_id, clerk_id: ownerClerk.clerk_id });
+      
       const step2Response = await api.post(
         `/api/onboarding/login/step2?merchant_id=${merchant_id}&clerk_id=${ownerClerk.clerk_id}&pin=1234`
       );
 
+      console.log('Step2 response:', step2Response.data);
+      
       const token = step2Response.data.token || step2Response.data.access_token;
       
       if (token) {
+        console.log('Token received, saving...');
         // Save token and user info
         await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('user', JSON.stringify({
@@ -107,6 +112,7 @@ export default function AdminLoginScreen() {
         // Set API header
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
+        console.log('Redirecting to admin...');
         // Redirect to admin console
         if (Platform.OS === 'web') {
           window.location.href = '/admin';
@@ -114,7 +120,8 @@ export default function AdminLoginScreen() {
           router.replace('/admin');
         }
       } else {
-        setError('Error al iniciar sesión');
+        console.log('No token in response:', step2Response.data);
+        setError('Error al iniciar sesión - No se recibió token');
       }
     } catch (error: any) {
       console.error('Login error:', error);
