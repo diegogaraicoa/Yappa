@@ -175,6 +175,94 @@ export default function AdminConsoleScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Merchant Filter - Only show if has multiple merchants */}
+      {hasMultipleMerchants && (
+        <View style={styles.merchantFilterContainer}>
+          <TouchableOpacity 
+            style={styles.merchantFilterButton}
+            onPress={() => setShowMerchantPicker(true)}
+          >
+            <Ionicons name="business" size={18} color="#00D2FF" />
+            <Text style={styles.merchantFilterText}>{getSelectedMerchantName()}</Text>
+            <Ionicons name="chevron-down" size={18} color="#666" />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Merchant Picker Modal */}
+      <Modal
+        visible={showMerchantPicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowMerchantPicker(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={() => setShowMerchantPicker(false)}
+        >
+          <View style={styles.merchantPickerModal}>
+            <Text style={styles.merchantPickerTitle}>Seleccionar Local</Text>
+            
+            {/* Option for All Merchants */}
+            <TouchableOpacity
+              style={[
+                styles.merchantOption,
+                !selectedMerchant && styles.merchantOptionSelected
+              ]}
+              onPress={() => {
+                setSelectedMerchant(null);
+                setShowMerchantPicker(false);
+              }}
+            >
+              <Ionicons 
+                name="globe-outline" 
+                size={20} 
+                color={!selectedMerchant ? '#00D2FF' : '#666'} 
+              />
+              <Text style={[
+                styles.merchantOptionText,
+                !selectedMerchant && styles.merchantOptionTextSelected
+              ]}>
+                Todos los locales
+              </Text>
+              {!selectedMerchant && (
+                <Ionicons name="checkmark" size={20} color="#00D2FF" />
+              )}
+            </TouchableOpacity>
+
+            {/* Individual Merchants */}
+            {merchants.map((merchant) => (
+              <TouchableOpacity
+                key={merchant.id}
+                style={[
+                  styles.merchantOption,
+                  selectedMerchant === merchant.id && styles.merchantOptionSelected
+                ]}
+                onPress={() => {
+                  setSelectedMerchant(merchant.id);
+                  setShowMerchantPicker(false);
+                }}
+              >
+                <Ionicons 
+                  name="storefront-outline" 
+                  size={20} 
+                  color={selectedMerchant === merchant.id ? '#00D2FF' : '#666'} 
+                />
+                <Text style={[
+                  styles.merchantOptionText,
+                  selectedMerchant === merchant.id && styles.merchantOptionTextSelected
+                ]}>
+                  {merchant.name}
+                </Text>
+                {selectedMerchant === merchant.id && (
+                  <Ionicons name="checkmark" size={20} color="#00D2FF" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
+
       <View style={styles.body}>
         {/* Sidebar */}
         {showSidebar && (
