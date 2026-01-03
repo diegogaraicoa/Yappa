@@ -643,16 +643,89 @@ function DashboardView({ data }: any) {
         </View>
       </View>
 
-      {/* Seasonality */}
+      {/* Seasonality - Enhanced AI Analysis */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📅 Análisis de Temporada</Text>
+        <Text style={styles.sectionTitle}>📅 Análisis de Temporada (AI)</Text>
         <View style={styles.seasonalityCard}>
-          <Text style={styles.seasonalityBest}>
-            🏆 Mejor día de ventas: {comparisons.seasonality?.best_day?.day || 'N/A'}
-          </Text>
-          <Text style={styles.seasonalityValue}>
-            ${comparisons.seasonality?.best_day?.total?.toFixed(2) || '0.00'}
-          </Text>
+          {/* Best Day */}
+          <View style={styles.seasonalityRow}>
+            <View style={styles.seasonalityIcon}>
+              <Ionicons name="trophy" size={24} color="#FFD700" />
+            </View>
+            <View style={styles.seasonalityContent}>
+              <Text style={styles.seasonalityLabel}>🏆 Mejor día de ventas</Text>
+              <Text style={styles.seasonalityBest}>
+                {comparisons.seasonality?.best_day?.day || 'N/A'}
+              </Text>
+              <Text style={styles.seasonalityValue}>
+                ${comparisons.seasonality?.best_day?.total?.toFixed(2) || '0.00'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Worst Day */}
+          <View style={styles.seasonalityRow}>
+            <View style={styles.seasonalityIcon}>
+              <Ionicons name="trending-down" size={24} color="#F44336" />
+            </View>
+            <View style={styles.seasonalityContent}>
+              <Text style={styles.seasonalityLabel}>📉 Día con menos ventas</Text>
+              <Text style={styles.seasonalityBest}>
+                {comparisons.seasonality?.worst_day?.day || 'N/A'}
+              </Text>
+              <Text style={[styles.seasonalityValue, {color: '#F44336'}]}>
+                ${comparisons.seasonality?.worst_day?.total?.toFixed(2) || '0.00'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Average Sale */}
+          <View style={styles.seasonalityRow}>
+            <View style={styles.seasonalityIcon}>
+              <Ionicons name="calculator" size={24} color="#2196F3" />
+            </View>
+            <View style={styles.seasonalityContent}>
+              <Text style={styles.seasonalityLabel}>💵 Promedio por venta</Text>
+              <Text style={styles.seasonalityBest}>Este mes</Text>
+              <Text style={styles.seasonalityValue}>
+                ${comparisons.seasonality?.avg_sale?.toFixed(2) || analytics.sales?.avg_sale?.toFixed(2) || '0.00'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Peak Hour */}
+          <View style={styles.seasonalityRow}>
+            <View style={styles.seasonalityIcon}>
+              <Ionicons name="time" size={24} color="#9C27B0" />
+            </View>
+            <View style={styles.seasonalityContent}>
+              <Text style={styles.seasonalityLabel}>⏰ Hora pico de ventas</Text>
+              <Text style={styles.seasonalityBest}>
+                {comparisons.seasonality?.peak_hour ? `${comparisons.seasonality.peak_hour}:00` : '12:00'}
+              </Text>
+              <Text style={styles.seasonalityValue}>
+                Mayor actividad
+              </Text>
+            </View>
+          </View>
+
+          {/* Weekly Trend */}
+          <View style={styles.seasonalityRow}>
+            <View style={styles.seasonalityIcon}>
+              <Ionicons name="trending-up" size={24} color="#4CAF50" />
+            </View>
+            <View style={styles.seasonalityContent}>
+              <Text style={styles.seasonalityLabel}>📈 Tendencia semanal</Text>
+              <Text style={styles.seasonalityBest}>
+                {comparisons.weekly?.change_percent > 0 ? 'Crecimiento' : comparisons.weekly?.change_percent < 0 ? 'Disminución' : 'Estable'}
+              </Text>
+              <Text style={[styles.seasonalityValue, {
+                color: comparisons.weekly?.change_percent > 0 ? '#4CAF50' : comparisons.weekly?.change_percent < 0 ? '#F44336' : '#666'
+              }]}>
+                {comparisons.weekly?.change_percent > 0 ? '+' : ''}{comparisons.weekly?.change_percent?.toFixed(1) || '0'}% vs semana anterior
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
 
