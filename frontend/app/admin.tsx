@@ -1837,11 +1837,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1852,9 +1847,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '500',
-  },
-  closeButton: {
-    padding: 8,
   },
   // Merchant Filter Styles
   merchantFilterContainer: {
