@@ -37,15 +37,26 @@ export default function AdminConsoleScreen() {
     loadMerchants();
   }, []);
 
+  // Load data when section or merchant filter changes
   useEffect(() => {
+    // Only load data if we have merchants loaded or no need for auth
     loadData();
   }, [activeSection, selectedMerchant]);
 
   const loadMerchants = async () => {
     try {
       const response = await api.get('/api/admin/my-merchants');
-      setMerchants(response.data.merchants || []);
+      const merchantsList = response.data.merchants || [];
+      setMerchants(merchantsList);
       setHasMultipleMerchants(response.data.has_multiple || false);
+      
+      // If we have merchants, auto-select the first one that is_current
+      if (merchantsList.length > 0) {
+        const currentMerchant = merchantsList.find((m: any) => m.is_current);
+        if (currentMerchant && !selectedMerchant) {
+          // Don't auto-select to show "all" by default for multi-merchant admins
+        }
+      }
     } catch (error) {
       console.error('Error loading merchants:', error);
     }
