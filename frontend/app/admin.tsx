@@ -10,6 +10,7 @@ import {
   Modal,
   Pressable,
   Alert,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
