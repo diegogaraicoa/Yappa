@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Backend Testing for Admin Console - Comparisons and Top Products Fix
+Backend Testing for Admin Console Dashboard - Analytics and Comparisons Endpoints
 Testing the specific endpoints mentioned in the review request.
 """
 
@@ -9,274 +9,236 @@ import json
 import sys
 from datetime import datetime
 
-# Configuration
+# Get backend URL from environment
 BACKEND_URL = "https://bug-hunter-126.preview.emergentagent.com/api"
-CREDENTIALS = {
-    "username": "tiendaclave",
-    "password": "Chifle98.",
-    "pin": "1234"
-}
 
-# Test merchant and clerk IDs from the review request
-MERCHANT_ID = "69373d809d90dca52da9d583"
-CLERK_ID = "6945be279a72c2ed0b05d6d8"
+# Test credentials from review request
+USERNAME = "tiendaclave"
+PASSWORD = "Chifle98."
+PIN = "1234"
 
 class AdminConsoleTest:
     def __init__(self):
-        self.token = None
         self.session = requests.Session()
-        self.session.headers.update({
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        })
+        self.token = None
+        self.merchant_id = None
+        self.clerk_id = None
         
-    def log(self, message, level="INFO"):
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"[{timestamp}] {level}: {message}")
+    def log(self, message):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
         
-    def test_login_step2(self):
-        """Test POST /api/onboarding/login/step2 with merchant_id, clerk_id and PIN"""
-        self.log("🔐 Testing Admin Login Step 2...")
+    def test_login_flow(self):
+        """Test the 2-step login flow as specified in review request"""
+        self.log("🔐 Testing Login Flow...")
         
-        url = f"{BACKEND_URL}/onboarding/login/step2"
-        params = {
-            "merchant_id": MERCHANT_ID,
-            "clerk_id": CLERK_ID,
-            "pin": CREDENTIALS["pin"]
+        # Step 1: Login with username and password
+        self.log(f"Step 1: POST /onboarding/login/step1?username={USERNAME}&password={PASSWORD}")
+        
+        step1_url = f"{BACKEND_URL}/onboarding/login/step1"
+        step1_params = {
+            "username": USERNAME,
+            "password": PASSWORD
         }
         
         try:
-            response = self.session.post(url, params=params)
-            self.log(f"Login Step 2 Response Status: {response.status_code}")
+            response = self.session.post(step1_url, params=step1_params)
+            self.log(f"Step 1 Response Status: {response.status_code}")
             
-            if response.status_code == 200:
-                data = response.json()
-                # Check for both 'access_token' and 'token' field names
-                token = data.get("access_token") or data.get("token")
-                if token:
-                    self.token = token
-                    self.session.headers.update({
-                        'Authorization': f'Bearer {self.token}'
-                    })
-                    self.log("✅ Login Step 2 successful - JWT token obtained")
-                    self.log(f"Token preview: {self.token[:50]}...")
-                    user_info = data.get("user", {})
-                    self.log(f"Logged in as: {user_info.get('clerk_name', 'Unknown')} - {user_info.get('store_name', 'Unknown Store')}")
-                    return True
-                else:
-                    self.log("❌ Login Step 2 failed - No access_token or token in response")
-                    self.log(f"Response: {data}")
-                    return False
-            else:
-                self.log(f"❌ Login Step 2 failed - Status {response.status_code}")
-                try:
-                    error_data = response.json()
-                    self.log(f"Error details: {error_data}")
-                except:
-                    self.log(f"Error text: {response.text}")
+            if response.status_code != 200:
+                self.log(f"❌ Step 1 Failed: {response.text}")
                 return False
                 
+            step1_data = response.json()
+            self.log(f"Step 1 Response: {json.dumps(step1_data, indent=2)}")
+            
+            # Check if it's a legacy account (direct token)
+            if step1_data.get("legacy_account"):
+                self.log("✅ Legacy account detected - using direct token")
+                self.token = step1_data.get("token")
+                self.merchant_id = step1_data.get("user", {}).get("merchant_id")
+                return True
+            
+            # New system - get merchant_id and clerk_id for step 2
+            self.merchant_id = step1_data.get("merchant_id")
+            clerks = step1_data.get("clerks", [])
+            
+            if not clerks:
+                self.log("❌ No clerks found for step 2")
+                return False
+                
+            # Use first clerk for testing
+            self.clerk_id = clerks[0]["clerk_id"]
+            self.log(f"Using clerk: {clerks[0]['name']} (ID: {self.clerk_id})")
+            
+            # Step 2: Login with merchant_id, clerk_id, and PIN
+            self.log(f"Step 2: POST /onboarding/login/step2?merchant_id={self.merchant_id}&clerk_id={self.clerk_id}&pin={PIN}")
+            
+            step2_url = f"{BACKEND_URL}/onboarding/login/step2"
+            step2_params = {
+                "merchant_id": self.merchant_id,
+                "clerk_id": self.clerk_id,
+                "pin": PIN
+            }
+            
+            response = self.session.post(step2_url, params=step2_params)
+            self.log(f"Step 2 Response Status: {response.status_code}")
+            
+            if response.status_code != 200:
+                self.log(f"❌ Step 2 Failed: {response.text}")
+                return False
+                
+            step2_data = response.json()
+            self.log(f"Step 2 Response: {json.dumps(step2_data, indent=2)}")
+            
+            self.token = step2_data.get("token")
+            
+            if not self.token:
+                self.log("❌ No token received from step 2")
+                return False
+                
+            self.log("✅ Login flow completed successfully")
+            return True
+            
         except Exception as e:
-            self.log(f"❌ Login Step 2 exception: {str(e)}", "ERROR")
+            self.log(f"❌ Login flow failed with exception: {str(e)}")
             return False
     
     def test_admin_analytics(self):
-        """Test GET /api/admin/analytics - should return top_products with non-empty array"""
-        self.log("📊 Testing Admin Analytics...")
+        """Test GET /api/admin/analytics endpoint"""
+        self.log("📊 Testing Admin Analytics Endpoint...")
         
         if not self.token:
-            self.log("❌ No token available for analytics test", "ERROR")
+            self.log("❌ No token available for analytics test")
             return False
             
         url = f"{BACKEND_URL}/admin/analytics"
+        headers = {"Authorization": f"Bearer {self.token}"}
         
         try:
-            response = self.session.get(url)
-            self.log(f"Admin Analytics Response Status: {response.status_code}")
+            response = self.session.get(url, headers=headers)
+            self.log(f"Analytics Response Status: {response.status_code}")
             
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Check top_products
-                top_products = data.get("top_products", [])
-                self.log(f"Top products count: {len(top_products)}")
-                
-                if len(top_products) > 0:
-                    self.log("✅ Top products array is NOT empty")
-                    for i, product in enumerate(top_products[:3]):  # Show first 3
-                        self.log(f"  Product {i+1}: {product.get('product_name', 'N/A')} - Qty: {product.get('quantity_sold', 0)} - Revenue: ${product.get('revenue', 0)}")
-                else:
-                    self.log("❌ Top products array is EMPTY")
-                
-                # Check sales.month
-                sales_month = data.get("sales", {}).get("month", 0)
-                self.log(f"Sales this month: ${sales_month}")
-                
-                if sales_month > 0:
-                    self.log("✅ Sales this month > 0")
-                else:
-                    self.log("❌ Sales this month = 0")
-                
-                # Show full structure for debugging
-                self.log("Analytics structure:")
-                self.log(f"  - Products: total={data.get('products', {}).get('total', 0)}, low_stock={data.get('products', {}).get('low_stock', 0)}")
-                self.log(f"  - Sales: today=${data.get('sales', {}).get('today', 0)}, week=${data.get('sales', {}).get('week', 0)}, month=${sales_month}")
-                self.log(f"  - Customers: {data.get('customers', 0)}")
-                self.log(f"  - Suppliers: {data.get('suppliers', 0)}")
-                self.log(f"  - Debts: ${data.get('debts', {}).get('total', 0)}")
-                
-                return len(top_products) > 0 and sales_month > 0
-                
-            else:
-                self.log(f"❌ Admin Analytics failed - Status {response.status_code}")
-                try:
-                    error_data = response.json()
-                    self.log(f"Error details: {error_data}")
-                except:
-                    self.log(f"Error text: {response.text}")
+            if response.status_code != 200:
+                self.log(f"❌ Analytics Failed: {response.text}")
                 return False
                 
+            data = response.json()
+            self.log(f"Analytics Response: {json.dumps(data, indent=2)}")
+            
+            # Check success criteria from review request
+            success = True
+            
+            # Check top_products array
+            top_products = data.get("top_products", [])
+            if len(top_products) < 1:
+                self.log("❌ FAIL: top_products.length < 1")
+                success = False
+            else:
+                self.log(f"✅ PASS: top_products.length = {len(top_products)} >= 1")
+                
+                # Check each product has required fields
+                for i, product in enumerate(top_products):
+                    required_fields = ["product_name", "quantity_sold", "revenue"]
+                    for field in required_fields:
+                        if field not in product:
+                            self.log(f"❌ FAIL: top_products[{i}] missing field '{field}'")
+                            success = False
+                        else:
+                            self.log(f"✅ PASS: top_products[{i}].{field} = {product[field]}")
+            
+            # Check sales.month > 0
+            sales_month = data.get("sales", {}).get("month", 0)
+            if sales_month <= 0:
+                self.log(f"❌ FAIL: sales.month = {sales_month} <= 0")
+                success = False
+            else:
+                self.log(f"✅ PASS: sales.month = {sales_month} > 0")
+            
+            return success
+            
         except Exception as e:
-            self.log(f"❌ Admin Analytics exception: {str(e)}", "ERROR")
+            self.log(f"❌ Analytics test failed with exception: {str(e)}")
             return False
     
     def test_admin_comparisons(self):
-        """Test GET /api/admin/comparisons - should return weekly, monthly, and seasonality data"""
-        self.log("📈 Testing Admin Comparisons...")
+        """Test GET /api/admin/comparisons endpoint"""
+        self.log("📈 Testing Admin Comparisons Endpoint...")
         
         if not self.token:
-            self.log("❌ No token available for comparisons test", "ERROR")
+            self.log("❌ No token available for comparisons test")
             return False
             
         url = f"{BACKEND_URL}/admin/comparisons"
+        headers = {"Authorization": f"Bearer {self.token}"}
         
         try:
-            response = self.session.get(url)
-            self.log(f"Admin Comparisons Response Status: {response.status_code}")
+            response = self.session.get(url, headers=headers)
+            self.log(f"Comparisons Response Status: {response.status_code}")
             
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Check weekly comparison
-                weekly = data.get("weekly", {})
-                self.log(f"Weekly comparison: this_week=${weekly.get('this_week', 0)}, last_week=${weekly.get('last_week', 0)}")
-                
-                # Check monthly comparison  
-                monthly = data.get("monthly", {})
-                self.log(f"Monthly comparison: this_month=${monthly.get('this_month', 0)}, last_month=${monthly.get('last_month', 0)}")
-                
-                # Check seasonality
-                seasonality = data.get("seasonality", {})
-                best_day = seasonality.get("best_day", "N/A")
-                worst_day = seasonality.get("worst_day", "N/A")
-                avg_sale = seasonality.get("avg_sale", 0)
-                peak_hour = seasonality.get("peak_hour", "N/A")
-                
-                self.log(f"Seasonality: best_day={best_day}, worst_day={worst_day}, avg_sale=${avg_sale}, peak_hour={peak_hour}")
-                
-                # Validate success criteria
-                weekly_valid = weekly.get('this_week', 0) >= 0  # Allow 0 but check structure
-                monthly_valid = monthly.get('this_month', 0) >= 0
-                seasonality_valid = best_day != "N/A"
-                
-                if weekly_valid and monthly_valid and seasonality_valid:
-                    self.log("✅ Admin Comparisons data structure is valid")
-                    return True
-                else:
-                    self.log("❌ Admin Comparisons data structure has issues")
-                    if not weekly_valid:
-                        self.log("  - Weekly data missing or invalid")
-                    if not monthly_valid:
-                        self.log("  - Monthly data missing or invalid") 
-                    if not seasonality_valid:
-                        self.log("  - Seasonality best_day is N/A")
-                    return False
-                
-            else:
-                self.log(f"❌ Admin Comparisons failed - Status {response.status_code}")
-                try:
-                    error_data = response.json()
-                    self.log(f"Error details: {error_data}")
-                except:
-                    self.log(f"Error text: {response.text}")
+            if response.status_code != 200:
+                self.log(f"❌ Comparisons Failed: {response.text}")
                 return False
                 
-        except Exception as e:
-            self.log(f"❌ Admin Comparisons exception: {str(e)}", "ERROR")
-            return False
-    
-    def test_admin_my_merchants(self):
-        """Test GET /api/admin/my-merchants - should return list of merchants"""
-        self.log("🏪 Testing Admin My Merchants...")
-        
-        if not self.token:
-            self.log("❌ No token available for my-merchants test", "ERROR")
-            return False
+            data = response.json()
+            self.log(f"Comparisons Response: {json.dumps(data, indent=2)}")
             
-        url = f"{BACKEND_URL}/admin/my-merchants"
-        
-        try:
-            response = self.session.get(url)
-            self.log(f"Admin My Merchants Response Status: {response.status_code}")
+            # Check success criteria from review request
+            success = True
             
-            if response.status_code == 200:
-                data = response.json()
-                
-                merchants = data.get("merchants", [])
-                has_multiple = data.get("has_multiple", False)
-                
-                self.log(f"Merchants count: {len(merchants)}")
-                self.log(f"Has multiple: {has_multiple}")
-                
-                if len(merchants) > 0:
-                    self.log("✅ Merchants list is NOT empty")
-                    for i, merchant in enumerate(merchants):
-                        self.log(f"  Merchant {i+1}: {merchant.get('name', 'N/A')} (ID: {merchant.get('id', 'N/A')})")
-                    return True
-                else:
-                    self.log("❌ Merchants list is EMPTY")
-                    return False
-                
+            # Check weekly.this_week > 0
+            weekly_this_week = data.get("weekly", {}).get("this_week", 0)
+            if weekly_this_week <= 0:
+                self.log(f"❌ FAIL: weekly.this_week = {weekly_this_week} <= 0")
+                success = False
             else:
-                self.log(f"❌ Admin My Merchants failed - Status {response.status_code}")
-                try:
-                    error_data = response.json()
-                    self.log(f"Error details: {error_data}")
-                except:
-                    self.log(f"Error text: {response.text}")
-                return False
-                
+                self.log(f"✅ PASS: weekly.this_week = {weekly_this_week} > 0")
+            
+            # Check monthly.this_month > 0
+            monthly_this_month = data.get("monthly", {}).get("this_month", 0)
+            if monthly_this_month <= 0:
+                self.log(f"❌ FAIL: monthly.this_month = {monthly_this_month} <= 0")
+                success = False
+            else:
+                self.log(f"✅ PASS: monthly.this_month = {monthly_this_month} > 0")
+            
+            # Check seasonality.best_day.day != "N/A"
+            best_day = data.get("seasonality", {}).get("best_day", {}).get("day", "N/A")
+            if best_day == "N/A":
+                self.log(f"❌ FAIL: seasonality.best_day.day = 'N/A'")
+                success = False
+            else:
+                self.log(f"✅ PASS: seasonality.best_day.day = '{best_day}' != 'N/A'")
+            
+            return success
+            
         except Exception as e:
-            self.log(f"❌ Admin My Merchants exception: {str(e)}", "ERROR")
+            self.log(f"❌ Comparisons test failed with exception: {str(e)}")
             return False
     
     def run_all_tests(self):
-        """Run all admin console tests in sequence"""
-        self.log("🚀 Starting Admin Console Backend Testing...")
+        """Run all tests in sequence"""
+        self.log("🚀 Starting Admin Console Dashboard Testing...")
         self.log(f"Backend URL: {BACKEND_URL}")
-        self.log(f"Testing with merchant_id: {MERCHANT_ID}, clerk_id: {CLERK_ID}")
+        self.log(f"Credentials: {USERNAME} / {PASSWORD} / PIN: {PIN}")
         
         results = {}
         
-        # Test 1: Login Step 2
-        results['login'] = self.test_login_step2()
+        # Test 1: Login Flow
+        results["login_flow"] = self.test_login_flow()
         
-        if not results['login']:
-            self.log("❌ Login failed - skipping other tests", "ERROR")
+        if not results["login_flow"]:
+            self.log("❌ Login failed - skipping other tests")
             return results
         
         # Test 2: Admin Analytics
-        results['analytics'] = self.test_admin_analytics()
+        results["admin_analytics"] = self.test_admin_analytics()
         
-        # Test 3: Admin Comparisons  
-        results['comparisons'] = self.test_admin_comparisons()
-        
-        # Test 4: Admin My Merchants
-        results['my_merchants'] = self.test_admin_my_merchants()
+        # Test 3: Admin Comparisons
+        results["admin_comparisons"] = self.test_admin_comparisons()
         
         # Summary
         self.log("\n" + "="*60)
-        self.log("📋 TEST RESULTS SUMMARY:")
+        self.log("📋 TEST SUMMARY")
         self.log("="*60)
         
         total_tests = len(results)
@@ -284,14 +246,14 @@ class AdminConsoleTest:
         
         for test_name, result in results.items():
             status = "✅ PASS" if result else "❌ FAIL"
-            self.log(f"{test_name.upper()}: {status}")
+            self.log(f"{status} {test_name}")
         
-        self.log(f"\nOVERALL: {passed_tests}/{total_tests} tests passed")
+        self.log(f"\nOverall: {passed_tests}/{total_tests} tests passed")
         
         if passed_tests == total_tests:
-            self.log("🎉 ALL TESTS PASSED - Admin Console endpoints are working correctly!")
+            self.log("🎉 ALL TESTS PASSED - Admin Console Dashboard endpoints working correctly!")
         else:
-            self.log("⚠️  SOME TESTS FAILED - Admin Console has issues that need attention")
+            self.log("⚠️ SOME TESTS FAILED - Check logs above for details")
         
         return results
 
