@@ -122,26 +122,34 @@ export default function AdminConsoleScreen() {
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Cerrar Sesión',
-      '¿Estás seguro que deseas cerrar sesión?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Cerrar Sesión',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem('token');
-              await AsyncStorage.removeItem('user');
-              router.replace('/');
-            } catch (error) {
-              console.error('Error logging out:', error);
-            }
-          }
+    // Use confirm for web, Alert for native
+    const confirmLogout = Platform.OS === 'web' 
+      ? window.confirm('¿Estás seguro que deseas cerrar sesión?')
+      : await new Promise((resolve) => {
+          Alert.alert(
+            'Cerrar Sesión',
+            '¿Estás seguro que deseas cerrar sesión?',
+            [
+              { text: 'Cancelar', onPress: () => resolve(false), style: 'cancel' },
+              { text: 'Cerrar Sesión', onPress: () => resolve(true), style: 'destructive' }
+            ]
+          );
+        });
+
+    if (confirmLogout) {
+      try {
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('user');
+        // Force reload for web to clear any cached state
+        if (Platform.OS === 'web') {
+          window.location.href = '/';
+        } else {
+          router.replace('/');
         }
-      ]
-    );
+      } catch (error) {
+        console.error('Error logging out:', error);
+      }
+    }
   };
 
   const renderContent = () => {
