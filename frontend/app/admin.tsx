@@ -222,16 +222,7 @@ export default function AdminConsoleScreen() {
         <Text style={styles.merchantFilterHint}>
           {merchants.length} local(es) disponible(s)
         </Text>
-      </View> 
-            style={styles.merchantFilterButton}
-            onPress={() => setShowMerchantPicker(true)}
-          >
-            <Ionicons name="business" size={18} color="#00D2FF" />
-            <Text style={styles.merchantFilterText}>{getSelectedMerchantName()}</Text>
-            <Ionicons name="chevron-down" size={18} color="#666" />
-          </TouchableOpacity>
-        </View>
-      )}
+      </View>
 
       {/* Merchant Picker Modal */}
       <Modal
