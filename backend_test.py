@@ -1,732 +1,502 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend API Testing Suite
-Tests all endpoints for pre-deployment validation
+Backend Testing for Admin Console Endpoints with Merchant Filter Support
+Testing the following endpoints:
+1. POST /api/onboarding/login/step1 - Admin login
+2. GET /api/admin/my-merchants - Get merchants for admin
+3. GET /api/admin/analytics - Admin analytics (with/without merchant filter)
+4. GET /api/admin/comparisons - Period comparisons (with/without merchant filter)
 """
 
 import requests
 import json
 import sys
-import time
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from datetime import datetime
 
 # Configuration
-BASE_URL = "https://store-launch-fix.preview.emergentagent.com/api"
-TEST_CREDENTIALS = {
+BASE_URL = "https://store-launch-fix.preview.emergentagent.com"
+ADMIN_CREDENTIALS = {
     "username": "tiendaclave",
     "password": "Chifle98."
 }
 
-class BackendTester:
+class AdminConsoleTestSuite:
     def __init__(self):
         self.base_url = BASE_URL
-        self.session = requests.Session()
-        self.auth_token = None
+        self.token = None
+        self.merchants = []
         self.test_results = []
-        self.failed_tests = []
         
-    def log_test(self, test_name: str, success: bool, details: str = "", response_data: Any = None):
+    def log_test(self, test_name, success, details="", response_data=None):
         """Log test results"""
         result = {
             "test": test_name,
             "success": success,
             "details": details,
-            "timestamp": datetime.now().isoformat(),
-            "response_data": response_data
+            "timestamp": datetime.now().isoformat()
         }
+        if response_data:
+            result["response_data"] = response_data
         self.test_results.append(result)
         
         status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status} | {test_name}")
+        print(f"{status} {test_name}")
         if details:
-            print(f"    Details: {details}")
-        if not success:
-            self.failed_tests.append(result)
-            
-    def make_request(self, method: str, endpoint: str, data: Dict = None, params: Dict = None, 
-                    auth_required: bool = True) -> requests.Response:
-        """Make HTTP request with optional authentication"""
-        url = f"{self.base_url}{endpoint}"
-        headers = {"Content-Type": "application/json"}
-        
-        if auth_required and self.auth_token:
-            headers["Authorization"] = f"Bearer {self.auth_token}"
-            
-        try:
-            if method.upper() == "GET":
-                response = self.session.get(url, headers=headers, params=params, timeout=30)
-            elif method.upper() == "POST":
-                response = self.session.post(url, headers=headers, json=data, params=params, timeout=30)
-            elif method.upper() == "PUT":
-                response = self.session.put(url, headers=headers, json=data, timeout=30)
-            elif method.upper() == "PATCH":
-                response = self.session.patch(url, headers=headers, json=data, timeout=30)
-            elif method.upper() == "DELETE":
-                response = self.session.delete(url, headers=headers, timeout=30)
-            else:
-                raise ValueError(f"Unsupported method: {method}")
-                
-            return response
-        except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e}")
-            raise
+            print(f"   Details: {details}")
+        if not success and response_data:
+            print(f"   Response: {response_data}")
+        print()
 
-    # ==================== AUTHENTICATION TESTS ====================
-    
-    def test_login_step1(self):
-        """Test login step 1 with valid credentials"""
+    def test_admin_login(self):
+        """Test 1: Login as admin user to get token"""
+        print("🔐 Testing Admin Login...")
+        
         try:
-            response = self.make_request(
-                "POST", 
-                "/onboarding/login/step1",
-                params={"username": TEST_CREDENTIALS["username"], "password": TEST_CREDENTIALS["password"]},
-                auth_required=False
-            )
+            url = f"{self.base_url}/api/onboarding/login/step1"
+            params = {
+                "username": ADMIN_CREDENTIALS["username"],
+                "password": ADMIN_CREDENTIALS["password"]
+            }
+            
+            response = requests.post(url, params=params, timeout=30)
             
             if response.status_code == 200:
                 data = response.json()
-                if data.get("success") and data.get("token"):
-                    self.auth_token = data["token"]
-                    self.log_test("Login Step 1", True, f"Token obtained for legacy account")
-                    return True
-                elif data.get("success") and data.get("clerks"):
-                    # Store data for step 2
-                    self.merchant_id = data.get("merchant_id")
-                    self.clerks = data.get("clerks", [])
-                    self.log_test("Login Step 1", True, f"Found {len(data['clerks'])} clerks, needs step 2")
+                if "access_token" in data:
+                    self.token = data["access_token"]
+                    user_info = data.get("user", {})
+                    self.log_test(
+                        "Admin Login", 
+                        True, 
+                        f"Successfully logged in as {user_info.get('username', 'admin')}. Token obtained.",
+                        {"status_code": response.status_code, "user": user_info}
+                    )
                     return True
                 else:
-                    self.log_test("Login Step 1", False, f"Unexpected response format: {data}")
+                    self.log_test(
+                        "Admin Login", 
+                        False, 
+                        "Login response missing access_token",
+                        data
+                    )
                     return False
             else:
-                self.log_test("Login Step 1", False, f"Status {response.status_code}: {response.text}")
+                self.log_test(
+                    "Admin Login", 
+                    False, 
+                    f"Login failed with status {response.status_code}",
+                    {"status_code": response.status_code, "response": response.text}
+                )
                 return False
                 
         except Exception as e:
-            self.log_test("Login Step 1", False, f"Exception: {str(e)}")
+            self.log_test("Admin Login", False, f"Exception: {str(e)}")
             return False
 
-    def test_login_step2(self):
-        """Test login step 2 with PIN (if needed)"""
-        if hasattr(self, 'clerks') and self.clerks and hasattr(self, 'merchant_id'):
-            try:
-                # Use first clerk with PIN 1234 (from review request)
-                clerk_id = self.clerks[0]["clerk_id"]
+    def test_get_my_merchants(self):
+        """Test 2: Get merchants for admin with has_multiple flag"""
+        print("🏪 Testing Get My Merchants...")
+        
+        if not self.token:
+            self.log_test("Get My Merchants", False, "No auth token available")
+            return False
+            
+        try:
+            url = f"{self.base_url}/api/admin/my-merchants"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            response = requests.get(url, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
                 
-                response = self.make_request(
-                    "POST",
-                    "/onboarding/login/step2",
-                    params={
-                        "merchant_id": self.merchant_id,
-                        "clerk_id": clerk_id,
-                        "pin": "1234"
-                    },
-                    auth_required=False
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("success") and data.get("token"):
-                        self.auth_token = data["token"]
-                        self.log_test("Login Step 2", True, f"Token obtained for clerk")
+                # Validate response structure
+                if "merchants" in data and "has_multiple" in data:
+                    self.merchants = data["merchants"]
+                    merchant_count = len(self.merchants)
+                    has_multiple = data["has_multiple"]
+                    
+                    # Validate has_multiple flag logic
+                    expected_has_multiple = merchant_count > 1
+                    flag_correct = has_multiple == expected_has_multiple
+                    
+                    details = f"Found {merchant_count} merchants. has_multiple={has_multiple} (correct: {flag_correct})"
+                    
+                    if flag_correct:
+                        self.log_test(
+                            "Get My Merchants", 
+                            True, 
+                            details,
+                            {"merchant_count": merchant_count, "has_multiple": has_multiple, "merchants": self.merchants}
+                        )
                         return True
                     else:
-                        self.log_test("Login Step 2", False, f"No token in response: {data}")
+                        self.log_test(
+                            "Get My Merchants", 
+                            False, 
+                            f"{details} - has_multiple flag incorrect",
+                            data
+                        )
                         return False
                 else:
-                    self.log_test("Login Step 2", False, f"Status {response.status_code}: {response.text}")
+                    self.log_test(
+                        "Get My Merchants", 
+                        False, 
+                        "Response missing required fields (merchants, has_multiple)",
+                        data
+                    )
                     return False
+            else:
+                self.log_test(
+                    "Get My Merchants", 
+                    False, 
+                    f"Request failed with status {response.status_code}",
+                    {"status_code": response.status_code, "response": response.text}
+                )
+                return False
+                
+        except Exception as e:
+            self.log_test("Get My Merchants", False, f"Exception: {str(e)}")
+            return False
+
+    def test_admin_analytics_without_filter(self):
+        """Test 3: Get admin analytics without merchant filter (all merchants)"""
+        print("📊 Testing Admin Analytics (All Merchants)...")
+        
+        if not self.token:
+            self.log_test("Admin Analytics (All)", False, "No auth token available")
+            return False
+            
+        try:
+            url = f"{self.base_url}/api/admin/analytics"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            response = requests.get(url, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Validate response structure
+                required_fields = ["products", "sales", "expenses", "balance", "customers", "suppliers", "debts"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    # Check nested structure
+                    products_valid = "total" in data["products"] and "low_stock" in data["products"]
+                    sales_valid = "today" in data["sales"] and "week" in data["sales"] and "month" in data["sales"]
                     
-            except Exception as e:
-                self.log_test("Login Step 2", False, f"Exception: {str(e)}")
-                return False
-        else:
-            self.log_test("Login Step 2", True, "Skipped - no clerks from step 1")
-            return True
-
-    def test_invalid_login(self):
-        """Test login with invalid credentials"""
-        try:
-            response = self.make_request(
-                "POST",
-                "/onboarding/login/step1", 
-                params={"username": "invalid", "password": "invalid"},
-                auth_required=False
-            )
-            
-            if response.status_code == 401:
-                self.log_test("Invalid Login", True, "Correctly rejected invalid credentials")
-                return True
+                    if products_valid and sales_valid:
+                        details = f"Analytics for all merchants: {data['products']['total']} products, ${data['sales']['month']:.2f} monthly sales"
+                        self.log_test(
+                            "Admin Analytics (All)", 
+                            True, 
+                            details,
+                            {"products_total": data["products"]["total"], "monthly_sales": data["sales"]["month"]}
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "Admin Analytics (All)", 
+                            False, 
+                            "Response structure invalid (missing nested fields)",
+                            data
+                        )
+                        return False
+                else:
+                    self.log_test(
+                        "Admin Analytics (All)", 
+                        False, 
+                        f"Response missing required fields: {missing_fields}",
+                        data
+                    )
+                    return False
             else:
-                self.log_test("Invalid Login", False, f"Expected 401, got {response.status_code}")
+                self.log_test(
+                    "Admin Analytics (All)", 
+                    False, 
+                    f"Request failed with status {response.status_code}",
+                    {"status_code": response.status_code, "response": response.text}
+                )
                 return False
                 
         except Exception as e:
-            self.log_test("Invalid Login", False, f"Exception: {str(e)}")
+            self.log_test("Admin Analytics (All)", False, f"Exception: {str(e)}")
             return False
 
-    # ==================== ONBOARDING TESTS ====================
-    
-    def test_search_stores(self):
-        """Test store search functionality"""
-        try:
-            # Test with valid query
-            response = self.make_request("GET", "/onboarding/search-stores", params={"query": "tienda"}, auth_required=False)
-            
-            if response.status_code == 200:
-                data = response.json()
-                stores = data.get("stores", [])
-                self.log_test("Search Stores - Valid Query", True, f"Found {len(stores)} stores")
-            else:
-                self.log_test("Search Stores - Valid Query", False, f"Status {response.status_code}")
-                return False
-                
-            # Test with short query
-            response = self.make_request("GET", "/onboarding/search-stores", params={"query": "a"}, auth_required=False)
-            if response.status_code == 200:
-                data = response.json()
-                self.log_test("Search Stores - Short Query", True, f"Correctly handled short query")
-            else:
-                self.log_test("Search Stores - Short Query", False, f"Status {response.status_code}")
-                
-            return True
-            
-        except Exception as e:
-            self.log_test("Search Stores", False, f"Exception: {str(e)}")
+    def test_admin_analytics_with_filter(self):
+        """Test 4: Get admin analytics with merchant filter"""
+        print("📊 Testing Admin Analytics (Filtered by Merchant)...")
+        
+        if not self.token:
+            self.log_test("Admin Analytics (Filtered)", False, "No auth token available")
             return False
-
-    def test_register_single_store(self):
-        """Test single store registration"""
-        try:
-            test_data = {
-                "store_name": f"Test Store {int(time.time())}",
-                "email": f"test{int(time.time())}@example.com",
-                "password": "testpass123",
-                "first_name": "Test",
-                "last_name": "User",
-                "phone": "+593999123456",
-                "pin": "1234",
-                "role": "owner"
-            }
             
-            response = self.make_request("POST", "/onboarding/register-single-store", data=test_data, auth_required=False)
+        if not self.merchants:
+            self.log_test("Admin Analytics (Filtered)", False, "No merchants available for filtering")
+            return False
+            
+        try:
+            # Use the first merchant for filtering
+            merchant_id = self.merchants[0]["id"]
+            merchant_name = self.merchants[0]["name"]
+            
+            url = f"{self.base_url}/api/admin/analytics"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            params = {"merchant_id": merchant_id}
+            
+            response = requests.get(url, headers=headers, params=params, timeout=30)
             
             if response.status_code == 200:
                 data = response.json()
-                if data.get("success") and data.get("token"):
-                    self.log_test("Register Single Store", True, f"Created store: {data.get('username')}")
+                
+                # Validate response structure (same as unfiltered)
+                required_fields = ["products", "sales", "expenses", "balance", "customers", "suppliers", "debts"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    details = f"Analytics for merchant '{merchant_name}': {data['products']['total']} products, ${data['sales']['month']:.2f} monthly sales"
+                    self.log_test(
+                        "Admin Analytics (Filtered)", 
+                        True, 
+                        details,
+                        {
+                            "merchant_id": merchant_id, 
+                            "merchant_name": merchant_name,
+                            "products_total": data["products"]["total"], 
+                            "monthly_sales": data["sales"]["month"]
+                        }
+                    )
                     return True
                 else:
-                    self.log_test("Register Single Store", False, f"Missing success/token in response")
+                    self.log_test(
+                        "Admin Analytics (Filtered)", 
+                        False, 
+                        f"Response missing required fields: {missing_fields}",
+                        data
+                    )
                     return False
             else:
-                self.log_test("Register Single Store", False, f"Status {response.status_code}: {response.text}")
+                self.log_test(
+                    "Admin Analytics (Filtered)", 
+                    False, 
+                    f"Request failed with status {response.status_code}",
+                    {"status_code": response.status_code, "response": response.text}
+                )
                 return False
                 
         except Exception as e:
-            self.log_test("Register Single Store", False, f"Exception: {str(e)}")
+            self.log_test("Admin Analytics (Filtered)", False, f"Exception: {str(e)}")
             return False
 
-    # ==================== CORE APP FUNCTIONALITY TESTS ====================
-    
-    def test_balance_endpoint(self):
-        """Test balance/reports endpoint"""
+    def test_admin_comparisons_without_filter(self):
+        """Test 5: Get admin comparisons without merchant filter"""
+        print("📈 Testing Admin Comparisons (All Merchants)...")
+        
+        if not self.token:
+            self.log_test("Admin Comparisons (All)", False, "No auth token available")
+            return False
+            
         try:
-            # Test without date range
-            response = self.make_request("GET", "/balance", auth_required=False)
+            url = f"{self.base_url}/api/admin/comparisons"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            
+            response = requests.get(url, headers=headers, timeout=30)
             
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ["ingresos", "egresos", "balance", "resumen_ingresos", "resumen_egresos"]
-                if all(field in data for field in required_fields):
-                    self.log_test("Balance Endpoint", True, f"Balance: ${data.get('balance', 0):.2f}")
+                
+                # Validate response structure
+                required_fields = ["week_comparison", "month_comparison", "seasonality"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    # Check nested structure
+                    week_valid = all(key in data["week_comparison"] for key in ["this_week", "last_week", "change_percent"])
+                    month_valid = all(key in data["month_comparison"] for key in ["this_month", "last_month", "change_percent"])
+                    seasonality_valid = "by_day_of_week" in data["seasonality"] and "best_day" in data["seasonality"]
+                    
+                    if week_valid and month_valid and seasonality_valid:
+                        week_change = data["week_comparison"]["change_percent"]
+                        month_change = data["month_comparison"]["change_percent"]
+                        best_day = data["seasonality"]["best_day"]["day"]
+                        
+                        details = f"Comparisons for all merchants: Week change {week_change:.1f}%, Month change {month_change:.1f}%, Best day: {best_day}"
+                        self.log_test(
+                            "Admin Comparisons (All)", 
+                            True, 
+                            details,
+                            {
+                                "week_change": week_change,
+                                "month_change": month_change,
+                                "best_day": best_day
+                            }
+                        )
+                        return True
+                    else:
+                        self.log_test(
+                            "Admin Comparisons (All)", 
+                            False, 
+                            "Response structure invalid (missing nested comparison fields)",
+                            data
+                        )
+                        return False
                 else:
-                    missing = [f for f in required_fields if f not in data]
-                    self.log_test("Balance Endpoint", False, f"Missing fields: {missing}")
+                    self.log_test(
+                        "Admin Comparisons (All)", 
+                        False, 
+                        f"Response missing required fields: {missing_fields}",
+                        data
+                    )
                     return False
             else:
-                self.log_test("Balance Endpoint", False, f"Status {response.status_code}")
-                return False
-                
-            # Test with date range
-            end_date = datetime.now().isoformat()
-            start_date = (datetime.now() - timedelta(days=30)).isoformat()
-            
-            response = self.make_request("GET", "/balance", 
-                                       params={"start_date": start_date, "end_date": end_date},
-                                       auth_required=False)
-            
-            if response.status_code == 200:
-                self.log_test("Balance Endpoint - Date Range", True, "Date filtering works")
-            else:
-                self.log_test("Balance Endpoint - Date Range", False, f"Status {response.status_code}")
-                
-            return True
-            
-        except Exception as e:
-            self.log_test("Balance Endpoint", False, f"Exception: {str(e)}")
-            return False
-
-    def test_customers_endpoint(self):
-        """Test customers CRUD operations"""
-        try:
-            # Test GET customers
-            response = self.make_request("GET", "/customers", auth_required=False)
-            
-            if response.status_code == 200:
-                customers = response.json()
-                self.log_test("Get Customers", True, f"Found {len(customers)} customers")
-                
-                # Test customer structure
-                if customers:
-                    customer = customers[0]
-                    required_fields = ["_id", "nombre"]
-                    if all(field in customer for field in required_fields):
-                        self.log_test("Customer Structure", True, "Customer fields present")
-                    else:
-                        self.log_test("Customer Structure", False, f"Missing fields in customer")
-                        
-                return True
-            else:
-                self.log_test("Get Customers", False, f"Status {response.status_code}")
+                self.log_test(
+                    "Admin Comparisons (All)", 
+                    False, 
+                    f"Request failed with status {response.status_code}",
+                    {"status_code": response.status_code, "response": response.text}
+                )
                 return False
                 
         except Exception as e:
-            self.log_test("Customers Endpoint", False, f"Exception: {str(e)}")
+            self.log_test("Admin Comparisons (All)", False, f"Exception: {str(e)}")
             return False
 
-    def test_suppliers_endpoint(self):
-        """Test suppliers endpoint"""
-        try:
-            response = self.make_request("GET", "/suppliers")
+    def test_admin_comparisons_with_filter(self):
+        """Test 6: Get admin comparisons with merchant filter"""
+        print("📈 Testing Admin Comparisons (Filtered by Merchant)...")
+        
+        if not self.token:
+            self.log_test("Admin Comparisons (Filtered)", False, "No auth token available")
+            return False
             
-            if response.status_code in [200, 401]:  # 401 expected without auth
-                if response.status_code == 401:
-                    self.log_test("Suppliers Endpoint", True, "Correctly requires authentication")
+        if not self.merchants:
+            self.log_test("Admin Comparisons (Filtered)", False, "No merchants available for filtering")
+            return False
+            
+        try:
+            # Use the first merchant for filtering
+            merchant_id = self.merchants[0]["id"]
+            merchant_name = self.merchants[0]["name"]
+            
+            url = f"{self.base_url}/api/admin/comparisons"
+            headers = {"Authorization": f"Bearer {self.token}"}
+            params = {"merchant_id": merchant_id}
+            
+            response = requests.get(url, headers=headers, params=params, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Validate response structure (same as unfiltered)
+                required_fields = ["week_comparison", "month_comparison", "seasonality"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    week_change = data["week_comparison"]["change_percent"]
+                    month_change = data["month_comparison"]["change_percent"]
+                    best_day = data["seasonality"]["best_day"]["day"]
+                    
+                    details = f"Comparisons for merchant '{merchant_name}': Week change {week_change:.1f}%, Month change {month_change:.1f}%, Best day: {best_day}"
+                    self.log_test(
+                        "Admin Comparisons (Filtered)", 
+                        True, 
+                        details,
+                        {
+                            "merchant_id": merchant_id,
+                            "merchant_name": merchant_name,
+                            "week_change": week_change,
+                            "month_change": month_change,
+                            "best_day": best_day
+                        }
+                    )
+                    return True
                 else:
-                    suppliers = response.json()
-                    self.log_test("Suppliers Endpoint", True, f"Found {len(suppliers)} suppliers")
-                return True
-            else:
-                self.log_test("Suppliers Endpoint", False, f"Status {response.status_code}")
-                return False
-                
-        except Exception as e:
-            self.log_test("Suppliers Endpoint", False, f"Exception: {str(e)}")
-            return False
-
-    def test_products_endpoint(self):
-        """Test products endpoint"""
-        try:
-            response = self.make_request("GET", "/products", auth_required=False)
-            
-            if response.status_code == 200:
-                products = response.json()
-                self.log_test("Get Products", True, f"Found {len(products)} products")
-                
-                # Test product structure
-                if products:
-                    product = products[0]
-                    # Note: API uses Spanish field names
-                    expected_fields = ["_id", "nombre"]
-                    if all(field in product for field in expected_fields):
-                        self.log_test("Product Structure", True, "Product fields present")
-                    else:
-                        self.log_test("Product Structure", False, f"Missing fields in product")
-                        
-                return True
-            else:
-                self.log_test("Products Endpoint", False, f"Status {response.status_code}")
-                return False
-                
-        except Exception as e:
-            self.log_test("Products Endpoint", False, f"Exception: {str(e)}")
-            return False
-
-    def test_low_stock_alerts(self):
-        """Test low stock alerts endpoint"""
-        try:
-            response = self.make_request("GET", "/alerts/low-stock", auth_required=False)
-            
-            if response.status_code == 200:
-                alerts = response.json()
-                self.log_test("Low Stock Alerts", True, f"Found {len(alerts)} low stock alerts")
-                
-                # Test alert structure
-                if alerts:
-                    alert = alerts[0]
-                    required_fields = ["_id", "nombre", "alert_level", "min_stock_alert"]
-                    if all(field in alert for field in required_fields):
-                        self.log_test("Alert Structure", True, "Alert fields present")
-                    else:
-                        missing = [f for f in required_fields if f not in alert]
-                        self.log_test("Alert Structure", False, f"Missing fields: {missing}")
-                        
-                return True
-            else:
-                self.log_test("Low Stock Alerts", False, f"Status {response.status_code}")
-                return False
-                
-        except Exception as e:
-            self.log_test("Low Stock Alerts", False, f"Exception: {str(e)}")
-            return False
-
-    # ==================== AI & ANALYTICS TESTS ====================
-    
-    def test_ai_insights_endpoints(self):
-        """Test AI insights endpoints"""
-        try:
-            # Test all insights
-            response = self.make_request("GET", "/ai/all-insights", auth_required=False)
-            
-            if response.status_code == 200:
-                data = response.json()
-                insights = data.get("insights", [])
-                self.log_test("AI All Insights", True, f"Found {len(insights)} insights")
-                
-                # Test insight structure
-                if insights:
-                    insight = insights[0]
-                    required_fields = ["id", "type", "category", "icon", "color", "title", "message", "cta_text", "cta_action", "priority"]
-                    if all(field in insight for field in required_fields):
-                        self.log_test("AI Insight Structure", True, "All required fields present")
-                    else:
-                        missing = [f for f in required_fields if f not in insight]
-                        self.log_test("AI Insight Structure", False, f"Missing fields: {missing}")
-            else:
-                self.log_test("AI All Insights", False, f"Status {response.status_code}")
-                return False
-                
-            # Test insight of the day
-            response = self.make_request("GET", "/ai/insight-of-the-day", auth_required=False)
-            
-            if response.status_code == 200:
-                data = response.json()
-                required_fields = ["type", "category", "icon", "color", "title", "message", "cta_text", "cta_action", "priority"]
-                if all(field in data for field in required_fields):
-                    self.log_test("AI Insight of the Day", True, f"Type: {data.get('type')}")
-                else:
-                    missing = [f for f in required_fields if f not in data]
-                    self.log_test("AI Insight of the Day", False, f"Missing fields: {missing}")
-            else:
-                self.log_test("AI Insight of the Day", False, f"Status {response.status_code}")
-                
-            # Test quick actions
-            response = self.make_request("GET", "/ai/quick-actions", auth_required=False)
-            
-            if response.status_code == 200:
-                data = response.json()
-                actions = data.get("actions", [])
-                self.log_test("AI Quick Actions", True, f"Found {len(actions)} quick actions")
-            else:
-                self.log_test("AI Quick Actions", False, f"Status {response.status_code}")
-                
-            return True
-            
-        except Exception as e:
-            self.log_test("AI Insights Endpoints", False, f"Exception: {str(e)}")
-            return False
-
-    # ==================== ADMIN OPS TESTS ====================
-    
-    def test_admin_ops_alert_settings(self):
-        """Test admin ops alert settings endpoints"""
-        try:
-            # Test GET alert settings
-            response = self.make_request("GET", "/admin-ops/alert-settings", auth_required=False)
-            
-            if response.status_code == 200:
-                data = response.json()
-                expected_fields = ["email", "whatsapp_number", "stock_alert_email", "daily_email", "weekly_email", "monthly_email"]
-                if all(field in data for field in expected_fields):
-                    self.log_test("Get Alert Settings", True, "All settings fields present")
-                else:
-                    missing = [f for f in expected_fields if f not in data]
-                    self.log_test("Get Alert Settings", False, f"Missing fields: {missing}")
+                    self.log_test(
+                        "Admin Comparisons (Filtered)", 
+                        False, 
+                        f"Response missing required fields: {missing_fields}",
+                        data
+                    )
                     return False
             else:
-                self.log_test("Get Alert Settings", False, f"Status {response.status_code}")
+                self.log_test(
+                    "Admin Comparisons (Filtered)", 
+                    False, 
+                    f"Request failed with status {response.status_code}",
+                    {"status_code": response.status_code, "response": response.text}
+                )
                 return False
                 
-            # Test POST alert settings
-            test_settings = {
-                "email": "test@example.com",
-                "whatsapp_number": "+593999123456",
-                "stock_alert_email": True,
-                "stock_alert_whatsapp": True,
-                "stock_alert_push": True,
-                "debt_alert_push": True,
-                "daily_email": False,
-                "daily_whatsapp": False,
-                "daily_push": False,
-                "weekly_email": False,
-                "weekly_whatsapp": False,
-                "weekly_push": True,
-                "monthly_email": False,
-                "monthly_whatsapp": False
-            }
-            
-            response = self.make_request("POST", "/admin-ops/alert-settings", data=test_settings, auth_required=False)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("success"):
-                    self.log_test("Save Alert Settings", True, "Settings saved successfully")
-                else:
-                    self.log_test("Save Alert Settings", False, "Success flag not returned")
-            else:
-                self.log_test("Save Alert Settings", False, f"Status {response.status_code}")
-                
-            return True
-            
         except Exception as e:
-            self.log_test("Admin Ops Alert Settings", False, f"Exception: {str(e)}")
+            self.log_test("Admin Comparisons (Filtered)", False, f"Exception: {str(e)}")
             return False
 
-    def test_dashboard_kpis(self):
-        """Test dashboard KPI endpoints"""
-        try:
-            # Test main KPIs endpoint
-            response = self.make_request("GET", "/dashboard/kpis", params={"period": "30d"}, auth_required=False)
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.log_test("Dashboard KPIs - 30d", True, f"KPIs retrieved for 30d period")
-            else:
-                self.log_test("Dashboard KPIs - 30d", False, f"Status {response.status_code}")
-                return False
-                
-            # Test 7d period
-            response = self.make_request("GET", "/dashboard/kpis", params={"period": "7d"}, auth_required=False)
-            
-            if response.status_code == 200:
-                self.log_test("Dashboard KPIs - 7d", True, f"KPIs retrieved for 7d period")
-            else:
-                self.log_test("Dashboard KPIs - 7d", False, f"Status {response.status_code}")
-                
-            # Test new merchants endpoint
-            response = self.make_request("GET", "/dashboard/merchants/new", auth_required=False)
-            
-            if response.status_code == 200:
-                self.log_test("Dashboard New Merchants", True, "New merchants endpoint working")
-            else:
-                self.log_test("Dashboard New Merchants", False, f"Status {response.status_code}")
-                
-            # Test active merchants endpoint
-            response = self.make_request("GET", "/dashboard/merchants/active", auth_required=False)
-            
-            if response.status_code == 200:
-                self.log_test("Dashboard Active Merchants", True, "Active merchants endpoint working")
-            else:
-                self.log_test("Dashboard Active Merchants", False, f"Status {response.status_code}")
-                
-            # Test active clerks endpoint
-            response = self.make_request("GET", "/dashboard/clerks/active", auth_required=False)
-            
-            if response.status_code == 200:
-                self.log_test("Dashboard Active Clerks", True, "Active clerks endpoint working")
-            else:
-                self.log_test("Dashboard Active Clerks", False, f"Status {response.status_code}")
-                
-            return True
-            
-        except Exception as e:
-            self.log_test("Dashboard KPIs", False, f"Exception: {str(e)}")
-            return False
-
-    # ==================== NOTIFICATIONS & ALERTS TESTS ====================
-    
-    def test_notification_endpoints(self):
-        """Test notification endpoints"""
-        try:
-            # Test scheduler status
-            response = self.make_request("GET", "/notifications/scheduler/status", auth_required=False)
-            
-            if response.status_code == 200:
-                self.log_test("Notification Scheduler Status", True, "Scheduler status endpoint working")
-            else:
-                self.log_test("Notification Scheduler Status", False, f"Status {response.status_code}")
-                
-            # Test notification tokens endpoint
-            response = self.make_request("GET", "/notifications/tokens", auth_required=False)
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.log_test("Notification Tokens", True, f"Found {len(data)} tokens")
-            else:
-                self.log_test("Notification Tokens", False, f"Status {response.status_code}")
-                
-            return True
-            
-        except Exception as e:
-            self.log_test("Notification Endpoints", False, f"Exception: {str(e)}")
-            return False
-
-    # ==================== PUT ENDPOINTS TESTS ====================
-    
-    def test_put_endpoints_with_auth(self):
-        """Test PUT endpoints with authentication"""
-        if not self.auth_token:
-            self.log_test("PUT Endpoints Auth", False, "No auth token available")
-            return False
-            
-        try:
-            # Test PUT product update
-            response = self.make_request("GET", "/products", auth_required=False)
-            if response.status_code == 200:
-                products = response.json()
-                if products:
-                    product_id = products[0]["_id"]
-                    
-                    # Test PUT with auth
-                    update_data = {"stock": 100.0, "quantity": 100.0}
-                    response = self.make_request("PUT", f"/products/{product_id}", data=update_data, auth_required=True)
-                    
-                    if response.status_code == 200:
-                        self.log_test("PUT Product with Auth", True, "Product updated successfully")
-                    else:
-                        self.log_test("PUT Product with Auth", False, f"Status {response.status_code}")
-                        
-                    # Test PUT without auth (should fail)
-                    response = self.make_request("PUT", f"/products/{product_id}", data=update_data, auth_required=False)
-                    
-                    if response.status_code in [401, 403]:
-                        self.log_test("PUT Product without Auth", True, "Correctly rejected unauthenticated request")
-                    else:
-                        self.log_test("PUT Product without Auth", False, f"Expected 401/403, got {response.status_code}")
-                        
-            # Test PUT customer update
-            response = self.make_request("GET", "/customers", auth_required=False)
-            if response.status_code == 200:
-                customers = response.json()
-                if customers:
-                    customer_id = customers[0]["_id"]
-                    
-                    # Test PUT with auth
-                    update_data = {"deuda_total": 50.0}
-                    response = self.make_request("PUT", f"/customers/{customer_id}", data=update_data, auth_required=True)
-                    
-                    if response.status_code == 200:
-                        self.log_test("PUT Customer with Auth", True, "Customer updated successfully")
-                    else:
-                        self.log_test("PUT Customer with Auth", False, f"Status {response.status_code}")
-                        
-            return True
-            
-        except Exception as e:
-            self.log_test("PUT Endpoints Auth", False, f"Exception: {str(e)}")
-            return False
-
-    # ==================== MAIN TEST RUNNER ====================
-    
     def run_all_tests(self):
-        """Run all backend tests"""
-        print("🚀 Starting Comprehensive Backend API Testing")
-        print(f"Base URL: {self.base_url}")
+        """Run all admin console tests in sequence"""
+        print("🚀 Starting Admin Console Backend Testing...")
+        print(f"Backend URL: {self.base_url}")
+        print(f"Admin User: {ADMIN_CREDENTIALS['username']}")
         print("=" * 60)
         
-        # Authentication Tests
-        print("\n📋 AUTHENTICATION & ONBOARDING TESTS")
-        self.test_login_step1()
-        self.test_login_step2()
-        self.test_invalid_login()
-        
-        # Onboarding Tests
-        print("\n📋 ONBOARDING FLOW TESTS")
-        self.test_search_stores()
-        self.test_register_single_store()
-        
-        # Core App Functionality Tests
-        print("\n📋 CORE APP FUNCTIONALITY TESTS")
-        self.test_balance_endpoint()
-        self.test_customers_endpoint()
-        self.test_suppliers_endpoint()
-        self.test_products_endpoint()
-        self.test_low_stock_alerts()
-        
-        # AI & Analytics Tests
-        print("\n📋 AI & ANALYTICS TESTS")
-        self.test_ai_insights_endpoints()
-        
-        # Admin Ops Tests
-        print("\n📋 ADMIN OPS TESTS")
-        self.test_admin_ops_alert_settings()
-        self.test_dashboard_kpis()
-        
-        # Notifications Tests
-        print("\n📋 NOTIFICATIONS & ALERTS TESTS")
-        self.test_notification_endpoints()
-        
-        # PUT Endpoints with Auth Tests
-        print("\n📋 AUTHENTICATED PUT ENDPOINTS TESTS")
-        self.test_put_endpoints_with_auth()
-        
-        # Summary
-        self.print_summary()
-
-    def print_summary(self):
-        """Print test summary"""
-        print("\n" + "=" * 60)
-        print("📊 TEST SUMMARY")
-        print("=" * 60)
-        
-        total_tests = len(self.test_results)
-        passed_tests = len([t for t in self.test_results if t["success"]])
-        failed_tests = len(self.failed_tests)
-        
-        print(f"Total Tests: {total_tests}")
-        print(f"✅ Passed: {passed_tests}")
-        print(f"❌ Failed: {failed_tests}")
-        print(f"Success Rate: {(passed_tests/total_tests*100):.1f}%")
-        
-        if self.failed_tests:
-            print("\n🔍 FAILED TESTS DETAILS:")
-            for test in self.failed_tests:
-                print(f"❌ {test['test']}: {test['details']}")
-        
-        print("\n🎯 CRITICAL ENDPOINTS STATUS:")
-        critical_endpoints = [
-            "Login Step 1",
-            "Get Customers", 
-            "Get Products",
-            "Balance Endpoint",
-            "AI All Insights",
-            "Get Alert Settings"
+        # Test sequence
+        tests = [
+            self.test_admin_login,
+            self.test_get_my_merchants,
+            self.test_admin_analytics_without_filter,
+            self.test_admin_analytics_with_filter,
+            self.test_admin_comparisons_without_filter,
+            self.test_admin_comparisons_with_filter
         ]
         
-        for endpoint in critical_endpoints:
-            test_result = next((t for t in self.test_results if t["test"] == endpoint), None)
-            if test_result:
-                status = "✅" if test_result["success"] else "❌"
-                print(f"{status} {endpoint}")
-            else:
-                print(f"⚠️ {endpoint} - Not tested")
-                
-        print("\n" + "=" * 60)
+        passed = 0
+        total = len(tests)
         
-        if failed_tests == 0:
-            print("🎉 ALL TESTS PASSED! Backend is ready for deployment.")
+        for test in tests:
+            if test():
+                passed += 1
+        
+        print("=" * 60)
+        print(f"🎯 TEST SUMMARY: {passed}/{total} tests passed")
+        
+        if passed == total:
+            print("🎉 ALL TESTS PASSED! Admin Console endpoints working correctly.")
         else:
-            print(f"⚠️ {failed_tests} tests failed. Review issues before deployment.")
+            print(f"⚠️  {total - passed} tests failed. Check details above.")
             
-        return failed_tests == 0
+        return passed == total
 
+    def print_detailed_results(self):
+        """Print detailed test results"""
+        print("\n📋 DETAILED TEST RESULTS:")
+        print("=" * 60)
+        
+        for result in self.test_results:
+            status = "✅ PASS" if result["success"] else "❌ FAIL"
+            print(f"{status} {result['test']}")
+            print(f"   Time: {result['timestamp']}")
+            if result["details"]:
+                print(f"   Details: {result['details']}")
+            if not result["success"] and "response_data" in result:
+                print(f"   Response: {json.dumps(result['response_data'], indent=2)}")
+            print()
 
 def main():
-    """Main function"""
-    tester = BackendTester()
+    """Main test execution"""
+    test_suite = AdminConsoleTestSuite()
     
     try:
-        success = tester.run_all_tests()
+        success = test_suite.run_all_tests()
+        test_suite.print_detailed_results()
+        
+        # Exit with appropriate code
         sys.exit(0 if success else 1)
+        
     except KeyboardInterrupt:
-        print("\n\n⚠️ Testing interrupted by user")
+        print("\n⚠️ Testing interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n\n💥 Testing failed with exception: {str(e)}")
+        print(f"\n💥 Unexpected error: {str(e)}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
