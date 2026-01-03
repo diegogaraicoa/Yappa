@@ -861,12 +861,9 @@ function DashboardView({ data, selectedMerchant, merchantName }: any) {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>⭐ Top Productos del Mes</Text>
           {analytics.top_products && analytics.top_products.length > 0 && (
-            <TouchableOpacity 
-              style={styles.downloadBtn}
-              onPress={() => downloadCSV('top_products', analytics.top_products)}
-            >
-              <Ionicons name="download-outline" size={16} color="#00D2FF" />
-              <Text style={styles.downloadBtnText}>CSV</Text>
+            <TouchableOpacity style={styles.downloadButton} onPress={downloadTopProducts}>
+              <Ionicons name="download-outline" size={18} color="#00D2FF" />
+              <Text style={styles.downloadText}>CSV</Text>
             </TouchableOpacity>
           )}
         </View>
