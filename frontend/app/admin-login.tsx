@@ -71,17 +71,16 @@ export default function AdminLoginScreen() {
         return;
       }
 
-      const { merchants, clerks } = step1Response.data;
+      const { merchant_id, store_name, clerks } = step1Response.data;
       
-      if (!merchants || merchants.length === 0) {
-        setError('No se encontraron tiendas asociadas');
+      if (!merchant_id) {
+        setError('No se encontró tienda asociada');
         setLoading(false);
         return;
       }
 
-      // Use first merchant and first clerk (owner)
-      const merchant = merchants[0];
-      const ownerClerk = clerks?.find((c: any) => c.role === 'owner') || clerks?.[0];
+      // Find owner clerk (first clerk is usually owner)
+      const ownerClerk = clerks?.find((c: any) => c.name?.toLowerCase().includes('dueño') || c.name?.toLowerCase().includes('owner')) || clerks?.[0];
 
       if (!ownerClerk) {
         setError('No se encontró acceso de propietario');
@@ -91,7 +90,7 @@ export default function AdminLoginScreen() {
 
       // Step 2: Complete login with owner PIN (1234 is default)
       const step2Response = await api.post(
-        `/api/onboarding/login/step2?merchant_id=${merchant.id}&clerk_id=${ownerClerk.id}&pin=1234`
+        `/api/onboarding/login/step2?merchant_id=${merchant_id}&clerk_id=${ownerClerk.clerk_id}&pin=1234`
       );
 
       if (step2Response.data.access_token) {
@@ -99,8 +98,8 @@ export default function AdminLoginScreen() {
         await AsyncStorage.setItem('token', step2Response.data.access_token);
         await AsyncStorage.setItem('user', JSON.stringify({
           ...step2Response.data.user,
-          store_id: merchant.id,
-          admin_id: step1Response.data.admin_id
+          store_id: merchant_id,
+          store_name: store_name
         }));
 
         // Set API header
