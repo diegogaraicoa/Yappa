@@ -93,9 +93,11 @@ export default function AdminLoginScreen() {
         `/api/onboarding/login/step2?merchant_id=${merchant_id}&clerk_id=${ownerClerk.clerk_id}&pin=1234`
       );
 
-      if (step2Response.data.access_token) {
+      const token = step2Response.data.token || step2Response.data.access_token;
+      
+      if (token) {
         // Save token and user info
-        await AsyncStorage.setItem('token', step2Response.data.access_token);
+        await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('user', JSON.stringify({
           ...step2Response.data.user,
           store_id: merchant_id,
@@ -103,7 +105,7 @@ export default function AdminLoginScreen() {
         }));
 
         // Set API header
-        api.defaults.headers.common['Authorization'] = `Bearer ${step2Response.data.access_token}`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
         // Redirect to admin console
         if (Platform.OS === 'web') {
